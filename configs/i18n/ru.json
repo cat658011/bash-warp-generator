@@ -54,5 +54,41 @@
   "web_btn_generate": "⬇️ Сгенерировать и скачать",
   "web_footer_status": "📊 Статус WARP",
   "web_footer_github": "⭐ GitHub",
-  "web_error_warp": "Ошибка регистрации WARP. API Cloudflare может быть заблокирован в вашем регионе. Попробуйте запустить на VPS или облачном сервере."
+  "web_error_warp": "Ошибка регистрации WARP. API Cloudflare может быть заблокирован в вашем регионе. Попробуйте запустить на VPS или облачном сервере.",
+
+  "dns_cloudflare": "Cloudflare DNS",
+  "dns_cloudflare_family": "Cloudflare Семейный DNS",
+  "dns_xbox": "XBox DNS",
+  "dns_comss": "Comss DNS",
+  "dns_google": "Google DNS",
+  "dns_adguard": "AdGuard DNS",
+
+  "relay_cloudflare": "Cloudflare",
+  "relay_cloudflare_alt": "Cloudflare Альтернативный",
+  "relay_finland_1": "Финляндия 1",
+  "relay_finland_2": "Финляндия 2",
+  "relay_netherlands_1": "Нидерланды 1",
+  "relay_netherlands_2": "Нидерланды 2",
+  "relay_poland_1": "Польша 1",
+  "relay_poland_2": "Польша 2",
+  "relay_germany_1": "Германия 1",
+  "relay_estonia_1": "Эстония 1",
+  "relay_russia_1": "Россия 1",
+
+  "svc_full_tunnel": "Весь трафик (полный туннель)",
+  "svc_google_youtube": "Google / YouTube",
+  "svc_meta": "Meta (Instagram / Facebook)",
+  "svc_twitter": "Twitter / X",
+  "svc_telegram": "Telegram",
+  "svc_discord": "Discord",
+  "svc_spotify": "Spotify",
+  "svc_netflix": "Netflix",
+  "svc_openai": "OpenAI (ChatGPT)",
+
+  "web_lang_label": "Язык",
+  "web_theme_light": "Светлая",
+  "web_theme_dark": "Тёмная",
+  "web_generating": "Генерация…",
+  "web_generate_again": "⬇️ Сгенерировать ещё",
+  "web_generation_failed": "Ошибка генерации. Попробуйте ещё раз."
 }

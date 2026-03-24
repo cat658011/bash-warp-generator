@@ -63,3 +63,30 @@ def test_all_keys_present_in_both_languages() -> None:
         ru_keys = set(json.load(f).keys())
 
     assert en_keys == ru_keys, f"Missing in ru: {en_keys - ru_keys}, missing in en: {ru_keys - en_keys}"
+
+
+def test_config_ids_have_i18n_keys() -> None:
+    """Every config id must have a corresponding i18n key."""
+    import json
+    from pathlib import Path
+
+    configs_dir = Path(__file__).resolve().parent.parent / "configs"
+    lang_dir = configs_dir / "i18n"
+
+    with open(lang_dir / "en.json", encoding="utf-8") as f:
+        en = json.load(f)
+
+    with open(configs_dir / "dns_servers.json", encoding="utf-8") as f:
+        for item in json.load(f):
+            key = "dns_" + item["id"]
+            assert key in en, f"Missing i18n key: {key}"
+
+    with open(configs_dir / "relay_servers.json", encoding="utf-8") as f:
+        for item in json.load(f):
+            key = "relay_" + item["id"]
+            assert key in en, f"Missing i18n key: {key}"
+
+    with open(configs_dir / "routing_services.json", encoding="utf-8") as f:
+        for item in json.load(f):
+            key = "svc_" + item["id"]
+            assert key in en, f"Missing i18n key: {key}"

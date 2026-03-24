@@ -1,10 +1,10 @@
 [
   {
-    "name": "Full Tunnel (All Traffic)",
+    "id": "full_tunnel",
     "routes": ["0.0.0.0/0", "::/0"]
   },
   {
-    "name": "Google / YouTube",
+    "id": "google_youtube",
     "routes": [
       "142.250.0.0/15",
       "172.217.0.0/16",
@@ -15,7 +15,7 @@
     ]
   },
   {
-    "name": "Meta (Instagram / Facebook)",
+    "id": "meta",
     "routes": [
       "157.240.0.0/16",
       "31.13.24.0/21",
@@ -26,7 +26,7 @@
     ]
   },
   {
-    "name": "Twitter / X",
+    "id": "twitter",
     "routes": [
       "104.244.42.0/24",
       "199.16.156.0/22",
@@ -35,7 +35,7 @@
     ]
   },
   {
-    "name": "Telegram",
+    "id": "telegram",
     "routes": [
       "91.108.4.0/22",
       "91.108.8.0/22",
@@ -47,14 +47,14 @@
     ]
   },
   {
-    "name": "Discord",
+    "id": "discord",
     "routes": [
       "162.159.128.0/17",
       "66.22.196.0/22"
     ]
   },
   {
-    "name": "Spotify",
+    "id": "spotify",
     "routes": [
       "35.186.224.0/20",
       "78.31.8.0/21",
@@ -63,7 +63,7 @@
     ]
   },
   {
-    "name": "Netflix",
+    "id": "netflix",
     "routes": [
       "23.246.0.0/18",
       "37.77.184.0/21",
@@ -79,7 +79,7 @@
     ]
   },
   {
-    "name": "OpenAI (ChatGPT)",
+    "id": "openai",
     "routes": [
       "13.65.0.0/16",
       "13.66.0.0/16",

@@ -1,46 +1,46 @@
 [
   {
-    "name": "Cloudflare",
+    "id": "cloudflare",
     "endpoint": "engage.cloudflareclient.com:4500"
   },
   {
-    "name": "Cloudflare alternative",
+    "id": "cloudflare_alt",
     "endpoint": "engage.cloudflareclient.com:2408"
   },
   {
-    "name": "Finland 1 (Финляндия 1)",
+    "id": "finland_1",
     "endpoint": "fi.tribukvy.ltd:4500"
   },
   {
-    "name": "Finland 2 (Финляндия 2)",
+    "id": "finland_2",
     "endpoint": "fi0.tribukvy.ltd:4500"
   },
   {
-    "name": "Netherlands 1 (Нидерланды 1)",
+    "id": "netherlands_1",
     "endpoint": "nl.tribukvy.ltd:4500"
   },
   {
-    "name": "Netherlands 2 (Нидерланды 2)",
+    "id": "netherlands_2",
     "endpoint": "nl0.tribukvy.ltd:4500"
   },
   {
-    "name": "Poland 1 (Польша 1)",
+    "id": "poland_1",
     "endpoint": "pl.tribukvy.ltd:4500"
   },
   {
-    "name": "Poland 2 (Польша 2)",
+    "id": "poland_2",
     "endpoint": "pl0.tribukvy.ltd:4500"
   },
   {
-    "name": "Germany 1 (Германия 1)",
+    "id": "germany_1",
     "endpoint": "de.tribukvy.ltd:4500"
   },
   {
-    "name": "Estonia 1 (Эстония 1)",
+    "id": "estonia_1",
     "endpoint": "ee.tribukvy.ltd:4500"
   },
   {
-    "name": "Russia 1 (Россия 1)",
+    "id": "russia_1",
     "endpoint": "ru.tribukvy.ltd:4500"
   }
 ]

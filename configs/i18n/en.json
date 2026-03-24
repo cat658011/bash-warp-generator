@@ -54,5 +54,41 @@
   "web_btn_generate": "⬇️ Generate & Download",
   "web_footer_status": "📊 WARP Status",
   "web_footer_github": "⭐ GitHub",
-  "web_error_warp": "WARP registration failed. Cloudflare API may be blocked in your region. Try running on a VPS or cloud server."
+  "web_error_warp": "WARP registration failed. Cloudflare API may be blocked in your region. Try running on a VPS or cloud server.",
+
+  "dns_cloudflare": "Cloudflare DNS",
+  "dns_cloudflare_family": "Cloudflare Family DNS",
+  "dns_xbox": "XBox DNS",
+  "dns_comss": "Comss DNS",
+  "dns_google": "Google DNS",
+  "dns_adguard": "AdGuard DNS",
+
+  "relay_cloudflare": "Cloudflare",
+  "relay_cloudflare_alt": "Cloudflare Alternative",
+  "relay_finland_1": "Finland 1",
+  "relay_finland_2": "Finland 2",
+  "relay_netherlands_1": "Netherlands 1",
+  "relay_netherlands_2": "Netherlands 2",
+  "relay_poland_1": "Poland 1",
+  "relay_poland_2": "Poland 2",
+  "relay_germany_1": "Germany 1",
+  "relay_estonia_1": "Estonia 1",
+  "relay_russia_1": "Russia 1",
+
+  "svc_full_tunnel": "Full Tunnel (All Traffic)",
+  "svc_google_youtube": "Google / YouTube",
+  "svc_meta": "Meta (Instagram / Facebook)",
+  "svc_twitter": "Twitter / X",
+  "svc_telegram": "Telegram",
+  "svc_discord": "Discord",
+  "svc_spotify": "Spotify",
+  "svc_netflix": "Netflix",
+  "svc_openai": "OpenAI (ChatGPT)",
+
+  "web_lang_label": "Language",
+  "web_theme_light": "Light",
+  "web_theme_dark": "Dark",
+  "web_generating": "Generating…",
+  "web_generate_again": "⬇️ Generate Another",
+  "web_generation_failed": "Generation failed. Try again."
 }

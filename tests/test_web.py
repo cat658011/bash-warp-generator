@@ -43,7 +43,7 @@ def test_node_server_health() -> None:
 
 
 def test_node_server_index() -> None:
-    """The Node.js web server renders the Russian index page."""
+    """The Node.js web server renders the index page with i18n names."""
     proc = _start_server()
     try:
         with urllib.request.urlopen("http://127.0.0.1:5555/") as resp:
@@ -51,6 +51,8 @@ def test_node_server_index() -> None:
             html = resp.read().decode()
             assert "<form" in html
             assert "Генератор" in html
+            # Config names should be resolved from i18n
+            assert "Cloudflare DNS" in html
     finally:
         proc.terminate()
         proc.wait()

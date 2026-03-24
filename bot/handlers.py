@@ -241,13 +241,13 @@ async def _show_confirm(
 
     fmt = user["format"]
     fmt_label = t(f"fmt_{fmt}")
-    dns_label = configs.dns_servers[user["dns_idx"]].name
-    relay_label = configs.relay_servers[user["relay_idx"]].name
+    dns_label = t("dns_" + configs.dns_servers[user["dns_idx"]].id)
+    relay_label = t("relay_" + configs.relay_servers[user["relay_idx"]].id)
 
     if user.get("routing") == "split":
         selected: set[int] = user.get("selected_svcs", set())
         if selected:
-            svc_names = [configs.routing_services[i].name for i in sorted(selected)]
+            svc_names = [t("svc_" + configs.routing_services[i].id) for i in sorted(selected)]
             routing_label = ", ".join(svc_names)
         else:
             routing_label = t("routing_full_label")

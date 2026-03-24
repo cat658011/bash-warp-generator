@@ -15,7 +15,7 @@ def test_dns_servers_loaded() -> None:
     assert len(configs.dns_servers) > 0
     for dns in configs.dns_servers:
         assert isinstance(dns, DnsServer)
-        assert dns.name
+        assert dns.id
         assert len(dns.servers) > 0
 
 
@@ -24,7 +24,7 @@ def test_relay_servers_loaded() -> None:
     assert len(configs.relay_servers) > 0
     for relay in configs.relay_servers:
         assert isinstance(relay, RelayServer)
-        assert relay.name
+        assert relay.id
         assert relay.endpoint
 
 
@@ -33,7 +33,7 @@ def test_routing_services_loaded() -> None:
     assert len(configs.routing_services) > 0
     for svc in configs.routing_services:
         assert isinstance(svc, RoutingService)
-        assert svc.name
+        assert svc.id
         assert len(svc.routes) > 0
 
 

@@ -67,7 +67,7 @@ def dns_keyboard(configs: BotConfigs) -> InlineKeyboardMarkup:
     buttons = [
         [
             InlineKeyboardButton(
-                f"🌐 {dns.name} ({', '.join(dns.servers)})",
+                f"🌐 {t('dns_' + dns.id)} ({', '.join(dns.servers)})",
                 callback_data=f"{DNS_CB}{i}",
             )
         ]
@@ -83,7 +83,7 @@ def relay_keyboard(configs: BotConfigs) -> InlineKeyboardMarkup:
     for i, relay in enumerate(configs.relay_servers):
         row.append(
             InlineKeyboardButton(
-                f"📡 {relay.name}",
+                f"📡 {t('relay_' + relay.id)}",
                 callback_data=f"{RELAY_CB}{i}",
             )
         )
@@ -128,7 +128,7 @@ def services_keyboard(
         buttons.append(
             [
                 InlineKeyboardButton(
-                    f"{check} {svc.name}",
+                    f"{check} {t('svc_' + svc.id)}",
                     callback_data=f"{SVC_CB}{i}",
                 )
             ]

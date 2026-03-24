@@ -14,7 +14,7 @@ CONFIGS_DIR = Path(__file__).resolve().parent.parent / "configs"
 class DnsServer:
     """A selectable DNS server option."""
 
-    name: str
+    id: str
     servers: list[str] = field(default_factory=list)
 
 
@@ -22,7 +22,7 @@ class DnsServer:
 class RelayServer:
     """A selectable relay / endpoint option."""
 
-    name: str
+    id: str
     endpoint: str = ""
 
 
@@ -30,7 +30,7 @@ class RelayServer:
 class RoutingService:
     """A selectable service with IP routes for split-tunnelling."""
 
-    name: str
+    id: str
     routes: list[str] = field(default_factory=list)
 
 
