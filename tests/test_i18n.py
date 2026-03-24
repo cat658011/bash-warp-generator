@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from bot.i18n import available_languages, current_language, load_language, t
+from bot.i18n import available_languages, current_language, load_language, t, t_user
 
 
 def test_load_english() -> None:
@@ -90,3 +90,46 @@ def test_config_ids_have_i18n_keys() -> None:
         for item in json.load(f):
             key = "svc_" + item["id"]
             assert key in en, f"Missing i18n key: {key}"
+
+
+def test_t_user_returns_user_language() -> None:
+    """t_user() with user_data['lang'] returns the correct language."""
+    load_language("en")  # Global is English
+
+    # User prefers Russian → should get Russian text
+    ru_result = t_user("btn_generate", {"lang": "ru"})
+    assert "Генерация" in ru_result or "конфиг" in ru_result.lower()
+
+    # User prefers English → should get English text
+    en_result = t_user("btn_generate", {"lang": "en"})
+    assert "Generate" in en_result
+
+    # Verify they are different
+    assert ru_result != en_result
+
+
+def test_t_user_falls_back_to_global() -> None:
+    """t_user() without user_data falls back to the global language."""
+    load_language("en")
+    result_none = t_user("btn_generate", None)
+    result_empty = t_user("btn_generate", {})
+    assert "Generate" in result_none
+    assert "Generate" in result_empty
+
+
+def test_t_user_with_format_args() -> None:
+    """t_user() forwards format keyword arguments."""
+    load_language("en")
+    result = t_user("config_generated", {"lang": "ru"}, format="WireGuard")
+    assert "WireGuard" in result
+
+
+def test_help_text_is_user_facing() -> None:
+    """Help text should contain user-facing guides, not developer instructions."""
+    load_language("en")
+    help_text = t("help")
+    # Should NOT contain developer instructions
+    assert "configs/dns_servers.json" not in help_text
+    assert "configs/relay_servers.json" not in help_text
+    assert "configs/routing_services.json" not in help_text
+    assert "i18n file" not in help_text.lower()

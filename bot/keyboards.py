@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
 
-from bot.i18n import t, available_languages
+from bot.i18n import t_user, available_languages
 from core.config import BotConfigs
 
 # Callback-data prefixes
@@ -23,53 +23,35 @@ GENERATE_ANOTHER_CB = "gen_another"
 FORMAT_KEYS = ("wireguard", "amnezia", "clash", "wiresock")
 
 
-def _btn_generate() -> str:
-    return t("btn_generate")
-
-
-def _btn_status() -> str:
-    return t("btn_status")
-
-
-def _btn_help() -> str:
-    return t("btn_help")
-
-
-# Expose button labels as functions so handler filters can match them.
-BTN_GENERATE = property(lambda self: t("btn_generate"))  # not used directly
-BTN_STATUS = property(lambda self: t("btn_status"))
-BTN_HELP = property(lambda self: t("btn_help"))
-
-
-def main_menu_keyboard() -> ReplyKeyboardMarkup:
+def main_menu_keyboard(user_data: dict | None = None) -> ReplyKeyboardMarkup:
     """Persistent reply-keyboard shown below the chat input."""
     return ReplyKeyboardMarkup(
         [
-            [KeyboardButton(t("btn_generate"))],
-            [KeyboardButton(t("btn_status")), KeyboardButton(t("btn_help"))],
+            [KeyboardButton(t_user("btn_generate", user_data))],
+            [KeyboardButton(t_user("btn_status", user_data)), KeyboardButton(t_user("btn_help", user_data))],
         ],
         resize_keyboard=True,
     )
 
 
-def format_keyboard() -> InlineKeyboardMarkup:
+def format_keyboard(user_data: dict | None = None) -> InlineKeyboardMarkup:
     """Keyboard with VPN-config format options."""
     buttons = []
     for key in FORMAT_KEYS:
-        label = t(f"fmt_{key}")
-        desc = t(f"fmt_{key}_desc")
+        label = t_user(f"fmt_{key}", user_data)
+        desc = t_user(f"fmt_{key}_desc", user_data)
         buttons.append(
             [InlineKeyboardButton(f"{label} — {desc}", callback_data=f"{FORMAT_CB}{key}")]
         )
     return InlineKeyboardMarkup(buttons)
 
 
-def dns_keyboard(configs: BotConfigs) -> InlineKeyboardMarkup:
+def dns_keyboard(configs: BotConfigs, user_data: dict | None = None) -> InlineKeyboardMarkup:
     """Keyboard listing available DNS servers."""
     buttons = [
         [
             InlineKeyboardButton(
-                f"🌐 {t('dns_' + dns.id)} ({', '.join(dns.servers)})",
+                f"🌐 {t_user('dns_' + dns.id, user_data)} ({', '.join(dns.servers)})",
                 callback_data=f"{DNS_CB}{i}",
             )
         ]
@@ -78,14 +60,14 @@ def dns_keyboard(configs: BotConfigs) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(buttons)
 
 
-def relay_keyboard(configs: BotConfigs) -> InlineKeyboardMarkup:
+def relay_keyboard(configs: BotConfigs, user_data: dict | None = None) -> InlineKeyboardMarkup:
     """Keyboard listing available relay endpoints in a two-column grid."""
     buttons: list[list[InlineKeyboardButton]] = []
     row: list[InlineKeyboardButton] = []
     for i, relay in enumerate(configs.relay_servers):
         row.append(
             InlineKeyboardButton(
-                f"📡 {t('relay_' + relay.id)}",
+                f"📡 {t_user('relay_' + relay.id, user_data)}",
                 callback_data=f"{RELAY_CB}{i}",
             )
         )
@@ -97,19 +79,19 @@ def relay_keyboard(configs: BotConfigs) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(buttons)
 
 
-def routing_keyboard() -> InlineKeyboardMarkup:
+def routing_keyboard(user_data: dict | None = None) -> InlineKeyboardMarkup:
     """Keyboard for choosing full or split tunnel."""
     return InlineKeyboardMarkup(
         [
             [
                 InlineKeyboardButton(
-                    t("route_full"),
+                    t_user("route_full", user_data),
                     callback_data=f"{ROUTE_CB}full",
                 )
             ],
             [
                 InlineKeyboardButton(
-                    t("route_split"),
+                    t_user("route_split", user_data),
                     callback_data=f"{ROUTE_CB}split",
                 )
             ],
@@ -118,7 +100,7 @@ def routing_keyboard() -> InlineKeyboardMarkup:
 
 
 def services_keyboard(
-    configs: BotConfigs, selected: set[int]
+    configs: BotConfigs, selected: set[int], user_data: dict | None = None
 ) -> InlineKeyboardMarkup:
     """Keyboard for toggling individual services in split-tunnel mode."""
     buttons: list[list[InlineKeyboardButton]] = []
@@ -130,23 +112,23 @@ def services_keyboard(
         buttons.append(
             [
                 InlineKeyboardButton(
-                    f"{check} {t('svc_' + svc.id)}",
+                    f"{check} {t_user('svc_' + svc.id, user_data)}",
                     callback_data=f"{SVC_CB}{i}",
                 )
             ]
         )
     buttons.append(
-        [InlineKeyboardButton(t("btn_done"), callback_data=SVC_DONE_CB)]
+        [InlineKeyboardButton(t_user("btn_done", user_data), callback_data=SVC_DONE_CB)]
     )
     return InlineKeyboardMarkup(buttons)
 
 
-def confirm_keyboard() -> InlineKeyboardMarkup:
+def confirm_keyboard(user_data: dict | None = None) -> InlineKeyboardMarkup:
     """Confirmation keyboard before generating the config."""
     return InlineKeyboardMarkup(
         [
-            [InlineKeyboardButton(t("btn_confirm"), callback_data=CONFIRM_CB)],
-            [InlineKeyboardButton(t("btn_back"), callback_data=f"{BACK_CB}start")],
+            [InlineKeyboardButton(t_user("btn_confirm", user_data), callback_data=CONFIRM_CB)],
+            [InlineKeyboardButton(t_user("btn_back", user_data), callback_data=f"{BACK_CB}start")],
         ]
     )
 
@@ -166,10 +148,10 @@ def language_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(buttons)
 
 
-def generate_another_keyboard() -> InlineKeyboardMarkup:
+def generate_another_keyboard(user_data: dict | None = None) -> InlineKeyboardMarkup:
     """Keyboard shown after a config is generated, offering to create another."""
     return InlineKeyboardMarkup(
         [
-            [InlineKeyboardButton(t("btn_generate"), callback_data=GENERATE_ANOTHER_CB)],
+            [InlineKeyboardButton(t_user("btn_generate", user_data), callback_data=GENERATE_ANOTHER_CB)],
         ]
     )

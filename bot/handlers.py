@@ -16,7 +16,7 @@ from telegram.ext import (
     filters,
 )
 
-from bot.i18n import t, t_user, available_languages
+from bot.i18n import t_user, available_languages
 from core.config import BotConfigs
 from core.generators import (
     GENERATORS,
@@ -65,6 +65,11 @@ def _configs(context: ContextTypes.DEFAULT_TYPE) -> BotConfigs:
     return context.bot_data["configs"]
 
 
+def _ud(context: ContextTypes.DEFAULT_TYPE) -> dict | None:
+    """Shortcut to get user_data for translation."""
+    return context.user_data
+
+
 # ------------------------------------------------------------------
 # /start
 # ------------------------------------------------------------------
@@ -72,9 +77,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send welcome message and show the persistent reply keyboard."""
     assert update.message is not None
     await update.message.reply_text(
-        t("welcome"),
+        t_user("welcome", _ud(context)),
         parse_mode="HTML",
-        reply_markup=main_menu_keyboard(),
+        reply_markup=main_menu_keyboard(_ud(context)),
     )
 
 
@@ -87,9 +92,9 @@ async def generate_entry(
     """Show the format picker (entry-point for the conversation)."""
     assert update.message is not None
     await update.message.reply_text(
-        t("step_format"),
+        t_user("step_format", _ud(context)),
         parse_mode="HTML",
-        reply_markup=format_keyboard(),
+        reply_markup=format_keyboard(_ud(context)),
     )
     return SELECT_FORMAT
 
@@ -103,7 +108,7 @@ async def warp_status(
     """Send a link to the WARP status Telegram channel."""
     assert update.message is not None
     await update.message.reply_text(
-        t("warp_status"),
+        t_user("warp_status", _ud(context)),
         parse_mode="HTML",
         disable_web_page_preview=True,
     )
@@ -118,7 +123,7 @@ async def help_handler(
     """Display help text with configuration guides."""
     assert update.message is not None
     await update.message.reply_text(
-        t("help"),
+        t_user("help", _ud(context)),
         parse_mode="HTML",
     )
 
@@ -132,7 +137,7 @@ async def lang_handler(
     """Show the language picker."""
     assert update.message is not None
     await update.message.reply_text(
-        t("lang_prompt"),
+        t_user("lang_prompt", _ud(context)),
         parse_mode="HTML",
         reply_markup=language_keyboard(),
     )
@@ -149,14 +154,18 @@ async def on_lang_select(
     lang = query.data.removeprefix(LANG_CB)
     context.user_data["lang"] = lang
 
-    # Load the new language's strings to get the confirmation message
-    from bot.i18n import _load_lang_file
-    strings = _load_lang_file(lang)
-    msg = strings.get("lang_changed", "Language changed.")
-
+    # Show confirmation in the newly selected language
     await query.edit_message_text(
-        msg,
+        t_user("lang_changed", context.user_data),
         parse_mode="HTML",
+    )
+
+    # Re-send the main menu keyboard with button text in the new language
+    assert query.message is not None
+    await query.message.reply_text(
+        t_user("welcome", context.user_data),
+        parse_mode="HTML",
+        reply_markup=main_menu_keyboard(context.user_data),
     )
 
 
@@ -171,9 +180,9 @@ async def on_format(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     context.user_data["format"] = query.data.removeprefix(FORMAT_CB)
 
     await query.edit_message_text(
-        t("step_dns"),
+        t_user("step_dns", _ud(context)),
         parse_mode="HTML",
-        reply_markup=dns_keyboard(_configs(context)),
+        reply_markup=dns_keyboard(_configs(context), _ud(context)),
     )
     return SELECT_DNS
 
@@ -189,9 +198,9 @@ async def on_dns(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     context.user_data["dns_idx"] = int(query.data.removeprefix(DNS_CB))
 
     await query.edit_message_text(
-        t("step_relay"),
+        t_user("step_relay", _ud(context)),
         parse_mode="HTML",
-        reply_markup=relay_keyboard(_configs(context)),
+        reply_markup=relay_keyboard(_configs(context), _ud(context)),
     )
     return SELECT_RELAY
 
@@ -207,9 +216,9 @@ async def on_relay(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     context.user_data["relay_idx"] = int(query.data.removeprefix(RELAY_CB))
 
     await query.edit_message_text(
-        t("step_routing"),
+        t_user("step_routing", _ud(context)),
         parse_mode="HTML",
-        reply_markup=routing_keyboard(),
+        reply_markup=routing_keyboard(_ud(context)),
     )
     return SELECT_ROUTING
 
@@ -232,9 +241,9 @@ async def on_routing(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     context.user_data["selected_svcs"] = set()
 
     await query.edit_message_text(
-        t("step_services"),
+        t_user("step_services", _ud(context)),
         parse_mode="HTML",
-        reply_markup=services_keyboard(_configs(context), set()),
+        reply_markup=services_keyboard(_configs(context), set(), _ud(context)),
     )
     return SELECT_SERVICES
 
@@ -261,9 +270,9 @@ async def on_service_toggle(
         selected.add(idx)
 
     await query.edit_message_text(
-        t("step_services"),
+        t_user("step_services", _ud(context)),
         parse_mode="HTML",
-        reply_markup=services_keyboard(_configs(context), selected),
+        reply_markup=services_keyboard(_configs(context), selected, _ud(context)),
     )
     return SELECT_SERVICES
 
@@ -279,26 +288,27 @@ async def _show_confirm(
     assert query is not None and context.user_data is not None
     configs = _configs(context)
     user = context.user_data
+    ud = _ud(context)
 
     fmt = user["format"]
-    fmt_label = t(f"fmt_{fmt}")
-    dns_label = t("dns_" + configs.dns_servers[user["dns_idx"]].id)
-    relay_label = t("relay_" + configs.relay_servers[user["relay_idx"]].id)
+    fmt_label = t_user(f"fmt_{fmt}", ud)
+    dns_label = t_user("dns_" + configs.dns_servers[user["dns_idx"]].id, ud)
+    relay_label = t_user("relay_" + configs.relay_servers[user["relay_idx"]].id, ud)
 
     if user.get("routing") == "split":
         selected: set[int] = user.get("selected_svcs", set())
         if selected:
-            svc_names = [t("svc_" + configs.routing_services[i].id) for i in sorted(selected)]
+            svc_names = [t_user("svc_" + configs.routing_services[i].id, ud) for i in sorted(selected)]
             routing_label = ", ".join(svc_names)
         else:
-            routing_label = t("routing_full_label")
+            routing_label = t_user("routing_full_label", ud)
     else:
-        routing_label = t("routing_full_label")
+        routing_label = t_user("routing_full_label", ud)
 
     await query.edit_message_text(
-        t("step_confirm", format=fmt_label, dns=dns_label, relay=relay_label, routing=routing_label),
+        t_user("step_confirm", ud, format=fmt_label, dns=dns_label, relay=relay_label, routing=routing_label),
         parse_mode="HTML",
-        reply_markup=confirm_keyboard(),
+        reply_markup=confirm_keyboard(ud),
     )
     return CONFIRM
 
@@ -316,9 +326,9 @@ async def on_confirm(
 
     # Back → restart the conversation from step 1
     await query.edit_message_text(
-        t("step_format"),
+        t_user("step_format", _ud(context)),
         parse_mode="HTML",
-        reply_markup=format_keyboard(),
+        reply_markup=format_keyboard(_ud(context)),
     )
     return SELECT_FORMAT
 
@@ -333,14 +343,15 @@ async def _generate(
     assert query is not None and context.user_data is not None
     configs = _configs(context)
     user = context.user_data
+    ud = _ud(context)
 
-    await query.edit_message_text(t("generating"))
+    await query.edit_message_text(t_user("generating", ud))
 
     try:
         account = await register_warp()
     except Exception:
         logger.exception("WARP registration failed")
-        await query.edit_message_text(t("generation_failed"))
+        await query.edit_message_text(t_user("generation_failed", ud))
         return ConversationHandler.END
 
     # Resolve user selections
@@ -375,11 +386,11 @@ async def _generate(
     # Send config as a file
     doc = BytesIO(content.encode("utf-8"))
     doc.name = filename
-    fmt_label = t(f"fmt_{fmt}")
+    fmt_label = t_user(f"fmt_{fmt}", ud)
     assert query.message is not None
     await query.message.reply_document(
         document=doc,
-        caption=t("config_generated", format=fmt_label),
+        caption=t_user("config_generated", ud, format=fmt_label),
         parse_mode="HTML",
     )
 
@@ -390,14 +401,14 @@ async def _generate(
         link_doc.name = "warp-amnezia-deeplink.txt"
         await query.message.reply_document(
             document=link_doc,
-            caption=t("amnezia_deeplink"),
+            caption=t_user("amnezia_deeplink", ud),
             parse_mode="HTML",
         )
 
     # Offer to generate another config
     await query.message.reply_text(
-        t("btn_generate"),
-        reply_markup=generate_another_keyboard(),
+        t_user("btn_generate", ud),
+        reply_markup=generate_another_keyboard(ud),
     )
     return SELECT_FORMAT
 
@@ -418,9 +429,9 @@ async def on_generate_another(
         context.user_data.pop(key, None)
 
     await query.edit_message_text(
-        t("step_format"),
+        t_user("step_format", _ud(context)),
         parse_mode="HTML",
-        reply_markup=format_keyboard(),
+        reply_markup=format_keyboard(_ud(context)),
     )
     return SELECT_FORMAT
 
@@ -430,7 +441,7 @@ async def on_generate_another(
 # ------------------------------------------------------------------
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     assert update.message is not None
-    await update.message.reply_text(t("cancelled"))
+    await update.message.reply_text(t_user("cancelled", _ud(context)))
     return ConversationHandler.END
 
 
