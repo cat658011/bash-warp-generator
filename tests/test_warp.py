@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import base64
 
-from bot.warp import generate_keys
+from core.warp import generate_keys
 
 
 def test_generate_keys_returns_base64_pair() -> None:

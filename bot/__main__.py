@@ -7,7 +7,7 @@ import os
 
 from telegram.ext import Application
 
-from bot.config import load_configs
+from core.config import load_configs
 from bot.handlers import setup_handlers
 
 

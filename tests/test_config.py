@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from bot.config import BotConfigs, DnsServer, RelayServer, RoutingService, load_configs
+from core.config import BotConfigs, DnsServer, RelayServer, RoutingService, load_configs
 
 
 def test_load_configs_returns_bot_configs() -> None:

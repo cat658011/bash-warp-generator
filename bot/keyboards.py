@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
-from bot.config import BotConfigs
+from core.config import BotConfigs
 
 # Callback-data prefixes
 FORMAT_CB = "fmt:"

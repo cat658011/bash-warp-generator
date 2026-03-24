@@ -1,1 +1,1 @@
-"""WARP Config Generator — Telegram bot."""
+"""WARP Config Generator — Telegram bot front-end."""

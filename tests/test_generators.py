@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from bot.generators import (
+from core.generators import (
     AmneziaWGGenerator,
     ClashGenerator,
     GeneratorParams,

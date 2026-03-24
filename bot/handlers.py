@@ -14,12 +14,14 @@ from telegram.ext import (
     ConversationHandler,
 )
 
-from bot.config import BotConfigs
-from bot.generators import (
+from core.config import BotConfigs
+from core.generators import (
     GENERATORS,
     AmneziaWGGenerator,
     GeneratorParams,
 )
+from core.warp import register_warp
+
 from bot.keyboards import (
     DNS_CB,
     FORMAT_CB,
@@ -33,7 +35,6 @@ from bot.keyboards import (
     routing_keyboard,
     services_keyboard,
 )
-from bot.warp import register_warp
 
 logger = logging.getLogger(__name__)
 
