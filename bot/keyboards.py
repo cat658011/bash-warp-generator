@@ -17,7 +17,7 @@ SVC_DONE_CB = "svc:done"
 CONFIRM_CB = "confirm"
 BACK_CB = "back:"
 LANG_CB = "lang:"
-    GENERATE_ANOTHER_CB = "gen_another"
+GENERATE_ANOTHER_CB = "gen_another"
 
 # Format keys (used as callback data values)
 FORMAT_KEYS = ("wireguard", "amnezia", "clash", "wiresock")

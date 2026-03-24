@@ -393,11 +393,7 @@ async def _generate(
 
     # Send config as a file
     doc = BytesIO(content.encode("utf-8"))
-    if "." in filename:
-        stem, dot, ext = filename.rpartition(".")
-        doc.name = f"{stem}.{ext}" if stem else filename
-    else:
-        doc.name = filename
+    doc.name = filename
     assert query.message is not None
     await query.message.reply_document(
         document=doc,
