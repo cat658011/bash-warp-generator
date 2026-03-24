@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
 
-from bot.i18n import t
+from bot.i18n import t, available_languages
 from core.config import BotConfigs
 
 # Callback-data prefixes
@@ -16,6 +16,8 @@ SVC_CB = "svc:"
 SVC_DONE_CB = "svc:done"
 CONFIRM_CB = "confirm"
 BACK_CB = "back:"
+LANG_CB = "lang:"
+GENERATE_ANOTHER_CB = "gen_another"
 
 # Format keys (used as callback data values)
 FORMAT_KEYS = ("wireguard", "amnezia", "clash", "wiresock")
@@ -145,5 +147,29 @@ def confirm_keyboard() -> InlineKeyboardMarkup:
         [
             [InlineKeyboardButton(t("btn_confirm"), callback_data=CONFIRM_CB)],
             [InlineKeyboardButton(t("btn_back"), callback_data=f"{BACK_CB}start")],
+        ]
+    )
+
+
+def language_keyboard() -> InlineKeyboardMarkup:
+    """Keyboard for choosing the bot language."""
+    lang_labels = {"en": "🇬🇧 English", "ru": "🇷🇺 Русский"}
+    buttons = [
+        [
+            InlineKeyboardButton(
+                lang_labels.get(lang, lang.upper()),
+                callback_data=f"{LANG_CB}{lang}",
+            )
+        ]
+        for lang in available_languages()
+    ]
+    return InlineKeyboardMarkup(buttons)
+
+
+def generate_another_keyboard() -> InlineKeyboardMarkup:
+    """Keyboard shown after a config is generated, offering to create another."""
+    return InlineKeyboardMarkup(
+        [
+            [InlineKeyboardButton(t("btn_generate"), callback_data=GENERATE_ANOTHER_CB)],
         ]
     )

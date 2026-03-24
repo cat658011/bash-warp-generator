@@ -18,6 +18,9 @@
   "amnezia_deeplink": "🔗 <b>AmneziaVPN Deep Link</b>\nOpen the file and copy the <code>vpn://</code> link into AmneziaVPN.",
   "cancelled": "❌ Configuration cancelled.",
 
+  "lang_prompt": "🌐 <b>Choose language:</b>",
+  "lang_changed": "✅ Language changed to <b>English</b>.",
+
   "btn_generate": "🚀 Generate Config",
   "btn_status": "📊 WARP Status",
   "btn_help": "❓ Help",

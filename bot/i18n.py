@@ -3,6 +3,10 @@
 Language files live in ``configs/i18n/<code>.json`` (e.g. ``en.json``,
 ``ru.json``).  The active language is chosen via the ``BOT_LANG``
 environment variable (default: ``en``).
+
+For per-user language support in the Telegram bot, use
+``t_user(key, user_data, **kwargs)`` which checks ``user_data["lang"]``
+before falling back to the global language.
 """
 
 from __future__ import annotations
@@ -15,6 +19,29 @@ from typing import Any
 _LANG_DIR = Path(__file__).resolve().parent.parent / "configs" / "i18n"
 _strings: dict[str, str] = {}
 _current_lang: str = "en"
+_lang_cache: dict[str, dict[str, str]] = {}
+
+
+def _load_lang_file(lang: str) -> dict[str, str]:
+    """Load and cache a language file."""
+    if lang in _lang_cache:
+        return _lang_cache[lang]
+
+    path = _LANG_DIR / f"{lang}.json"
+    if not path.exists():
+        path = _LANG_DIR / "en.json"
+        # Cache under the original key so we don't try again,
+        # and also under 'en' for reuse.
+        with open(path, encoding="utf-8") as fh:
+            data = json.load(fh)
+        _lang_cache[lang] = data
+        _lang_cache["en"] = data
+        return data
+
+    with open(path, encoding="utf-8") as fh:
+        data = json.load(fh)
+    _lang_cache[lang] = data
+    return data
 
 
 def load_language(lang: str | None = None) -> None:
@@ -37,8 +64,7 @@ def load_language(lang: str | None = None) -> None:
         path = _LANG_DIR / "en.json"
         lang = "en"
 
-    with open(path, encoding="utf-8") as fh:
-        _strings = json.load(fh)
+    _strings = _load_lang_file(lang)
     _current_lang = lang
 
 
@@ -53,6 +79,26 @@ def t(key: str, **kwargs: Any) -> str:
     if not _strings:
         load_language()
     value = _strings.get(key, key)
+    if kwargs:
+        value = value.format(**kwargs)
+    return value
+
+
+def t_user(key: str, user_data: dict | None = None, **kwargs: Any) -> str:
+    """Return a translated string using the user's preferred language.
+
+    Falls back to the global language if no user preference is set.
+    """
+    lang = None
+    if user_data:
+        lang = user_data.get("lang")
+    if lang:
+        strings = _load_lang_file(lang)
+    else:
+        if not _strings:
+            load_language()
+        strings = _strings
+    value = strings.get(key, key)
     if kwargs:
         value = value.format(**kwargs)
     return value

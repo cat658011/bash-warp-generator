@@ -16,7 +16,7 @@ from telegram.ext import (
     filters,
 )
 
-from bot.i18n import t
+from bot.i18n import t, t_user, available_languages, load_language
 from core.config import BotConfigs
 from core.generators import (
     GENERATORS,
@@ -31,6 +31,8 @@ from bot.keyboards import (
     DNS_CB,
     FORMAT_CB,
     FORMAT_KEYS,
+    GENERATE_ANOTHER_CB,
+    LANG_CB,
     RELAY_CB,
     ROUTE_CB,
     SVC_CB,
@@ -38,6 +40,8 @@ from bot.keyboards import (
     confirm_keyboard,
     dns_keyboard,
     format_keyboard,
+    generate_another_keyboard,
+    language_keyboard,
     main_menu_keyboard,
     relay_keyboard,
     routing_keyboard,
@@ -115,6 +119,39 @@ async def help_handler(
     assert update.message is not None
     await update.message.reply_text(
         t("help"),
+        parse_mode="HTML",
+    )
+
+
+# ------------------------------------------------------------------
+# /lang — language selection
+# ------------------------------------------------------------------
+async def lang_handler(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
+    """Show the language picker."""
+    assert update.message is not None
+    await update.message.reply_text(
+        t("lang_prompt"),
+        parse_mode="HTML",
+        reply_markup=language_keyboard(),
+    )
+
+
+async def on_lang_select(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
+    """Handle language selection callback."""
+    query = update.callback_query
+    assert query is not None and query.data is not None and context.user_data is not None
+    await query.answer()
+
+    lang = query.data.removeprefix(LANG_CB)
+    context.user_data["lang"] = lang
+    load_language(lang)
+
+    await query.edit_message_text(
+        t("lang_changed"),
         parse_mode="HTML",
     )
 
@@ -353,7 +390,31 @@ async def _generate(
             parse_mode="HTML",
         )
 
-    return ConversationHandler.END
+    # Offer to generate another config
+    await query.message.reply_text(
+        t("btn_generate"),
+        reply_markup=generate_another_keyboard(),
+    )
+    return SELECT_FORMAT
+
+
+# ------------------------------------------------------------------
+# "Generate another" callback (re-enter the conversation)
+# ------------------------------------------------------------------
+async def on_generate_another(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> int:
+    """Re-enter the conversation from the generate-another button."""
+    query = update.callback_query
+    assert query is not None
+    await query.answer()
+
+    await query.edit_message_text(
+        t("step_format"),
+        parse_mode="HTML",
+        reply_markup=format_keyboard(),
+    )
+    return SELECT_FORMAT
 
 
 # ------------------------------------------------------------------
@@ -373,6 +434,8 @@ def setup_handlers(app: Application) -> None:  # type: ignore[type-arg]
     # Main menu / standalone handlers
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_handler))
+    app.add_handler(CommandHandler("lang", lang_handler))
+    app.add_handler(CallbackQueryHandler(on_lang_select, pattern=f"^{LANG_CB}"))
     app.add_handler(
         MessageHandler(filters.Regex(r"^📊"), warp_status)
     )
@@ -388,6 +451,7 @@ def setup_handlers(app: Application) -> None:  # type: ignore[type-arg]
         states={
             SELECT_FORMAT: [
                 CallbackQueryHandler(on_format, pattern=f"^{FORMAT_CB}"),
+                CallbackQueryHandler(on_generate_another, pattern=f"^{GENERATE_ANOTHER_CB}$"),
             ],
             SELECT_DNS: [
                 CallbackQueryHandler(on_dns, pattern=f"^{DNS_CB}"),

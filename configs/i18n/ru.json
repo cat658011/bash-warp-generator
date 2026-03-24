@@ -18,6 +18,9 @@
   "amnezia_deeplink": "🔗 <b>Ссылка AmneziaVPN</b>\nОткройте файл и скопируйте ссылку <code>vpn://</code> в AmneziaVPN.",
   "cancelled": "❌ Генерация отменена.",
 
+  "lang_prompt": "🌐 <b>Выберите язык:</b>",
+  "lang_changed": "✅ Язык изменён на <b>Русский</b>.",
+
   "btn_generate": "🚀 Генерация конфига",
   "btn_status": "📊 Статус WARP",
   "btn_help": "❓ Помощь",
