@@ -83,6 +83,11 @@ class TestAmneziaWG:
         deeplink = AmneziaWGGenerator().generate_deeplink(_PARAMS)
         assert deeplink.startswith("vpn://")
 
+    def test_deeplink_exceeds_telegram_message_limit(self) -> None:
+        """The deep-link is too long for a Telegram text message (4096 chars)."""
+        deeplink = AmneziaWGGenerator().generate_deeplink(_PARAMS)
+        assert len(deeplink) > 4096
+
 
 # ── Clash ─────────────────────────────────────────────────────────
 class TestClash:

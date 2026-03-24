@@ -230,11 +230,14 @@ async def _generate(
         parse_mode="Markdown",
     )
 
-    # AmneziaWG deep-link
+    # AmneziaWG deep-link (sent as a file – the link is too long for a message)
     if fmt == "amnezia" and isinstance(generator, AmneziaWGGenerator):
         deeplink = generator.generate_deeplink(params)
-        await query.message.reply_text(
-            f"\U0001f517 *AmneziaVPN Deep Link:*\n\n`{deeplink}`",
+        link_doc = BytesIO(deeplink.encode("utf-8"))
+        link_doc.name = "warp-amnezia-deeplink.txt"
+        await query.message.reply_document(
+            document=link_doc,
+            caption="\U0001f517 *AmneziaVPN Deep Link*\nOpen the file and copy the `vpn://` link into AmneziaVPN.",
             parse_mode="Markdown",
         )
 
