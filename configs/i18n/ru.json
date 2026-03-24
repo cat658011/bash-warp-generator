@@ -89,6 +89,8 @@
   "svc_spotify": "Spotify",
   "svc_netflix": "Netflix",
   "svc_openai": "OpenAI (ChatGPT)",
+  "svc_tiktok": "TikTok",
+  "svc_steam": "Steam",
 
   "web_lang_label": "Язык",
   "web_theme_light": "Светлая",
