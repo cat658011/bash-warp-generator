@@ -1,8 +1,8 @@
-"""Inline-keyboard builders for the Telegram bot."""
+"""Inline-keyboard and reply-keyboard builders for the Telegram bot."""
 
 from __future__ import annotations
 
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
 
 from core.config import BotConfigs
 
@@ -14,12 +14,25 @@ ROUTE_CB = "route:"
 SVC_CB = "svc:"
 SVC_DONE_CB = "svc:done"
 
+# Persistent reply-keyboard button labels
+BTN_GENERATE = "\U0001f680 Generate Config"
+BTN_STATUS = "\U0001f4ca WARP Status"
+BTN_HELP = "\u2753 Help"
+
 _FORMAT_LABELS: dict[str, str] = {
     "wireguard": "\U0001f512 WireGuard",
-    "amnezia": "\U0001f6e1 AmneziaWG",
+    "amnezia": "\U0001f6e1\ufe0f AmneziaWG",
     "clash": "\u2694\ufe0f Clash",
     "wiresock": "\U0001fa9f WireSock",
 }
+
+
+def main_menu_keyboard() -> ReplyKeyboardMarkup:
+    """Persistent reply-keyboard shown below the chat input."""
+    return ReplyKeyboardMarkup(
+        [[KeyboardButton(BTN_GENERATE)], [KeyboardButton(BTN_STATUS), KeyboardButton(BTN_HELP)]],
+        resize_keyboard=True,
+    )
 
 
 def format_keyboard() -> InlineKeyboardMarkup:

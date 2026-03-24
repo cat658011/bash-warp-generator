@@ -12,6 +12,8 @@ from telegram.ext import (
     CommandHandler,
     ContextTypes,
     ConversationHandler,
+    MessageHandler,
+    filters,
 )
 
 from core.config import BotConfigs
@@ -23,6 +25,9 @@ from core.generators import (
 from core.warp import register_warp
 
 from bot.keyboards import (
+    BTN_GENERATE,
+    BTN_HELP,
+    BTN_STATUS,
     DNS_CB,
     FORMAT_CB,
     RELAY_CB,
@@ -31,6 +36,7 @@ from bot.keyboards import (
     SVC_DONE_CB,
     dns_keyboard,
     format_keyboard,
+    main_menu_keyboard,
     relay_keyboard,
     routing_keyboard,
     services_keyboard,
@@ -41,28 +47,108 @@ logger = logging.getLogger(__name__)
 # Conversation states
 SELECT_FORMAT, SELECT_DNS, SELECT_RELAY, SELECT_ROUTING, SELECT_SERVICES = range(5)
 
+_WELCOME_TEXT = (
+    "\U0001f680 <b>WARP Config Generator</b>\n"
+    "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
+    "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n\n"
+    "Generate <b>Cloudflare WARP</b> VPN configs\n"
+    "in multiple formats with one tap.\n\n"
+    "\U0001f4cb <b>Supported formats:</b>\n"
+    "  \U0001f512 WireGuard\n"
+    "  \U0001f6e1\ufe0f AmneziaWG\n"
+    "  \u2694\ufe0f Clash / Clash Meta\n"
+    "  \U0001fa9f WireSock (Windows)\n\n"
+    "Use the menu below to get started \u2b07\ufe0f"
+)
+
+_HELP_TEXT = (
+    "\u2753 <b>Help &amp; Guides</b>\n"
+    "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
+    "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n\n"
+    "\U0001f4d6 <b>How to add a custom DNS server</b>\n"
+    "Open <code>configs/dns_servers.json</code> and add:\n"
+    "<pre>{\n"
+    '  "name": "My DNS",\n'
+    '  "servers": ["10.0.0.1", "10.0.0.2"]\n'
+    "}</pre>\n\n"
+    "\U0001f4d6 <b>How to add a relay endpoint</b>\n"
+    "Open <code>configs/relay_servers.json</code> and add:\n"
+    "<pre>{\n"
+    '  "name": "Custom Relay",\n'
+    '  "endpoint": "203.0.113.1:51820"\n'
+    "}</pre>\n\n"
+    "\U0001f4d6 <b>How to add a split-tunnel service</b>\n"
+    "Open <code>configs/routing_services.json</code> and add:\n"
+    "<pre>{\n"
+    '  "name": "My Service",\n'
+    '  "routes": ["203.0.113.0/24"]\n'
+    "}</pre>\n\n"
+    "\U0001f504 Restart the bot after editing config files.\n\n"
+    "\U0001f6e0\ufe0f <b>Commands:</b>\n"
+    "/start \u2014 show welcome &amp; menu\n"
+    "/cancel \u2014 cancel current generation"
+)
+
 
 def _configs(context: ContextTypes.DEFAULT_TYPE) -> BotConfigs:
     return context.bot_data["configs"]
 
 
 # ------------------------------------------------------------------
-# /start
+# /start  &  "🚀 Generate Config" button
 # ------------------------------------------------------------------
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Send welcome message and show the format picker."""
-    text = (
-        "\U0001f310 *WARP Config Generator*\n\n"
-        "Generate Cloudflare WARP VPN configurations in multiple formats.\n\n"
-        "Select the output format:"
-    )
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Send welcome message and show the persistent reply keyboard."""
     assert update.message is not None
     await update.message.reply_text(
-        text,
-        parse_mode="Markdown",
+        _WELCOME_TEXT,
+        parse_mode="HTML",
+        reply_markup=main_menu_keyboard(),
+    )
+
+
+async def generate_entry(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> int:
+    """Show the format picker (entry-point for the conversation)."""
+    assert update.message is not None
+    await update.message.reply_text(
+        "\U0001f4e6 <b>Step 1/4</b> \u2014 Choose output format:",
+        parse_mode="HTML",
         reply_markup=format_keyboard(),
     )
     return SELECT_FORMAT
+
+
+# ------------------------------------------------------------------
+# 📊 WARP Status
+# ------------------------------------------------------------------
+async def warp_status(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
+    """Send a link to the WARP status Telegram channel."""
+    assert update.message is not None
+    await update.message.reply_text(
+        "\U0001f4ca <b>WARP Status</b>\n\n"
+        "Check the current Cloudflare WARP service status:\n"
+        "\U0001f449 <a href=\"https://t.me/cfwarpstatus\">@cfwarpstatus</a>",
+        parse_mode="HTML",
+        disable_web_page_preview=True,
+    )
+
+
+# ------------------------------------------------------------------
+# ❓ Help
+# ------------------------------------------------------------------
+async def help_handler(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
+    """Display help text with configuration guides."""
+    assert update.message is not None
+    await update.message.reply_text(
+        _HELP_TEXT,
+        parse_mode="HTML",
+    )
 
 
 # ------------------------------------------------------------------
@@ -76,7 +162,8 @@ async def on_format(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     context.user_data["format"] = query.data.removeprefix(FORMAT_CB)
 
     await query.edit_message_text(
-        "\U0001f310 Select a DNS server:",
+        "\U0001f310 <b>Step 2/4</b> \u2014 Select a DNS server:",
+        parse_mode="HTML",
         reply_markup=dns_keyboard(_configs(context)),
     )
     return SELECT_DNS
@@ -93,7 +180,8 @@ async def on_dns(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     context.user_data["dns_idx"] = int(query.data.removeprefix(DNS_CB))
 
     await query.edit_message_text(
-        "\U0001f4e1 Select a relay server (endpoint):",
+        "\U0001f4e1 <b>Step 3/4</b> \u2014 Select a relay server (endpoint):",
+        parse_mode="HTML",
         reply_markup=relay_keyboard(_configs(context)),
     )
     return SELECT_RELAY
@@ -110,7 +198,8 @@ async def on_relay(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     context.user_data["relay_idx"] = int(query.data.removeprefix(RELAY_CB))
 
     await query.edit_message_text(
-        "\U0001f500 Select routing mode:",
+        "\U0001f500 <b>Step 4/4</b> \u2014 Select routing mode:",
+        parse_mode="HTML",
         reply_markup=routing_keyboard(),
     )
     return SELECT_ROUTING
@@ -135,7 +224,8 @@ async def on_routing(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
     await query.edit_message_text(
         "\U0001f500 Select services to route through WARP:\n"
-        "(tap to toggle, then press Done)",
+        "(tap to toggle, then press <b>Done</b>)",
+        parse_mode="HTML",
         reply_markup=services_keyboard(_configs(context), set()),
     )
     return SELECT_SERVICES
@@ -164,7 +254,8 @@ async def on_service_toggle(
 
     await query.edit_message_text(
         "\U0001f500 Select services to route through WARP:\n"
-        "(tap to toggle, then press Done)",
+        "(tap to toggle, then press <b>Done</b>)",
+        parse_mode="HTML",
         reply_markup=services_keyboard(_configs(context), selected),
     )
     return SELECT_SERVICES
@@ -227,8 +318,11 @@ async def _generate(
     assert query.message is not None
     await query.message.reply_document(
         document=doc,
-        caption=f"\u2705 WARP config generated!\n\U0001f4c4 Format: *{fmt.upper()}*",
-        parse_mode="Markdown",
+        caption=(
+            f"\u2705 <b>WARP config generated!</b>\n"
+            f"\U0001f4c4 Format: <b>{fmt.upper()}</b>"
+        ),
+        parse_mode="HTML",
     )
 
     # AmneziaWG deep-link (sent as a file – the link is too long for a message)
@@ -238,8 +332,11 @@ async def _generate(
         link_doc.name = "warp-amnezia-deeplink.txt"
         await query.message.reply_document(
             document=link_doc,
-            caption="\U0001f517 *AmneziaVPN Deep Link*\nOpen the file and copy the `vpn://` link into AmneziaVPN.",
-            parse_mode="Markdown",
+            caption=(
+                "\U0001f517 <b>AmneziaVPN Deep Link</b>\n"
+                "Open the file and copy the <code>vpn://</code> link into AmneziaVPN."
+            ),
+            parse_mode="HTML",
         )
 
     return ConversationHandler.END
@@ -258,9 +355,22 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 # Handler registration
 # ------------------------------------------------------------------
 def setup_handlers(app: Application) -> None:  # type: ignore[type-arg]
-    """Register the conversation handler on *app*."""
+    """Register all handlers on *app*."""
+    # Main menu / standalone handlers
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("help", help_handler))
+    app.add_handler(
+        MessageHandler(filters.Text([BTN_STATUS]), warp_status)
+    )
+    app.add_handler(
+        MessageHandler(filters.Text([BTN_HELP]), help_handler)
+    )
+
+    # Config-generation conversation
     conv = ConversationHandler(
-        entry_points=[CommandHandler("start", start)],
+        entry_points=[
+            MessageHandler(filters.Text([BTN_GENERATE]), generate_entry),
+        ],
         states={
             SELECT_FORMAT: [
                 CallbackQueryHandler(on_format, pattern=f"^{FORMAT_CB}"),
