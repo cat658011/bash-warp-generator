@@ -38,5 +38,21 @@
 
   "btn_done": "✔️ Done",
   "btn_confirm": "✅ Confirm",
-  "btn_back": "◀️ Back"
+  "btn_back": "◀️ Back",
+
+  "web_title": "WARP Generator",
+  "web_subtitle": "Create a Cloudflare WARP config in a few clicks",
+  "web_step_format": "Config format",
+  "web_step_dns": "DNS server",
+  "web_step_relay": "Endpoint",
+  "web_step_routing": "Routing",
+  "web_hint_dns": "Alternative DNS servers may help bypass blocks in your region",
+  "web_hint_relay": "Alternative endpoints may improve connection speed",
+  "web_hint_routing": "Full tunnel routes all traffic through VPN. Split routes only selected services",
+  "web_route_full": "🌍 Full tunnel",
+  "web_route_split": "🔀 Split tunnel",
+  "web_btn_generate": "⬇️ Generate & Download",
+  "web_footer_status": "📊 WARP Status",
+  "web_footer_github": "⭐ GitHub",
+  "web_error_warp": "WARP registration failed. Cloudflare API may be blocked in your region. Try running on a VPS or cloud server."
 }

@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>WARP Генератор конфигов</title>
-  <meta name="description" content="Генерация конфигов Cloudflare WARP VPN в форматах WireGuard, AmneziaWG, Clash и WireSock.">
+  <title><%= t.web_title %></title>
+  <meta name="description" content="<%= t.web_subtitle %>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -20,6 +20,8 @@
       --accent-glow: rgba(99, 102, 241, 0.35);
       --green: #10b981;
       --green-glow: rgba(16, 185, 129, 0.25);
+      --orange: #f97316;
+      --pink: #ec4899;
       --text: #f1f5f9;
       --text-secondary: #94a3b8;
       --text-dim: #64748b;
@@ -81,7 +83,6 @@
       66% { transform: translate(-20px, 15px) scale(0.97); }
     }
 
-    /* ── Grid noise overlay ──────────────────────────────── */
     .bg-scene::after {
       content: '';
       position: absolute; inset: 0;
@@ -96,26 +97,26 @@
       padding: 2.5rem 1rem 3rem;
       min-height: 100vh;
     }
-    .container { width: 100%; max-width: 620px; }
+    .container { width: 100%; max-width: 640px; }
 
     /* ── Header ──────────────────────────────────────────── */
     .header { text-align: center; margin-bottom: 2.5rem; }
     .logo {
       display: inline-flex; align-items: center; justify-content: center;
-      width: 64px; height: 64px;
+      width: 72px; height: 72px;
       background: linear-gradient(135deg, var(--accent), #a78bfa);
-      border-radius: 20px;
-      font-size: 1.8rem;
-      margin-bottom: 1rem;
+      border-radius: 22px;
+      font-size: 2rem;
+      margin-bottom: 1.2rem;
       box-shadow: 0 8px 32px var(--accent-glow);
     }
     .header h1 {
-      font-size: 2rem; font-weight: 800;
+      font-size: 2.2rem; font-weight: 800;
       background: linear-gradient(135deg, #f1f5f9, #94a3b8);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text;
       letter-spacing: -0.02em;
-      margin-bottom: .35rem;
+      margin-bottom: .4rem;
     }
     .header p {
       color: var(--text-dim); font-size: .95rem; font-weight: 400;
@@ -152,51 +153,6 @@
     .card-header h2 {
       font-size: 1rem; font-weight: 600;
       color: var(--text);
-    }
-
-    /* ── Select / dropdown ───────────────────────────────── */
-    .select-wrap {
-      position: relative;
-      margin-bottom: .5rem;
-    }
-    .select-wrap::after {
-      content: '';
-      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
-      width: 0; height: 0;
-      border-left: 5px solid transparent;
-      border-right: 5px solid transparent;
-      border-top: 5px solid var(--text-dim);
-      pointer-events: none;
-    }
-    .select-wrap select {
-      width: 100%;
-      appearance: none; -webkit-appearance: none;
-      padding: .75rem 2.5rem .75rem 1rem;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      color: var(--text);
-      font-family: inherit;
-      font-size: .9rem;
-      cursor: pointer;
-      transition: border-color .2s, box-shadow .2s, background .2s;
-    }
-    .select-wrap select:hover {
-      background: var(--surface-hover);
-      border-color: rgba(99,102,241,.25);
-    }
-    .select-wrap select:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(99,102,241,.12);
-    }
-    .select-wrap select option {
-      background: #1e293b; color: var(--text);
-    }
-
-    .hint {
-      font-size: .78rem; color: var(--text-dim);
-      line-height: 1.5; margin-top: .4rem;
     }
 
     /* ── Format cards grid ───────────────────────────────── */
@@ -262,6 +218,51 @@
       content: '✓'; color: #fff; font-weight: 700;
     }
 
+    /* ── Select / dropdown ───────────────────────────────── */
+    .select-wrap {
+      position: relative;
+      margin-bottom: .5rem;
+    }
+    .select-wrap::after {
+      content: '';
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      width: 0; height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 5px solid var(--text-dim);
+      pointer-events: none;
+    }
+    .select-wrap select {
+      width: 100%;
+      appearance: none; -webkit-appearance: none;
+      padding: .75rem 2.5rem .75rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: inherit;
+      font-size: .9rem;
+      cursor: pointer;
+      transition: border-color .2s, box-shadow .2s, background .2s;
+    }
+    .select-wrap select:hover {
+      background: var(--surface-hover);
+      border-color: rgba(99,102,241,.25);
+    }
+    .select-wrap select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(99,102,241,.12);
+    }
+    .select-wrap select option {
+      background: #1e293b; color: var(--text);
+    }
+
+    .hint {
+      font-size: .78rem; color: var(--text-dim);
+      line-height: 1.5; margin-top: .4rem;
+    }
+
     /* ── Routing toggle ──────────────────────────────────── */
     .routing-toggle {
       display: flex; gap: .5rem;
@@ -286,9 +287,6 @@
       color: var(--text);
     }
     .routing-toggle input { display: none; }
-    .routing-toggle input:checked + span {
-      /* handled via JS class */
-    }
     .routing-toggle label.active {
       background: linear-gradient(135deg, var(--accent), var(--accent-light));
       color: #fff;
@@ -433,8 +431,8 @@
     <div class="container">
       <div class="header">
         <div class="logo">🚀</div>
-        <h1>WARP Генератор</h1>
-        <p>Создайте конфиг Cloudflare WARP за пару кликов</p>
+        <h1><%= t.web_title %></h1>
+        <p><%= t.web_subtitle %></p>
       </div>
 
       <form action="/generate" method="post" id="gen-form">
@@ -443,7 +441,7 @@
         <div class="card">
           <div class="card-header">
             <span class="step-num">1</span>
-            <h2>Формат конфига</h2>
+            <h2><%= t.web_step_format %></h2>
           </div>
           <div class="format-grid" id="format-grid">
             <% var icons = { wireguard: '🔐', amnezia: '🛡️', clash: '⚔️', wiresock: '🪟' }; %>
@@ -463,7 +461,7 @@
         <div class="card">
           <div class="card-header">
             <span class="step-num">2</span>
-            <h2>DNS-сервер</h2>
+            <h2><%= t.web_step_dns %></h2>
           </div>
           <div class="select-wrap">
             <select name="dns">
@@ -472,14 +470,14 @@
               <% }); %>
             </select>
           </div>
-          <p class="hint">Альтернативные DNS могут помочь обойти блокировки в вашем регионе</p>
+          <p class="hint"><%= t.web_hint_dns %></p>
         </div>
 
         <!-- Step 3: Relay -->
         <div class="card">
           <div class="card-header">
             <span class="step-num">3</span>
-            <h2>Эндпоинт</h2>
+            <h2><%= t.web_step_relay %></h2>
           </div>
           <div class="select-wrap">
             <select name="relay">
@@ -488,20 +486,20 @@
               <% }); %>
             </select>
           </div>
-          <p class="hint">Альтернативные эндпоинты могут улучшить скорость подключения</p>
+          <p class="hint"><%= t.web_hint_relay %></p>
         </div>
 
         <!-- Step 4: Routing -->
         <div class="card">
           <div class="card-header">
             <span class="step-num">4</span>
-            <h2>Маршрутизация</h2>
+            <h2><%= t.web_step_routing %></h2>
           </div>
           <div class="routing-toggle" id="routing-toggle">
-            <label class="active"><input type="radio" name="routing" value="full" checked><span>🌍 Весь трафик</span></label>
-            <label><input type="radio" name="routing" value="split"><span>🔀 Раздельный</span></label>
+            <label class="active"><input type="radio" name="routing" value="full" checked><span><%= t.web_route_full %></span></label>
+            <label><input type="radio" name="routing" value="split"><span><%= t.web_route_split %></span></label>
           </div>
-          <p class="hint">Весь трафик — всё через VPN. Раздельный — только выбранные сервисы</p>
+          <p class="hint"><%= t.web_hint_routing %></p>
           <div class="services" id="services">
             <div class="svc-grid">
               <% routingServices.forEach(function(svc, i) { %>
@@ -514,15 +512,15 @@
         </div>
 
         <button type="submit" class="btn-generate" id="btn-generate">
-          <span class="btn-text">⬇️ Сгенерировать и скачать</span>
+          <span class="btn-text"><%= t.web_btn_generate %></span>
           <span class="spinner"></span>
         </button>
       </form>
 
       <div class="footer">
-        <a href="https://t.me/cfwarpstatus" target="_blank" rel="noopener">📊 Статус WARP</a>
+        <a href="https://t.me/cfwarpstatus" target="_blank" rel="noopener"><%= t.web_footer_status %></a>
         <span class="dot">·</span>
-        <a href="https://github.com/cat658011/bash-warp-generator" target="_blank" rel="noopener">⭐ GitHub</a>
+        <a href="https://github.com/cat658011/bash-warp-generator" target="_blank" rel="noopener"><%= t.web_footer_github %></a>
       </div>
     </div>
   </div>

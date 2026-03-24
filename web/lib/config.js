@@ -18,4 +18,20 @@ function loadConfigs() {
   };
 }
 
-module.exports = { loadConfigs };
+function loadWarpParams() {
+  return loadJson('warp_params.json');
+}
+
+function loadI18n(lang) {
+  const code = lang || process.env.BOT_LANG || 'ru';
+  const filePath = path.join(CONFIGS_DIR, 'i18n', `${code}.json`);
+  if (fs.existsSync(filePath)) {
+    return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+  }
+  // Fallback to Russian
+  return JSON.parse(
+    fs.readFileSync(path.join(CONFIGS_DIR, 'i18n', 'ru.json'), 'utf-8'),
+  );
+}
+
+module.exports = { loadConfigs, loadWarpParams, loadI18n };

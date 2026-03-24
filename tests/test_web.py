@@ -50,7 +50,7 @@ def test_node_server_index() -> None:
             assert resp.status == 200
             html = resp.read().decode()
             assert "<form" in html
-            assert "Генератор конфигов" in html
+            assert "Генератор" in html
     finally:
         proc.terminate()
         proc.wait()

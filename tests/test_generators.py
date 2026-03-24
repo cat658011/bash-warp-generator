@@ -83,10 +83,14 @@ class TestAmneziaWG:
         deeplink = AmneziaWGGenerator().generate_deeplink(_PARAMS)
         assert deeplink.startswith("vpn://")
 
-    def test_deeplink_exceeds_telegram_message_limit(self) -> None:
-        """The deep-link is too long for a Telegram text message (4096 chars)."""
+    def test_deeplink_is_valid_base64(self) -> None:
+        """The deep-link contains valid base64-encoded JSON."""
         deeplink = AmneziaWGGenerator().generate_deeplink(_PARAMS)
-        assert len(deeplink) > 4096
+        assert deeplink.startswith("vpn://")
+        import base64, json
+        payload = base64.b64decode(deeplink[len("vpn://"):])
+        data = json.loads(payload)
+        assert "containers" in data
 
 
 # ── Clash ─────────────────────────────────────────────────────────

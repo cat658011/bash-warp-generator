@@ -56,7 +56,7 @@ def test_all_keys_present_in_both_languages() -> None:
     import json
     from pathlib import Path
 
-    lang_dir = Path(__file__).resolve().parent.parent / "bot" / "lang"
+    lang_dir = Path(__file__).resolve().parent.parent / "configs" / "i18n"
     with open(lang_dir / "en.json", encoding="utf-8") as f:
         en_keys = set(json.load(f).keys())
     with open(lang_dir / "ru.json", encoding="utf-8") as f:

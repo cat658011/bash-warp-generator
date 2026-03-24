@@ -38,5 +38,21 @@
 
   "btn_done": "✔️ Готово",
   "btn_confirm": "✅ Подтвердить",
-  "btn_back": "◀️ Назад"
+  "btn_back": "◀️ Назад",
+
+  "web_title": "WARP Генератор",
+  "web_subtitle": "Создайте конфиг Cloudflare WARP за пару кликов",
+  "web_step_format": "Формат конфига",
+  "web_step_dns": "DNS-сервер",
+  "web_step_relay": "Эндпоинт",
+  "web_step_routing": "Маршрутизация",
+  "web_hint_dns": "Альтернативные DNS могут помочь обойти блокировки в вашем регионе",
+  "web_hint_relay": "Альтернативные эндпоинты могут улучшить скорость подключения",
+  "web_hint_routing": "Весь трафик — всё через VPN. Раздельный — только выбранные сервисы",
+  "web_route_full": "🌍 Весь трафик",
+  "web_route_split": "🔀 Раздельный",
+  "web_btn_generate": "⬇️ Сгенерировать и скачать",
+  "web_footer_status": "📊 Статус WARP",
+  "web_footer_github": "⭐ GitHub",
+  "web_error_warp": "Ошибка регистрации WARP. API Cloudflare может быть заблокирован в вашем регионе. Попробуйте запустить на VPS или облачном сервере."
 }

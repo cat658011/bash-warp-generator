@@ -2,7 +2,7 @@
 
 const path = require('node:path');
 const express = require('express');
-const { loadConfigs } = require('./lib/config');
+const { loadConfigs, loadI18n } = require('./lib/config');
 const { registerWarp } = require('./lib/warp');
 const { GENERATORS, FORMAT_LABELS } = require('./lib/generators');
 
@@ -16,6 +16,7 @@ app.use(express.urlencoded({ extended: false }));
 
 // Load configs once at startup
 const configs = loadConfigs();
+const i18n = loadI18n();
 
 // ── Routes ───────────────────────────────────────────────────────────────────
 
@@ -26,6 +27,7 @@ app.get('/', (_req, res) => {
     dnsServers: configs.dnsServers,
     relayServers: configs.relayServers,
     routingServices: configs.routingServices,
+    t: i18n,
   });
 });
 
@@ -63,10 +65,7 @@ app.post('/generate', async (req, res) => {
     account = await registerWarp();
   } catch (err) {
     console.error('WARP registration failed:', err);
-    return res.status(502).send(
-      'Ошибка регистрации WARP. API Cloudflare может быть заблокирован в вашем регионе. ' +
-        'Попробуйте запустить на VPS или облачном сервере.',
-    );
+    return res.status(502).send(i18n.web_error_warp);
   }
 
   const params = {

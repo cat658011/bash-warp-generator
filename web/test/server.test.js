@@ -64,7 +64,7 @@ describe('GET /', () => {
 
   it('displays Russian text', async () => {
     const res = await request('GET', '/');
-    assert.ok(res.body.includes('Генератор конфигов'));
+    assert.ok(res.body.includes('Генератор'));
     assert.ok(res.body.includes('Сгенерировать'));
   });
 });

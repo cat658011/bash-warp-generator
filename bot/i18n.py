@@ -1,8 +1,8 @@
 """Internationalisation helper for the Telegram bot.
 
-Language files live in ``bot/lang/<code>.json`` (e.g. ``en.json``, ``ru.json``).
-The active language is chosen via the ``BOT_LANG`` environment variable
-(default: ``en``).
+Language files live in ``configs/i18n/<code>.json`` (e.g. ``en.json``,
+``ru.json``).  The active language is chosen via the ``BOT_LANG``
+environment variable (default: ``en``).
 """
 
 from __future__ import annotations
@@ -12,7 +12,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-_LANG_DIR = Path(__file__).resolve().parent / "lang"
+_LANG_DIR = Path(__file__).resolve().parent.parent / "configs" / "i18n"
 _strings: dict[str, str] = {}
 _current_lang: str = "en"
 

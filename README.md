@@ -120,6 +120,9 @@ curl http://localhost:3000/health
 | `dns_servers.json` | DNS-серверы (имя + адреса) |
 | `relay_servers.json` | Альтернативные эндпоинты Cloudflare WARP |
 | `routing_services.json` | IP-диапазоны сервисов для раздельного туннеля |
+| `warp_params.json` | Параметры AmneziaWG (Jc, Jmin, …), MTU, I1 payloads |
+| `i18n/ru.json` | Русская локализация (бот + веб) |
+| `i18n/en.json` | Английская локализация (бот + веб) |
 
 ---
 
@@ -231,9 +234,7 @@ dig +short yandex.ru
 
 ### 📦 Как изменить названия протоколов (форматов)
 
-#### В Telegram-боте
-
-Отредактируйте файл `bot/lang/ru.json`:
+Отредактируйте файл `configs/i18n/ru.json` (или `en.json` для английского):
 
 ```json
 {
@@ -249,30 +250,18 @@ dig +short yandex.ru
 ```
 
 Измените значения `fmt_*` и `fmt_*_desc` на нужные. Ключи менять нельзя.
-
-#### В веб-интерфейсе
-
-Отредактируйте `web/lib/generators.js`, секция `FORMAT_LABELS`:
-
-```javascript
-const FORMAT_LABELS = {
-  wireguard: { name: 'WireGuard', desc: 'Стандартный WireGuard конфиг (.conf)' },
-  amnezia: { name: 'AmneziaWG', desc: 'AmneziaWG с защитой от DPI' },
-  clash: { name: 'Clash', desc: 'Конфиг прокси Clash / Clash Meta' },
-  wiresock: { name: 'WireSock', desc: 'WireSock для Windows' },
-};
-```
+Названия используются **и в боте, и в веб-интерфейсе** — один файл на все фронтенды.
 
 ---
 
 ## 🌍 Локализация
 
-Бот поддерживает несколько языков через JSON-файлы в `bot/lang/`.
+Все текстовые строки (бот + веб) хранятся в `configs/i18n/`.
 
 | Файл | Язык |
 |------|------|
-| `bot/lang/ru.json` | Русский (по умолчанию) |
-| `bot/lang/en.json` | Английский |
+| `configs/i18n/ru.json` | Русский (по умолчанию) |
+| `configs/i18n/en.json` | Английский |
 
 Язык задаётся через переменную `BOT_LANG`:
 
@@ -283,12 +272,43 @@ python -m bot
 
 ### Как добавить новый язык
 
-1. Скопируйте `bot/lang/ru.json` в `bot/lang/<код>.json` (например, `uk.json`)
+1. Скопируйте `configs/i18n/ru.json` в `configs/i18n/<код>.json` (например, `uk.json`)
 2. Переведите все значения (ключи менять нельзя)
 3. Установите `BOT_LANG=uk` и перезапустите бота
 
-Все строки сообщений, надписи на кнопках, описания шагов и UI-текст определены
-в файле языка. Изменений в коде не требуется.
+Все строки сообщений, надписи на кнопках, описания форматов и весь UI-текст
+определены в файле языка. Один файл используется **и ботом, и веб-интерфейсом**
+— изменений в коде не требуется.
+
+---
+
+## ⚙️ Параметры WARP (AmneziaWG)
+
+Параметры обфускации AmneziaWG и payload I1 хранятся в `configs/warp_params.json`:
+
+```json
+{
+  "amnezia": {
+    "Jc": 120, "Jmin": 23, "Jmax": 911,
+    "S1": 0, "S2": 0,
+    "H1": 1, "H2": 2, "H3": 3, "H4": 4
+  },
+  "mtu": 1280,
+  "i1_payloads": [
+    "<b 0xc200...>",
+    "<b 0xa100...>",
+    "<b 0xd300...>"
+  ]
+}
+```
+
+| Поле | Описание |
+|------|----------|
+| `amnezia` | Параметры обфускации (Jc, Jmin, Jmax, S1, S2, H1–H4) |
+| `mtu` | MTU по умолчанию для всех форматов |
+| `i1_payloads` | Массив I1-payload'ов — при каждой генерации выбирается **случайный** |
+
+> 💡 Добавьте свои I1-payload'ы в массив — они будут ротироваться автоматически.
 
 ---
 
@@ -305,25 +325,26 @@ python -m bot
 │   ├── __main__.py          # Точка входа (python -m bot)
 │   ├── handlers.py          # Логика диалога + обработчики меню
 │   ├── keyboards.py         # Построение inline- и reply-клавиатур
-│   ├── i18n.py              # Загрузчик локализации
-│   └── lang/                # Языковые файлы
-│       ├── en.json          # Английский
-│       └── ru.json          # Русский
+│   └── i18n.py              # Загрузчик локализации (→ configs/i18n/)
 ├── web/                     # Веб-интерфейс (Node.js / Express)
 │   ├── package.json         # Зависимости Node.js
 │   ├── server.js            # Express-приложение
 │   ├── lib/
-│   │   ├── config.js        # Загрузка JSON-конфигов
-│   │   ├── generators.js    # Генераторы конфигов
+│   │   ├── config.js        # Загрузка JSON-конфигов + i18n + warp_params
+│   │   ├── generators.js    # Генераторы конфигов (из warp_params.json)
 │   │   └── warp.js          # Клиент API WARP (X25519 + регистрация)
 │   ├── views/
-│   │   └── index.ejs        # HTML-шаблон (EJS)
+│   │   └── index.ejs        # HTML-шаблон (EJS, i18n-строки)
 │   └── test/
 │       └── server.test.js   # Тесты веб-сервера
 ├── configs/
+│   ├── i18n/                # Локализация (бот + веб)
+│   │   ├── ru.json          # Русский
+│   │   └── en.json          # Английский
 │   ├── dns_servers.json     # DNS-серверы
 │   ├── relay_servers.json   # Эндпоинты Cloudflare WARP
-│   └── routing_services.json # IP-маршруты сервисов
+│   ├── routing_services.json # IP-маршруты сервисов
+│   └── warp_params.json     # Параметры AmneziaWG + I1 payloads
 ├── tests/
 │   ├── test_config.py       # Тесты конфигурации
 │   ├── test_generators.py   # Тесты генераторов
@@ -337,11 +358,8 @@ python -m bot
 ```
 
 Пакет `core/` содержит всю логику генерации WARP и **не зависит** от Telegram.
-Его может использовать любой фронтенд — бот, веб-приложение, CLI и т.д.
-
-Пакет `web/` — полностью автономный Node.js-проект со своими зависимостями
-и генераторами. Он читает конфиги из `configs/` и самостоятельно выполняет
-регистрацию WARP и генерацию конфигов.
+Оба фронтенда (бот и веб) читают параметры из общих конфигов в `configs/`:
+локализацию из `configs/i18n/`, параметры обфускации из `configs/warp_params.json`.
 
 ---
 
@@ -391,7 +409,7 @@ bash warp_generator.sh
 | Бот не отвечает | Убедитесь, что `BOT_TOKEN` задан правильно |
 | Ошибка регистрации WARP | API Cloudflare может быть заблокирован; запустите на VPS |
 | Ошибки импорта (Python) | Выполните `pip install -r requirements.txt` |
-| Язык не загружается | Проверьте, что `BOT_LANG` соответствует файлу в `bot/lang/` |
+| Язык не загружается | Проверьте, что `BOT_LANG` соответствует файлу в `configs/i18n/` |
 | Веб-сервер не запускается | Выполните `cd web && npm install` |
 | Порт занят | Измените порт: `PORT=8080 node web/server.js` |
 
