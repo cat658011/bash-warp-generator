@@ -1,26 +1,46 @@
 [
   {
-    "name": "Default (Cloudflare)",
-    "endpoint": "162.159.192.1:500"
+    "name": "Cloudflare",
+    "endpoint": "engage.cloudflareclient.com:4500"
   },
   {
-    "name": "Cloudflare #2",
-    "endpoint": "162.159.192.1:2408"
+    "name": "Cloudflare alternative",
+    "endpoint": "engage.cloudflareclient.com:2408"
   },
   {
-    "name": "Cloudflare #3",
-    "endpoint": "162.159.193.1:500"
+    "name": "Finland 1 (Финляндия 1)",
+    "endpoint": "fi.tribukvy.ltd:4500"
   },
   {
-    "name": "Cloudflare #4",
-    "endpoint": "162.159.195.1:500"
+    "name": "Finland 2 (Финляндия 2)",
+    "endpoint": "fi0.tribukvy.ltd:4500"
   },
   {
-    "name": "Cloudflare #5",
-    "endpoint": "162.159.192.1:1701"
+    "name": "Netherlands 1 (Нидерланды 1)",
+    "endpoint": "nl.tribukvy.ltd:4500"
   },
   {
-    "name": "Cloudflare IPv6",
-    "endpoint": "[2606:4700:d0::a29f:c001]:500"
+    "name": "Netherlands 2 (Нидерланды 2)",
+    "endpoint": "nl0.tribukvy.ltd:4500"
+  },
+  {
+    "name": "Poland 1 (Польша 1)",
+    "endpoint": "pl.tribukvy.ltd:4500"
+  },
+  {
+    "name": "Poland 2 (Польша 2)",
+    "endpoint": "pl0.tribukvy.ltd:4500"
+  },
+  {
+    "name": "Germany 1 (Германия 1)",
+    "endpoint": "de.tribukvy.ltd:4500"
+  },
+  {
+    "name": "Estonia 1 (Эстония 1)",
+    "endpoint": "ee.tribukvy.ltd:4500"
+  },
+  {
+    "name": "Russia 1 (Россия 1)",
+    "endpoint": "ru.tribukvy.ltd:4500"
   }
 ]
