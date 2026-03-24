@@ -27,6 +27,18 @@ function resolveNames(items, prefix, i18n) {
   }));
 }
 
+// Helper: resolve format labels with localized descriptions
+function resolveFormatLabels(formatLabels, i18n) {
+  const resolved = {};
+  for (const [key, val] of Object.entries(formatLabels)) {
+    resolved[key] = {
+      name: val.name,
+      desc: i18n[val.descKey] || val.descKey,
+    };
+  }
+  return resolved;
+}
+
 // ── Routes ───────────────────────────────────────────────────────────────────
 
 app.get('/', (req, res) => {
@@ -35,7 +47,7 @@ app.get('/', (req, res) => {
 
   res.render('index', {
     formats: Object.keys(GENERATORS),
-    formatLabels: FORMAT_LABELS,
+    formatLabels: resolveFormatLabels(FORMAT_LABELS, i18n),
     dnsServers: resolveNames(configs.dnsServers, 'dns_', i18n),
     relayServers: resolveNames(configs.relayServers, 'relay_', i18n),
     routingServices: resolveNames(configs.routingServices, 'svc_', i18n),

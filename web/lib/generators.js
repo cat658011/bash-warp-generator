@@ -1,6 +1,6 @@
 'use strict';
 
-const { loadWarpParams, loadI18n } = require('./config');
+const { loadWarpParams } = require('./config');
 
 // ---------------------------------------------------------------------------
 // Load AmneziaWG parameters from shared config
@@ -228,13 +228,12 @@ const GENERATORS = {
   wiresock: generateWireSock,
 };
 
-const _i18n = loadI18n();
-
+// Static format metadata. Descriptions are resolved from i18n at render time.
 const FORMAT_LABELS = {
-  wireguard: { name: 'WireGuard', desc: _i18n.fmt_wireguard_desc || 'Standard WireGuard config (.conf)' },
-  amnezia: { name: 'AmneziaWG', desc: _i18n.fmt_amnezia_desc || 'AmneziaWG with DPI protection' },
-  clash: { name: 'Clash', desc: _i18n.fmt_clash_desc || 'Clash / Clash Meta proxy config' },
-  wiresock: { name: 'WireSock', desc: _i18n.fmt_wiresock_desc || 'WireSock for Windows' },
+  wireguard: { name: 'WireGuard', descKey: 'fmt_wireguard_desc' },
+  amnezia: { name: 'AmneziaWG', descKey: 'fmt_amnezia_desc' },
+  clash: { name: 'Clash', descKey: 'fmt_clash_desc' },
+  wiresock: { name: 'WireSock', descKey: 'fmt_wiresock_desc' },
 };
 
 module.exports = { GENERATORS, FORMAT_LABELS, generateAmneziaDeeplink };
