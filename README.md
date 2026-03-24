@@ -1,122 +1,135 @@
-# Сгенерируйте конфиг Cloudflare WARP для AmneziaVPN
-Этот bash скрипт сгенерирует конфиг Cloudflare WARP для AmneziaVPN.
+# WARP Config Generator — Telegram Bot
 
-Не стоит выполнять его локально, так как РКН заблокировал запросы для получения конфига. Вместо этого лучше выполнять на удалённых серверах.
+Telegram bot that generates **Cloudflare WARP** VPN configurations in multiple formats.
 
-## Вариант 1: Aeza Terminator
-1. Заходим на https://terminator.aeza.net
-2. Выбираем **`debian`**
-3. Вставляем команду (Shift + Insert):
+## Supported Formats
+
+| Format | Description |
+|--------|-------------|
+| **WireGuard** | Standard `.conf` for any WireGuard client |
+| **AmneziaWG** | `.conf` with obfuscation parameters + `vpn://` deep-link for AmneziaVPN |
+| **Clash** | YAML proxy config for Clash / Clash Meta |
+| **WireSock** | `.conf` tailored for WireSock on Windows |
+
+## Features
+
+- **DNS server selection** — choose from Cloudflare, Google, Quad9, AdGuard, OpenDNS, and more (see `configs/dns_servers.json`)
+- **Relay / endpoint selection** — pick an alternative Cloudflare edge endpoint (see `configs/relay_servers.json`)
+- **Routing modes** — full tunnel (all traffic) or split tunnel with per-service routing (see `configs/routing_services.json`)
+- **Fully configurable** — all options are stored in JSON files under `configs/` and can be extended without code changes
+
+## Quick Start
+
+### 1. Create a bot
+
+Talk to [@BotFather](https://t.me/BotFather) on Telegram and create a new bot.  
+Copy the API token.
+
+### 2. Clone & install
+
 ```bash
-bash <(wget --inet4-only -qO- https://raw.githubusercontent.com/ImMALWARE/bash-warp-generator/main/warp_generator.sh)
+git clone https://github.com/cat658011/bash-warp-generator.git
+cd bash-warp-generator
+pip install -r requirements.txt
 ```
-4. После того, как конфиг сгенерируется, копируем его, либо скачиваем файлом по ссылке и импортируем в AmneziaVPN!👍
 
-## Вариант 2: pad.ws
-1. Заходим на https://pad.ws
-2. Continue with Google
-3. В окне Dashboard, если будет кнопка Start, нажмите на неё
-4. Terminal
-5. Вставляем команду (Shift + Insert):
+### 3. Run
+
 ```bash
-bash <(wget --inet4-only -qO- https://raw.githubusercontent.com/ImMALWARE/bash-warp-generator/main/warp_generator.sh)
+export BOT_TOKEN="your-telegram-bot-token"
+python -m bot
 ```
-6. После того, как конфиг сгенерируется, копируем его, либо скачиваем файлом по ссылке и импортируем в AmneziaVPN!👍
 
-## Вариант 3: Replit
-1. Тыкаем сюда: [![Run on Repl.it](https://repl.it/badge/github/replit/upm)](https://replit.com/new/github/ImMALWARE/bash-warp-generator)
-2. Создаём аккаунт
-3. Нажимаем кнопку **`Run`** вверху
-4. После того, как конфиг сгенерируется, копируем его, либо скачиваем файлом по ссылке и импортируем в AmneziaVPN!👍
+The bot will start polling for updates. Send `/start` in your Telegram chat to begin.
 
-## Вариант 4: GitHub Codespaces
-1. Переходим по ссылке: https://github.com/ImMALWARE/bash-warp-generator/codespaces
-2. Вводим учётные данные GitHub (потребуется авторизация, если вы не вошли в аккаунт)
-3. Нажимаем **`Create codespace on main`**
-4. Дожидаемся, пока среда загрузится (может занять 10–30 секунд)
-5. В терминале (внизу экрана) вводим команду (Shift + Insert):
+## Configuration Files
+
+All selectable options live in `configs/`:
+
+| File | Purpose |
+|------|---------|
+| `dns_servers.json` | DNS resolver options (name + server addresses) |
+| `relay_servers.json` | Cloudflare WARP endpoint alternatives |
+| `routing_services.json` | Service IP ranges for split-tunnel routing |
+
+Edit these files to add, remove, or modify the available options. No code changes required.
+
+### Example: adding a custom DNS server
+
+```json
+{
+  "name": "My DNS",
+  "servers": ["10.0.0.1", "10.0.0.2"]
+}
+```
+
+Add the object to the array in `configs/dns_servers.json` and restart the bot.
+
+### Example: adding a custom relay endpoint
+
+```json
+{
+  "name": "Custom Relay",
+  "endpoint": "203.0.113.1:51820"
+}
+```
+
+### Example: adding a routable service
+
+```json
+{
+  "name": "My Service",
+  "routes": ["203.0.113.0/24", "198.51.100.0/24"]
+}
+```
+
+## Project Structure
+
+```
+├── bot/
+│   ├── __init__.py
+│   ├── __main__.py        # Entry-point (python -m bot)
+│   ├── config.py          # JSON config loading
+│   ├── generators.py      # WireGuard / AmneziaWG / Clash / WireSock generators
+│   ├── handlers.py        # Telegram conversation flow
+│   ├── keyboards.py       # Inline-keyboard builders
+│   └── warp.py            # Cloudflare WARP API client
+├── configs/
+│   ├── dns_servers.json
+│   ├── relay_servers.json
+│   └── routing_services.json
+├── tests/
+│   ├── test_config.py
+│   ├── test_generators.py
+│   └── test_warp.py
+├── warp_generator.sh      # Original bash script (kept for reference)
+├── requirements.txt
+├── .env.example
+└── README.md
+```
+
+## Legacy Bash Script
+
+The original `warp_generator.sh` is kept for reference.  
+Run it directly if you prefer the CLI approach:
+
 ```bash
 bash warp_generator.sh
 ```
-6. После того, как конфиг сгенерируется, копируем его, либо скачиваем файлом по ссылке и импортируем в AmneziaVPN!👍
-7. После завершения можно **удалить codespace**:  
-   - Переходим в https://github.com/ImMALWARE/bash-warp-generator/codespaces
-   - Нажимаем на три точки → **Delete**  
-   *GitHub удаляет Codespaces автоматически через некоторое время бездействия, но лучше удалить сразу.*
 
-# Частые ошибки в приложениях AmneziaWG
+## Running Tests
 
-## Две запятые подряд: ","
+```bash
+pip install pytest
+python -m pytest tests/ -v
+```
 
-По какой-то причине конфиг сгенерировался неверно, удалите его, попробуйте перегенерировать снова другим способом или скачайте уже рабочий.
+## Troubleshooting
 
-## Название туннеля недействительно: "WARP (1)"
+- **Bot doesn't respond** — make sure `BOT_TOKEN` is set correctly.
+- **WARP registration fails** — the Cloudflare API may be blocked in your region; run the bot on a VPS or cloud server.
+- **Import errors** — run `pip install -r requirements.txt` first.
 
-Переименуйте файл .conf, в нём не должно быть пробелов и скобок.
+## License
 
-## Неверный ключ для секции [Interface]: "s1"
-
-Импортировать конфиг WARP нужно не в WireGuard, а в AmneziaWG или AmneziaVPN!
-
-## Неправильное имя
-
-В мобильном приложении AmneziaWG названия конфигов могут иметь длину не более 15 символов.
-
-## Включить обфускацию WireGuard
-
-В случае если в конфиге отсутствуют значения S1 и S2, AmneziaVPN не даст подключиться к нему и предложит включить обфускацию. Приложение AmneziaWG умеет читать такие сломанные конфиги, но использовать их всё равно не рекомендуется.
-
-## Unable to create Wintun interface
-
-### Решение 1: Удаление записи в реестре
-1.  Откройте "Редактор реестра" в Windows. Его можно найти в поиске, либо [выполнить команду](https://wiki.malw.link/windows/run) `regedit`.
-2.  Перейдите в **HKEY_CLASSES_ROOT** -> **CLSID**. Найдите и удалите раздел `{3d09c1ca-2bcc-40b7-b9bb-3f3ec143a87b}`.
-3.  Перезапустите приложение AmneziaWG.
-
-### Решение 2: Переустановка AmneziaWG от имени администратора:
-
-1.  Удалите AmneziaWG в "Программах и компонентах"
-2.  Скопируйте полный путь к .msi файлу установщика AmneziaWG. Для этого, **удерживая Shift**, нажмите правой кнопкой мыши по нему -> Копировать как путь
-3.  Откройте [Командную строку от имени администратора](https://wiki.malw.link/windows/run)
-4.  Вставьте в командную строку скопированный путь, нажав по ней правой кнопкой мыши, нажмите Enter
-
-Таким образом, msi файл будет открыт от имени администратора, возможно, это решит проблему.
-
-### Решение 3: Удаление драйвера wintun:
-
-1.  Удалите AmneziaWG в "Программах и компонентах"
-2.  Откройте [Командную строку от имени администратора](https://wiki.malw.link/windows/run)
-3.  Выполните команды:
-    ```bat
-    dism /online /get-drivers /format:table > drivers.txt
-    notepad drivers.txt
-    ```
-4.  Найдите `wintun.inf`, нам нужен его oem-номер. В моём случае это `oem7.inf`:
-    <img src="https://wiki.malw.link/img/network/vpns/amneziawg/1.png">
-5.  Выполните команду для его удаления:
-    ```bat
-    pnputil.exe /d oem7.inf
-    ```
-    Вместо 7 подставьте номер, который соответствует wintun.inf в вашем блокноте!
-6.  Скопируйте полный путь к .msi файлу установщика AmneziaWG. Для этого **удерживая Shift** нажмите правой кнопкой мыши по нему -> Копировать как путь
-7.  Вставьте в командную строку скопированный путь, просто нажав по ней правой кнопкой мыши, нажмите Enter. Установите AmneziaWG.
-
-### Решение 4: AmneziaVPN вместо AmneziaWG
-
-Приложение [AmneziaVPN](https://wiki.malw.link/network/vpns/amneziavpn) полностью поддерживает конфиги протокола AmneziaWG.
-
-## Не работают соединения к локальной сети
-
-Откройте конфигурационный файл для редактирования:
-
-<img src="https://wiki.malw.link/img/network/vpns/amneziawg/2.png"/>
-
-Уберите галочку "Блокировать нетуннелированный трафик"
-
-## Failed to set IPv4: error: Destination address required на macOS
-
-Уберите [IPv6-адрес](https://ru.wikipedia.org/wiki/IPv6) в файле конфигурации.
-
-# Что-то не получается?
-
-Напишите в чат: https://t.me/immalware_chat
+MIT
