@@ -648,10 +648,10 @@
       var btn = document.getElementById('theme-toggle');
       var icon = btn.querySelector('.theme-icon');
       var label = btn.querySelector('.theme-label');
-      var darkLabel = '<%= (t.web_theme_dark || "Dark").replace(/'/g, "\\'") %>';
-      var lightLabel = '<%= (t.web_theme_light || "Light").replace(/'/g, "\\'") %>';
-      var errorMsg = '<%= (t.web_generation_failed || "Generation failed").replace(/'/g, "\\'") %>';
-      var anotherLabel = '<%= (t.web_generate_again || "Generate Another").replace(/'/g, "\\'") %>';
+      var darkLabel = <%- JSON.stringify(t.web_theme_dark || "Dark") %>;
+      var lightLabel = <%- JSON.stringify(t.web_theme_light || "Light") %>;
+      var errorMsg = <%- JSON.stringify(t.web_generation_failed || "Generation failed") %>;
+      var anotherLabel = <%- JSON.stringify(t.web_generate_again || "Generate Another") %>;
       var stored = localStorage.getItem('theme');
       if (stored === 'light' || stored === 'dark') {
         html.setAttribute('data-theme', stored);
