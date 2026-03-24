@@ -81,7 +81,17 @@ class TestAmneziaWG:
 
     def test_has_i1_payload(self) -> None:
         content, _ = AmneziaWGGenerator().generate(_PARAMS)
-        assert "I1 = <b 0x" in content
+        # I1 payloads are hex strings from warp_params.json
+        assert "I1 = " in content
+        # Extract the I1 value and verify it's a non-empty hex string
+        for line in content.splitlines():
+            if line.startswith("I1 = "):
+                val = line.removeprefix("I1 = ").strip()
+                assert len(val) > 0
+                assert all(c in "0123456789abcdef" for c in val)
+                break
+        else:
+            raise AssertionError("I1 line not found")
 
     def test_deeplink_starts_with_vpn(self) -> None:
         deeplink = AmneziaWGGenerator().generate_deeplink(_PARAMS)
