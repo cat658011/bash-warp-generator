@@ -325,7 +325,7 @@ async def on_count(
 
 
 # ------------------------------------------------------------------
-# Step 5 — confirmation
+# Step 6 — confirmation
 # ------------------------------------------------------------------
 async def _show_confirm(
     update: Update, context: ContextTypes.DEFAULT_TYPE
