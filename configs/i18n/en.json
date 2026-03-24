@@ -1,0 +1,58 @@
+{
+  "welcome": "🚀 <b>WARP Config Generator</b>\n━━━━━━━━━━━━━━━━━━━━━━━━\n\nGenerate <b>Cloudflare WARP</b> VPN configs\nin multiple formats with one tap.\n\n📋 <b>Supported formats:</b>\n  🔐 WireGuard\n  🛡️ AmneziaWG\n  ⚔️ Clash / Clash Meta\n  🪟 WireSock (Windows)\n\nUse the menu below to get started ⬇️",
+
+  "help": "❓ <b>Help &amp; Guides</b>\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n📖 <b>How to add a custom DNS server</b>\nOpen <code>configs/dns_servers.json</code> and add:\n<pre>{\n  \"name\": \"My DNS\",\n  \"servers\": [\"10.0.0.1\", \"10.0.0.2\"]\n}</pre>\n\n📖 <b>How to add a relay endpoint</b>\nOpen <code>configs/relay_servers.json</code> and add:\n<pre>{\n  \"name\": \"Custom Relay\",\n  \"endpoint\": \"203.0.113.1:51820\"\n}</pre>\n\n📖 <b>How to add a split-tunnel service</b>\nOpen <code>configs/routing_services.json</code> and add:\n<pre>{\n  \"name\": \"My Service\",\n  \"routes\": [\"203.0.113.0/24\"]\n}</pre>\n\n🔄 Restart the bot after editing config files.\n\n🛠️ <b>Commands:</b>\n/start — show welcome &amp; menu\n/cancel — cancel current generation",
+
+  "warp_status": "📊 <b>WARP Status</b>\n\nCheck the current Cloudflare WARP service status:\n👉 <a href=\"https://t.me/cfwarpstatus\">@cfwarpstatus</a>",
+
+  "step_format": "⚙️ <b>Step 1/5</b> — Choose config format:\n\n<i>Select the output format for your VPN configuration.</i>",
+  "step_dns": "🔩 <b>Step 2/5</b> — Select DNS server:\n\n🌐 DNS servers marked <b>[C]</b> — community (may help bypass blocks).",
+  "step_relay": "🔄 <b>Step 3/5</b> — Select endpoint:\n\n<i>Default — standard Cloudflare endpoint.\nCountry servers may help bypass regional blocks.</i>",
+  "step_routing": "🔗 <b>Step 4/5</b> — Select routing mode:\n\n<i>All traffic — all traffic through VPN.\nSpecific sites — only selected services.</i>",
+  "step_services": "🔗 Select services to route through WARP:\n(tap to toggle, then press <b>Done</b>)",
+  "step_confirm": "📋 <b>Confirm config generation</b>\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n📦 Format: <b>{format}</b>\n🌐 DNS: <b>{dns}</b>\n🔄 Endpoint: <b>{relay}</b>\n🔗 Routing: <b>{routing}</b>\n\nPress <b>✅ Confirm</b> to generate the config.",
+
+  "generating": "⏳ Generating WARP configuration…",
+  "generation_failed": "❌ Failed to register with Cloudflare WARP. Please try again later.",
+  "config_generated": "✅ <b>WARP config generated!</b>\n📄 Format: <b>{format}</b>",
+  "amnezia_deeplink": "🔗 <b>AmneziaVPN Deep Link</b>\nOpen the file and copy the <code>vpn://</code> link into AmneziaVPN.",
+  "cancelled": "❌ Configuration cancelled.",
+
+  "btn_generate": "🚀 Generate Config",
+  "btn_status": "📊 WARP Status",
+  "btn_help": "❓ Help",
+
+  "fmt_wireguard": "🔐 WireGuard",
+  "fmt_amnezia": "🛡️ AmneziaWG",
+  "fmt_clash": "⚔️ Clash",
+  "fmt_wiresock": "🪟 WireSock",
+  "fmt_wireguard_desc": "Standard WireGuard config (.conf)",
+  "fmt_amnezia_desc": "AmneziaWG with DPI protection",
+  "fmt_clash_desc": "Clash / Clash Meta proxy config",
+  "fmt_wiresock_desc": "WireSock for Windows",
+
+  "route_full": "🌍 All Traffic (Full Tunnel)",
+  "route_split": "🔀 Specific Sites (Split Tunnel)",
+  "routing_full_label": "All traffic (full tunnel)",
+  "routing_split_label": "Specific sites",
+
+  "btn_done": "✔️ Done",
+  "btn_confirm": "✅ Confirm",
+  "btn_back": "◀️ Back",
+
+  "web_title": "WARP Generator",
+  "web_subtitle": "Create a Cloudflare WARP config in a few clicks",
+  "web_step_format": "Config format",
+  "web_step_dns": "DNS server",
+  "web_step_relay": "Endpoint",
+  "web_step_routing": "Routing",
+  "web_hint_dns": "Alternative DNS servers may help bypass blocks in your region",
+  "web_hint_relay": "Alternative endpoints may improve connection speed",
+  "web_hint_routing": "Full tunnel routes all traffic through VPN. Split routes only selected services",
+  "web_route_full": "🌍 Full tunnel",
+  "web_route_split": "🔀 Split tunnel",
+  "web_btn_generate": "⬇️ Generate & Download",
+  "web_footer_status": "📊 WARP Status",
+  "web_footer_github": "⭐ GitHub",
+  "web_error_warp": "WARP registration failed. Cloudflare API may be blocked in your region. Try running on a VPS or cloud server."
+}

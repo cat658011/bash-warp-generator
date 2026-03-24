@@ -1,0 +1,26 @@
+[
+  {
+    "name": "Default (Cloudflare)",
+    "endpoint": "162.159.192.1:500"
+  },
+  {
+    "name": "Cloudflare #2",
+    "endpoint": "162.159.192.1:2408"
+  },
+  {
+    "name": "Cloudflare #3",
+    "endpoint": "162.159.193.1:500"
+  },
+  {
+    "name": "Cloudflare #4",
+    "endpoint": "162.159.195.1:500"
+  },
+  {
+    "name": "Cloudflare #5",
+    "endpoint": "162.159.192.1:1701"
+  },
+  {
+    "name": "Cloudflare IPv6",
+    "endpoint": "[2606:4700:d0::a29f:c001]:500"
+  }
+]

@@ -1,0 +1,14 @@
+{
+  "name": "warp-web",
+  "version": "1.0.0",
+  "description": "Веб-интерфейс генератора конфигов Cloudflare WARP",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "ejs": "^3.1.10",
+    "express": "^4.21.0"
+  }
+}

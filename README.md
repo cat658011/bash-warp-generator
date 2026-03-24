@@ -1,122 +1,435 @@
-# Сгенерируйте конфиг Cloudflare WARP для AmneziaVPN
-Этот bash скрипт сгенерирует конфиг Cloudflare WARP для AmneziaVPN.
+# 🚀 WARP Config Generator
 
-Не стоит выполнять его локально, так как РКН заблокировал запросы для получения конфига. Вместо этого лучше выполнять на удалённых серверах.
+Генератор конфигов **Cloudflare WARP** VPN через **Telegram-бота** или **веб-интерфейс**.
 
-## Вариант 1: Aeza Terminator
-1. Заходим на https://terminator.aeza.net
-2. Выбираем **`debian`**
-3. Вставляем команду (Shift + Insert):
+![Веб-интерфейс](https://github.com/user-attachments/assets/84ae89b2-b679-4f03-9acd-b79cbda99180)
+
+## Поддерживаемые форматы
+
+| Формат | Описание |
+|--------|----------|
+| **WireGuard** | Стандартный `.conf` для любого WireGuard-клиента |
+| **AmneziaWG** | `.conf` с параметрами обфускации + `vpn://` deeplink для AmneziaVPN |
+| **Clash** | YAML-конфиг прокси для Clash / Clash Meta |
+| **WireSock** | `.conf` для WireSock на Windows |
+
+## Возможности
+
+- **Выбор DNS-сервера** — Cloudflare, Google, Quad9, AdGuard, OpenDNS и другие
+- **Выбор релея / эндпоинта** — альтернативные Cloudflare edge-эндпоинты
+- **Режимы маршрутизации** — весь трафик (full tunnel) или раздельный туннель (split tunnel) с маршрутами для конкретных сервисов
+- **Подтверждение перед генерацией** — просмотр настроек перед созданием конфига
+- **Постоянная клавиатура** — кнопки «Генерация», «Статус WARP», «Помощь» всегда видны
+- **Статус WARP** — ссылка на [@cfwarpstatus](https://t.me/cfwarpstatus) для мониторинга
+- **Локализация** — русский и английский (легко добавить новые языки)
+- **Помощь прямо в боте** — инструкции по добавлению DNS, релеев и сервисов
+- **Полная настройка** — все параметры хранятся в JSON-файлах в `configs/`
+- **Веб-интерфейс** — Node.js/Express приложение на русском языке
+
+---
+
+## Быстрый старт
+
+### 1. Создайте бота
+
+Напишите [@BotFather](https://t.me/BotFather) в Telegram и создайте нового бота.
+Скопируйте API-токен.
+
+### 2. Клонируйте и установите
+
 ```bash
-bash <(wget --inet4-only -qO- https://raw.githubusercontent.com/ImMALWARE/bash-warp-generator/main/warp_generator.sh)
+git clone https://github.com/cat658011/bash-warp-generator.git
+cd bash-warp-generator
+pip install -r requirements.txt
 ```
-4. После того, как конфиг сгенерируется, копируем его, либо скачиваем файлом по ссылке и импортируем в AmneziaVPN!👍
 
-## Вариант 2: pad.ws
-1. Заходим на https://pad.ws
-2. Continue with Google
-3. В окне Dashboard, если будет кнопка Start, нажмите на неё
-4. Terminal
-5. Вставляем команду (Shift + Insert):
+### 3. Запустите Telegram-бота
+
 ```bash
-bash <(wget --inet4-only -qO- https://raw.githubusercontent.com/ImMALWARE/bash-warp-generator/main/warp_generator.sh)
+export BOT_TOKEN="ваш-токен-бота"
+export BOT_LANG="ru"
+python -m bot
 ```
-6. После того, как конфиг сгенерируется, копируем его, либо скачиваем файлом по ссылке и импортируем в AmneziaVPN!👍
 
-## Вариант 3: Replit
-1. Тыкаем сюда: [![Run on Repl.it](https://repl.it/badge/github/replit/upm)](https://replit.com/new/github/ImMALWARE/bash-warp-generator)
-2. Создаём аккаунт
-3. Нажимаем кнопку **`Run`** вверху
-4. После того, как конфиг сгенерируется, копируем его, либо скачиваем файлом по ссылке и импортируем в AmneziaVPN!👍
+Бот начнёт получать обновления. Отправьте `/start` в чате, чтобы начать.
 
-## Вариант 4: GitHub Codespaces
-1. Переходим по ссылке: https://github.com/ImMALWARE/bash-warp-generator/codespaces
-2. Вводим учётные данные GitHub (потребуется авторизация, если вы не вошли в аккаунт)
-3. Нажимаем **`Create codespace on main`**
-4. Дожидаемся, пока среда загрузится (может занять 10–30 секунд)
-5. В терминале (внизу экрана) вводим команду (Shift + Insert):
+### 4. Запустите веб-интерфейс
+
+**Установка зависимостей:**
+
+```bash
+cd web
+npm install
+```
+
+**Запуск в режиме разработки:**
+
+```bash
+node web/server.js
+```
+
+Откройте `http://localhost:3000` в браузере.
+
+**Продакшн (с pm2):**
+
+```bash
+npm install -g pm2
+pm2 start web/server.js --name warp-web
+```
+
+**Продакшн с nginx (рекомендуется):**
+
+1. Запустите сервер через pm2 или systemd:
+
+```bash
+PORT=3000 node web/server.js
+```
+
+2. Настройте nginx как реверс-прокси:
+
+```nginx
+server {
+    listen 80;
+    server_name your-domain.com;
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+3. Используйте эндпоинт `/health` для мониторинга:
+
+```bash
+curl http://localhost:3000/health
+# {"status":"ok"}
+```
+
+---
+
+## 📁 Файлы конфигурации
+
+Все настройки хранятся в JSON-файлах в папке `configs/`. Редактируйте их — **никаких изменений в коде не требуется**.
+
+| Файл | Назначение |
+|------|-----------|
+| `dns_servers.json` | DNS-серверы (имя + адреса) |
+| `relay_servers.json` | Альтернативные эндпоинты Cloudflare WARP |
+| `routing_services.json` | IP-диапазоны сервисов для раздельного туннеля |
+| `warp_params.json` | Параметры AmneziaWG (Jc, Jmin, …), MTU, I1 payloads |
+| `i18n/ru.json` | Русская локализация (бот + веб) |
+| `i18n/en.json` | Английская локализация (бот + веб) |
+
+---
+
+### 📡 Как добавить свой релей (эндпоинт)
+
+Откройте файл `configs/relay_servers.json` и добавьте новый объект в массив:
+
+```json
+[
+  {
+    "name": "Default (Cloudflare)",
+    "endpoint": "162.159.192.1:500"
+  },
+  {
+    "name": "Мой кастомный релей",
+    "endpoint": "203.0.113.1:51820"
+  }
+]
+```
+
+**Поля:**
+
+| Поле | Описание | Пример |
+|------|----------|--------|
+| `name` | Отображаемое имя в боте и на сайте | `"Мой релей (Германия)"` |
+| `endpoint` | IP-адрес и порт эндпоинта WARP | `"203.0.113.1:51820"` |
+
+**Где найти альтернативные эндпоинты:**
+
+```bash
+# Через DNS
+dig +short engage.cloudflareclient.com
+
+# Через утилиту nslookup
+nslookup engage.cloudflareclient.com
+```
+
+Также можно найти актуальные эндпоинты в сообществах и на форумах.
+
+**Поддерживаемые порты:** `500`, `854`, `859`, `1701`, `2408`, `4500`, `51820`
+
+**Поддержка IPv6:**
+
+```json
+{
+  "name": "Cloudflare IPv6",
+  "endpoint": "[2606:4700:d0::a29f:c001]:500"
+}
+```
+
+> 💡 После редактирования перезапустите бота и/или веб-сервер.
+
+---
+
+### 🌐 Как добавить DNS-сервер
+
+Откройте файл `configs/dns_servers.json` и добавьте объект:
+
+```json
+{
+  "name": "Мой DNS",
+  "servers": ["10.0.0.1", "10.0.0.2"]
+}
+```
+
+**Поля:**
+
+| Поле | Описание | Пример |
+|------|----------|--------|
+| `name` | Отображаемое имя | `"AdGuard Family"` |
+| `servers` | Массив IP-адресов DNS-серверов | `["94.140.14.15", "94.140.15.16"]` |
+
+---
+
+### 🔀 Как добавить сервис для раздельного туннеля
+
+Откройте файл `configs/routing_services.json` и добавьте объект:
+
+```json
+{
+  "name": "Мой Сервис",
+  "routes": ["203.0.113.0/24", "198.51.100.0/24"]
+}
+```
+
+**Поля:**
+
+| Поле | Описание | Пример |
+|------|----------|--------|
+| `name` | Название сервиса | `"Яндекс"` |
+| `routes` | Массив CIDR-подсетей | `["77.88.55.0/24", "5.255.255.0/24"]` |
+
+**Как найти IP-диапазоны сервиса:**
+
+```bash
+# Через whois
+whois -h whois.radb.net -- '-i origin AS13238' | grep route
+
+# Через BGP
+# Используйте bgp.he.net для поиска ASN и их префиксов
+
+# Через DNS
+dig +short yandex.ru
+```
+
+> ⚠️ Первый элемент массива (`index 0`) — это «Весь трафик» (Full Tunnel) и он не отображается в меню выбора сервисов. Ваши сервисы должны идти после него.
+
+---
+
+### 📦 Как изменить названия протоколов (форматов)
+
+Отредактируйте файл `configs/i18n/ru.json` (или `en.json` для английского):
+
+```json
+{
+  "fmt_wireguard": "🔐 WireGuard",
+  "fmt_amnezia": "🛡️ AmneziaWG",
+  "fmt_clash": "⚔️ Clash",
+  "fmt_wiresock": "🪟 WireSock",
+  "fmt_wireguard_desc": "Стандартный WireGuard конфиг (.conf)",
+  "fmt_amnezia_desc": "AmneziaWG с защитой от DPI",
+  "fmt_clash_desc": "Конфиг прокси Clash / Clash Meta",
+  "fmt_wiresock_desc": "WireSock для Windows"
+}
+```
+
+Измените значения `fmt_*` и `fmt_*_desc` на нужные. Ключи менять нельзя.
+Названия используются **и в боте, и в веб-интерфейсе** — один файл на все фронтенды.
+
+---
+
+## 🌍 Локализация
+
+Все текстовые строки (бот + веб) хранятся в `configs/i18n/`.
+
+| Файл | Язык |
+|------|------|
+| `configs/i18n/ru.json` | Русский (по умолчанию) |
+| `configs/i18n/en.json` | Английский |
+
+Язык задаётся через переменную `BOT_LANG`:
+
+```bash
+export BOT_LANG="ru"
+python -m bot
+```
+
+### Как добавить новый язык
+
+1. Скопируйте `configs/i18n/ru.json` в `configs/i18n/<код>.json` (например, `uk.json`)
+2. Переведите все значения (ключи менять нельзя)
+3. Установите `BOT_LANG=uk` и перезапустите бота
+
+Все строки сообщений, надписи на кнопках, описания форматов и весь UI-текст
+определены в файле языка. Один файл используется **и ботом, и веб-интерфейсом**
+— изменений в коде не требуется.
+
+---
+
+## ⚙️ Параметры WARP (AmneziaWG)
+
+Параметры обфускации AmneziaWG и payload I1 хранятся в `configs/warp_params.json`:
+
+```json
+{
+  "amnezia": {
+    "Jc": 120, "Jmin": 23, "Jmax": 911,
+    "S1": 0, "S2": 0,
+    "H1": 1, "H2": 2, "H3": 3, "H4": 4
+  },
+  "mtu": 1280,
+  "i1_payloads": [
+    "<b 0xc200...>",
+    "<b 0xa100...>",
+    "<b 0xd300...>"
+  ]
+}
+```
+
+| Поле | Описание |
+|------|----------|
+| `amnezia` | Параметры обфускации (Jc, Jmin, Jmax, S1, S2, H1–H4) |
+| `mtu` | MTU по умолчанию для всех форматов |
+| `i1_payloads` | Массив I1-payload'ов — при каждой генерации выбирается **случайный** |
+
+> 💡 Добавьте свои I1-payload'ы в массив — они будут ротироваться автоматически.
+
+---
+
+## 📂 Структура проекта
+
+```
+├── core/                    # Основная библиотека (без зависимости от Telegram)
+│   ├── __init__.py
+│   ├── config.py            # Загрузка JSON-конфигов и dataclasses
+│   ├── generators.py        # Генераторы WireGuard / AmneziaWG / Clash / WireSock
+│   └── warp.py              # Клиент API Cloudflare WARP
+├── bot/                     # Telegram-бот
+│   ├── __init__.py
+│   ├── __main__.py          # Точка входа (python -m bot)
+│   ├── handlers.py          # Логика диалога + обработчики меню
+│   ├── keyboards.py         # Построение inline- и reply-клавиатур
+│   └── i18n.py              # Загрузчик локализации (→ configs/i18n/)
+├── web/                     # Веб-интерфейс (Node.js / Express)
+│   ├── package.json         # Зависимости Node.js
+│   ├── server.js            # Express-приложение
+│   ├── lib/
+│   │   ├── config.js        # Загрузка JSON-конфигов + i18n + warp_params
+│   │   ├── generators.js    # Генераторы конфигов (из warp_params.json)
+│   │   └── warp.js          # Клиент API WARP (X25519 + регистрация)
+│   ├── views/
+│   │   └── index.ejs        # HTML-шаблон (EJS, i18n-строки)
+│   └── test/
+│       └── server.test.js   # Тесты веб-сервера
+├── configs/
+│   ├── i18n/                # Локализация (бот + веб)
+│   │   ├── ru.json          # Русский
+│   │   └── en.json          # Английский
+│   ├── dns_servers.json     # DNS-серверы
+│   ├── relay_servers.json   # Эндпоинты Cloudflare WARP
+│   ├── routing_services.json # IP-маршруты сервисов
+│   └── warp_params.json     # Параметры AmneziaWG + I1 payloads
+├── tests/
+│   ├── test_config.py       # Тесты конфигурации
+│   ├── test_generators.py   # Тесты генераторов
+│   ├── test_i18n.py         # Тесты локализации
+│   ├── test_warp.py         # Тесты API WARP
+│   └── test_web.py          # Тесты веб-сервера (Node.js)
+├── generate.py              # CLI-генератор (python generate.py)
+├── warp_generator.sh        # Оригинальный bash-скрипт (для справки)
+├── requirements.txt         # Зависимости Python (бот + core)
+├── .env.example             # Пример переменных окружения
+└── README.md
+```
+
+Пакет `core/` содержит всю логику генерации WARP и **не зависит** от Telegram.
+Оба фронтенда (бот и веб) читают параметры из общих конфигов в `configs/`:
+локализацию из `configs/i18n/`, параметры обфускации из `configs/warp_params.json`.
+
+---
+
+## 🧪 Тестирование
+
+**Python-тесты (бот + core + веб-интеграция):**
+
+```bash
+pip install pytest
+python -m pytest tests/ -v
+```
+
+**JavaScript-тесты (веб-интерфейс):**
+
+```bash
+cd web
+npm test
+```
+
+---
+
+## 🔧 Переменные окружения
+
+| Переменная | Описание | По умолчанию |
+|-----------|----------|-------------|
+| `BOT_TOKEN` | Токен Telegram-бота от @BotFather | — (обязательно) |
+| `BOT_LANG` | Язык бота (`ru`, `en`) | `ru` |
+| `PORT` | Порт веб-интерфейса | `3000` |
+
+---
+
+## 🖥️ CLI-генератор
+
+Для быстрой генерации конфига через командную строку:
+
+```bash
+python generate.py
+```
+
+Скрипт зарегистрируется в Cloudflare WARP, сгенерирует AmneziaWG-конфиг
+и выведет его вместе с deep-link для AmneziaVPN. Конфиг также сохраняется
+в файл `warp-amnezia.conf`.
+
+---
+
+## 🔄 Legacy Bash-скрипт
+
+Оригинальный `warp_generator.sh` оставлен для справки.
+Запустите его напрямую, если предпочитаете CLI:
+
 ```bash
 bash warp_generator.sh
 ```
-6. После того, как конфиг сгенерируется, копируем его, либо скачиваем файлом по ссылке и импортируем в AmneziaVPN!👍
-7. После завершения можно **удалить codespace**:  
-   - Переходим в https://github.com/ImMALWARE/bash-warp-generator/codespaces
-   - Нажимаем на три точки → **Delete**  
-   *GitHub удаляет Codespaces автоматически через некоторое время бездействия, но лучше удалить сразу.*
 
-# Частые ошибки в приложениях AmneziaWG
+---
 
-## Две запятые подряд: ","
+## ❓ Решение проблем
 
-По какой-то причине конфиг сгенерировался неверно, удалите его, попробуйте перегенерировать снова другим способом или скачайте уже рабочий.
+| Проблема | Решение |
+|----------|---------|
+| Бот не отвечает | Убедитесь, что `BOT_TOKEN` задан правильно |
+| Ошибка регистрации WARP | API Cloudflare может быть заблокирован; запустите на VPS |
+| Ошибки импорта (Python) | Выполните `pip install -r requirements.txt` |
+| Язык не загружается | Проверьте, что `BOT_LANG` соответствует файлу в `configs/i18n/` |
+| Веб-сервер не запускается | Выполните `cd web && npm install` |
+| Порт занят | Измените порт: `PORT=8080 node web/server.js` |
 
-## Название туннеля недействительно: "WARP (1)"
+---
 
-Переименуйте файл .conf, в нём не должно быть пробелов и скобок.
+## 📜 Лицензия
 
-## Неверный ключ для секции [Interface]: "s1"
-
-Импортировать конфиг WARP нужно не в WireGuard, а в AmneziaWG или AmneziaVPN!
-
-## Неправильное имя
-
-В мобильном приложении AmneziaWG названия конфигов могут иметь длину не более 15 символов.
-
-## Включить обфускацию WireGuard
-
-В случае если в конфиге отсутствуют значения S1 и S2, AmneziaVPN не даст подключиться к нему и предложит включить обфускацию. Приложение AmneziaWG умеет читать такие сломанные конфиги, но использовать их всё равно не рекомендуется.
-
-## Unable to create Wintun interface
-
-### Решение 1: Удаление записи в реестре
-1.  Откройте "Редактор реестра" в Windows. Его можно найти в поиске, либо [выполнить команду](https://wiki.malw.link/windows/run) `regedit`.
-2.  Перейдите в **HKEY_CLASSES_ROOT** -> **CLSID**. Найдите и удалите раздел `{3d09c1ca-2bcc-40b7-b9bb-3f3ec143a87b}`.
-3.  Перезапустите приложение AmneziaWG.
-
-### Решение 2: Переустановка AmneziaWG от имени администратора:
-
-1.  Удалите AmneziaWG в "Программах и компонентах"
-2.  Скопируйте полный путь к .msi файлу установщика AmneziaWG. Для этого, **удерживая Shift**, нажмите правой кнопкой мыши по нему -> Копировать как путь
-3.  Откройте [Командную строку от имени администратора](https://wiki.malw.link/windows/run)
-4.  Вставьте в командную строку скопированный путь, нажав по ней правой кнопкой мыши, нажмите Enter
-
-Таким образом, msi файл будет открыт от имени администратора, возможно, это решит проблему.
-
-### Решение 3: Удаление драйвера wintun:
-
-1.  Удалите AmneziaWG в "Программах и компонентах"
-2.  Откройте [Командную строку от имени администратора](https://wiki.malw.link/windows/run)
-3.  Выполните команды:
-    ```bat
-    dism /online /get-drivers /format:table > drivers.txt
-    notepad drivers.txt
-    ```
-4.  Найдите `wintun.inf`, нам нужен его oem-номер. В моём случае это `oem7.inf`:
-    <img src="https://wiki.malw.link/img/network/vpns/amneziawg/1.png">
-5.  Выполните команду для его удаления:
-    ```bat
-    pnputil.exe /d oem7.inf
-    ```
-    Вместо 7 подставьте номер, который соответствует wintun.inf в вашем блокноте!
-6.  Скопируйте полный путь к .msi файлу установщика AmneziaWG. Для этого **удерживая Shift** нажмите правой кнопкой мыши по нему -> Копировать как путь
-7.  Вставьте в командную строку скопированный путь, просто нажав по ней правой кнопкой мыши, нажмите Enter. Установите AmneziaWG.
-
-### Решение 4: AmneziaVPN вместо AmneziaWG
-
-Приложение [AmneziaVPN](https://wiki.malw.link/network/vpns/amneziavpn) полностью поддерживает конфиги протокола AmneziaWG.
-
-## Не работают соединения к локальной сети
-
-Откройте конфигурационный файл для редактирования:
-
-<img src="https://wiki.malw.link/img/network/vpns/amneziawg/2.png"/>
-
-Уберите галочку "Блокировать нетуннелированный трафик"
-
-## Failed to set IPv4: error: Destination address required на macOS
-
-Уберите [IPv6-адрес](https://ru.wikipedia.org/wiki/IPv6) в файле конфигурации.
-
-# Что-то не получается?
-
-Напишите в чат: https://t.me/immalware_chat
+MIT

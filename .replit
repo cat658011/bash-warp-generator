@@ -1,6 +1,6 @@
-run = "bash warp_generator.sh"
-entrypoint = "warp_generator.sh"
-modules = ["bash"]
+run = "python generate.py"
+entrypoint = "generate.py"
+modules = ["python-3.12"]
 
 hidden = [".config"]
 
@@ -12,5 +12,5 @@ pattern = "**/*.sh"
 syntax = "bash"
 
 [deployment]
-run = ["bash", "warp_generator.sh"]
+run = ["python", "generate.py"]
 deploymentTarget = "cloudrun"
