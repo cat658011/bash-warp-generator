@@ -52,9 +52,11 @@
   "web_step_dns": "DNS server",
   "web_step_relay": "Endpoint",
   "web_step_routing": "Routing",
+  "web_step_count": "How many configs?",
   "web_hint_dns": "Alternative DNS servers may help bypass blocks in your region",
   "web_hint_relay": "Alternative endpoints may improve connection speed",
   "web_hint_routing": "Full tunnel routes all traffic through VPN. Split routes only selected services",
+  "web_hint_count": "Generate up to 5 configs at once. Each config uses unique keys.",
   "web_route_full": "🌍 Full tunnel",
   "web_route_split": "🔀 Split tunnel",
   "web_btn_generate": "⬇️ Generate & Download",
@@ -100,5 +102,6 @@
   "web_theme_dark": "Dark",
   "web_generating": "Generating…",
   "web_generate_again": "⬇️ Generate Another",
-  "web_generation_failed": "Generation failed. Try again."
+  "web_generation_failed": "Generation failed. Try again.",
+  "web_download_multi": "✅ Downloaded {count} configs."
 }
