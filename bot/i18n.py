@@ -29,14 +29,11 @@ def _load_lang_file(lang: str) -> dict[str, str]:
 
     path = _LANG_DIR / f"{lang}.json"
     if not path.exists():
-        path = _LANG_DIR / "en.json"
-        # Cache under the original key so we don't try again,
-        # and also under 'en' for reuse.
-        with open(path, encoding="utf-8") as fh:
-            data = json.load(fh)
-        _lang_cache[lang] = data
-        _lang_cache["en"] = data
-        return data
+        # Fall back to English; cache the fallback under the requested key
+        # so we don't retry the missing file, but load English data properly.
+        en_data = _load_lang_file("en")
+        _lang_cache[lang] = en_data
+        return en_data
 
     with open(path, encoding="utf-8") as fh:
         data = json.load(fh)

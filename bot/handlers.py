@@ -16,7 +16,7 @@ from telegram.ext import (
     filters,
 )
 
-from bot.i18n import t, t_user, available_languages, load_language
+from bot.i18n import t, t_user, available_languages
 from core.config import BotConfigs
 from core.generators import (
     GENERATORS,
@@ -148,10 +148,14 @@ async def on_lang_select(
 
     lang = query.data.removeprefix(LANG_CB)
     context.user_data["lang"] = lang
-    load_language(lang)
+
+    # Load the new language's strings to get the confirmation message
+    from bot.i18n import _load_lang_file
+    strings = _load_lang_file(lang)
+    msg = strings.get("lang_changed", "Language changed.")
 
     await query.edit_message_text(
-        t("lang_changed"),
+        msg,
         parse_mode="HTML",
     )
 
@@ -406,8 +410,12 @@ async def on_generate_another(
 ) -> int:
     """Re-enter the conversation from the generate-another button."""
     query = update.callback_query
-    assert query is not None
+    assert query is not None and context.user_data is not None
     await query.answer()
+
+    # Clear previous selections but keep user preferences (like lang)
+    for key in ("format", "dns_idx", "relay_idx", "routing", "selected_svcs"):
+        context.user_data.pop(key, None)
 
     await query.edit_message_text(
         t("step_format"),

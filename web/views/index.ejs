@@ -648,14 +648,18 @@
       var btn = document.getElementById('theme-toggle');
       var icon = btn.querySelector('.theme-icon');
       var label = btn.querySelector('.theme-label');
+      var darkLabel = '<%= (t.web_theme_dark || "Dark").replace(/'/g, "\\'") %>';
+      var lightLabel = '<%= (t.web_theme_light || "Light").replace(/'/g, "\\'") %>';
+      var errorMsg = '<%= (t.web_generation_failed || "Generation failed").replace(/'/g, "\\'") %>';
+      var anotherLabel = '<%= (t.web_generate_again || "Generate Another").replace(/'/g, "\\'") %>';
       var stored = localStorage.getItem('theme');
-      if (stored) {
+      if (stored === 'light' || stored === 'dark') {
         html.setAttribute('data-theme', stored);
       }
       function update() {
         var dark = html.getAttribute('data-theme') === 'dark';
         icon.textContent = dark ? '🌙' : '☀️';
-        label.textContent = dark ? '<%= (t.web_theme_dark || "Dark").replace(/'/g, "\\'") %>' : '<%= (t.web_theme_light || "Light").replace(/'/g, "\\'") %>';
+        label.textContent = dark ? darkLabel : lightLabel;
       }
       update();
       btn.addEventListener('click', function() {
@@ -704,8 +708,8 @@
         body: body,
       }).then(function(resp) {
         if (!resp.ok) {
-          return resp.json().catch(function() { return { error: '<%= (t.web_generation_failed || "Generation failed").replace(/'/g, "\\'") %>' }; }).then(function(data) {
-            throw new Error(data.error || '<%= (t.web_generation_failed || "Generation failed").replace(/'/g, "\\'") %>');
+          return resp.json().catch(function() { return { error: errorMsg }; }).then(function(data) {
+            throw new Error(data.error || errorMsg);
           });
         }
         var disposition = resp.headers.get('Content-Disposition') || '';
@@ -721,7 +725,7 @@
         a.remove();
         URL.revokeObjectURL(a.href);
         btn.classList.remove('loading');
-        btn.querySelector('.btn-text').textContent = '<%= (t.web_generate_again || "Generate Another").replace(/'/g, "\\'") %>';
+        btn.querySelector('.btn-text').textContent = anotherLabel;
         statusEl.className = 'status-msg success';
         statusEl.textContent = '✅ ' + result.filename;
       }).catch(function(err) {
