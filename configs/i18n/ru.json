@@ -65,6 +65,8 @@
   "dns_comss": "Comss DNS",
   "dns_google": "Google DNS",
   "dns_adguard": "AdGuard DNS",
+  "dns_quad9": "Quad9 DNS",
+  "dns_yandex": "Yandex DNS",
 
   "relay_cloudflare": "Cloudflare",
   "relay_cloudflare_alt": "Cloudflare Альтернативный",
