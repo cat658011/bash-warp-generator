@@ -26,6 +26,8 @@ def test_relay_servers_loaded() -> None:
         assert isinstance(relay, RelayServer)
         assert relay.id
         assert relay.endpoint
+        # Endpoints should be host-only (no port)
+        assert ":" not in relay.endpoint
 
 
 def test_routing_services_loaded() -> None:
@@ -42,3 +44,31 @@ def test_first_routing_service_is_full_tunnel() -> None:
     full = configs.routing_services[0]
     assert "0.0.0.0/0" in full.routes
     assert "::/0" in full.routes
+
+
+def test_endpoint_ports_loaded() -> None:
+    configs = load_configs()
+    assert len(configs.endpoint_ports) > 0
+    for fmt in ("wireguard", "amnezia", "clash", "wiresock"):
+        assert fmt in configs.endpoint_ports
+        assert isinstance(configs.endpoint_ports[fmt], int)
+
+
+def test_resolve_endpoint_combines_host_and_port() -> None:
+    configs = load_configs()
+    relay = configs.relay_servers[0]
+    endpoint = configs.resolve_endpoint(relay, "wireguard")
+    assert endpoint == f"{relay.endpoint}:{configs.endpoint_ports['wireguard']}"
+
+
+def test_resolve_endpoint_uses_format_port() -> None:
+    """Each format should get its own port."""
+    configs = load_configs()
+    relay = configs.relay_servers[0]
+    wg = configs.resolve_endpoint(relay, "wireguard")
+    awg = configs.resolve_endpoint(relay, "amnezia")
+    # Ports for different formats should differ (per endpoint_ports.json config)
+    wg_port = int(wg.rsplit(":", 1)[1])
+    awg_port = int(awg.rsplit(":", 1)[1])
+    assert wg_port == configs.endpoint_ports["wireguard"]
+    assert awg_port == configs.endpoint_ports["amnezia"]

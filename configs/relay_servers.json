@@ -1,46 +1,42 @@
 [
   {
     "id": "cloudflare",
-    "endpoint": "engage.cloudflareclient.com:4500"
-  },
-  {
-    "id": "cloudflare_alt",
-    "endpoint": "engage.cloudflareclient.com:2408"
+    "endpoint": "engage.cloudflareclient.com"
   },
   {
     "id": "finland_1",
-    "endpoint": "fi.tribukvy.ltd:4500"
+    "endpoint": "fi.tribukvy.ltd"
   },
   {
     "id": "finland_2",
-    "endpoint": "fi0.tribukvy.ltd:4500"
+    "endpoint": "fi0.tribukvy.ltd"
   },
   {
     "id": "netherlands_1",
-    "endpoint": "nl.tribukvy.ltd:4500"
+    "endpoint": "nl.tribukvy.ltd"
   },
   {
     "id": "netherlands_2",
-    "endpoint": "nl0.tribukvy.ltd:4500"
+    "endpoint": "nl0.tribukvy.ltd"
   },
   {
     "id": "poland_1",
-    "endpoint": "pl.tribukvy.ltd:4500"
+    "endpoint": "pl.tribukvy.ltd"
   },
   {
     "id": "poland_2",
-    "endpoint": "pl0.tribukvy.ltd:4500"
+    "endpoint": "pl0.tribukvy.ltd"
   },
   {
     "id": "germany_1",
-    "endpoint": "de.tribukvy.ltd:4500"
+    "endpoint": "de.tribukvy.ltd"
   },
   {
     "id": "estonia_1",
-    "endpoint": "ee.tribukvy.ltd:4500"
+    "endpoint": "ee.tribukvy.ltd"
   },
   {
     "id": "russia_1",
-    "endpoint": "ru.tribukvy.ltd:4500"
+    "endpoint": "ru.tribukvy.ltd"
   }
 ]

@@ -152,6 +152,6 @@ def generate_another_keyboard(user_data: dict | None = None) -> InlineKeyboardMa
     """Keyboard shown after a config is generated, offering to create another."""
     return InlineKeyboardMarkup(
         [
-            [InlineKeyboardButton(t_user("btn_generate", user_data), callback_data=GENERATE_ANOTHER_CB)],
+            [InlineKeyboardButton(t_user("btn_generate_another", user_data), callback_data=GENERATE_ANOTHER_CB)],
         ]
     )

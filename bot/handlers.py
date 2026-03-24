@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from io import BytesIO
 
-from telegram import Update
+from telegram import Bot, Update
 from telegram.ext import (
     Application,
     CallbackQueryHandler,
@@ -76,8 +76,16 @@ def _ud(context: ContextTypes.DEFAULT_TYPE) -> dict | None:
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send welcome message and show the persistent reply keyboard."""
     assert update.message is not None
+    configs = _configs(context)
+    ep = configs.endpoint_ports
     await update.message.reply_text(
-        t_user("welcome", _ud(context)),
+        t_user("welcome", _ud(context),
+               relay_count=len(configs.relay_servers),
+               svc_count=len(configs.routing_services) - 1,
+               port_wg=ep.get("wireguard", 2408),
+               port_awg=ep.get("amnezia", 4500),
+               port_clash=ep.get("clash", 1701),
+               port_ws=ep.get("wiresock", 500)),
         parse_mode="HTML",
         reply_markup=main_menu_keyboard(_ud(context)),
     )
@@ -162,8 +170,16 @@ async def on_lang_select(
 
     # Re-send the main menu keyboard with button text in the new language
     assert query.message is not None
+    configs = _configs(context)
+    ep = configs.endpoint_ports
     await query.message.reply_text(
-        t_user("welcome", context.user_data),
+        t_user("welcome", context.user_data,
+               relay_count=len(configs.relay_servers),
+               svc_count=len(configs.routing_services) - 1,
+               port_wg=ep.get("wireguard", 2408),
+               port_awg=ep.get("amnezia", 4500),
+               port_clash=ep.get("clash", 1701),
+               port_ws=ep.get("wiresock", 500)),
         parse_mode="HTML",
         reply_markup=main_menu_keyboard(context.user_data),
     )
@@ -293,7 +309,10 @@ async def _show_confirm(
     fmt = user["format"]
     fmt_label = t_user(f"fmt_{fmt}", ud)
     dns_label = t_user("dns_" + configs.dns_servers[user["dns_idx"]].id, ud)
-    relay_label = t_user("relay_" + configs.relay_servers[user["relay_idx"]].id, ud)
+    relay = configs.relay_servers[user["relay_idx"]]
+    relay_label = t_user("relay_" + relay.id, ud)
+    endpoint = configs.resolve_endpoint(relay, fmt)
+    port = configs.endpoint_ports.get(fmt, 4500)
 
     if user.get("routing") == "split":
         selected: set[int] = user.get("selected_svcs", set())
@@ -306,7 +325,10 @@ async def _show_confirm(
         routing_label = t_user("routing_full_label", ud)
 
     await query.edit_message_text(
-        t_user("step_confirm", ud, format=fmt_label, dns=dns_label, relay=relay_label, routing=routing_label),
+        t_user("step_confirm", ud,
+               format=fmt_label, dns=dns_label,
+               relay=relay_label, endpoint=endpoint,
+               port=port, routing=routing_label),
         parse_mode="HTML",
         reply_markup=confirm_keyboard(ud),
     )
@@ -322,7 +344,34 @@ async def on_confirm(
     await query.answer()
 
     if query.data == CONFIRM_CB:
-        return await _generate(update, context)
+        # Snapshot user selections before ending the conversation
+        configs = _configs(context)
+        user = context.user_data
+        selections = {
+            "format": user["format"],
+            "dns_idx": user["dns_idx"],
+            "relay_idx": user["relay_idx"],
+            "routing": user.get("routing", "full"),
+            "selected_svcs": set(user.get("selected_svcs", set())),
+            "lang": user.get("lang"),
+        }
+
+        await query.edit_message_text(
+            t_user("generating", _ud(context)),
+            parse_mode="HTML",
+        )
+
+        # Launch generation in background so user can start a new one
+        context.application.create_task(
+            _generate_task(
+                context.bot,
+                query.message.chat_id,
+                query.message.message_id,
+                selections,
+                configs,
+            )
+        )
+        return ConversationHandler.END
 
     # Back → restart the conversation from step 1
     await query.edit_message_text(
@@ -334,32 +383,38 @@ async def on_confirm(
 
 
 # ------------------------------------------------------------------
-# Generation
+# Background generation task
 # ------------------------------------------------------------------
-async def _generate(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
-) -> int:
-    query = update.callback_query
-    assert query is not None and context.user_data is not None
-    configs = _configs(context)
-    user = context.user_data
-    ud = _ud(context)
-
-    await query.edit_message_text(t_user("generating", ud))
+async def _generate_task(
+    bot: Bot,
+    chat_id: int,
+    status_message_id: int,
+    selections: dict,
+    configs: BotConfigs,
+) -> None:
+    """Generate a WARP config in the background and send it to the user."""
+    ud = {"lang": selections.get("lang")} if selections.get("lang") else None
 
     try:
         account = await register_warp()
     except Exception:
         logger.exception("WARP registration failed")
-        await query.edit_message_text(t_user("generation_failed", ud))
-        return ConversationHandler.END
+        await bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=status_message_id,
+            text=t_user("generation_failed", ud),
+            parse_mode="HTML",
+        )
+        return
 
     # Resolve user selections
-    dns = configs.dns_servers[user["dns_idx"]]
-    relay = configs.relay_servers[user["relay_idx"]]
+    fmt = selections["format"]
+    dns = configs.dns_servers[selections["dns_idx"]]
+    relay = configs.relay_servers[selections["relay_idx"]]
+    endpoint = configs.resolve_endpoint(relay, fmt)
 
-    if user.get("routing") == "split":
-        selected_set: set[int] = user.get("selected_svcs", set())
+    if selections.get("routing") == "split":
+        selected_set: set[int] = selections.get("selected_svcs", set())
         allowed_ips: list[str] = []
         for idx in sorted(selected_set):
             allowed_ips.extend(configs.routing_services[idx].routes)
@@ -375,65 +430,73 @@ async def _generate(
         client_ipv4=account.client_ipv4,
         client_ipv6=account.client_ipv6,
         dns_servers=dns.servers,
-        endpoint=relay.endpoint,
+        endpoint=endpoint,
         allowed_ips=allowed_ips,
     )
 
-    fmt = user["format"]
     generator = GENERATORS[fmt]()
     content, filename = generator.generate(params)
+
+    # Update status message
+    fmt_label = t_user(f"fmt_{fmt}", ud)
+    await bot.edit_message_text(
+        chat_id=chat_id,
+        message_id=status_message_id,
+        text=t_user("config_generated", ud, format=fmt_label),
+        parse_mode="HTML",
+    )
 
     # Send config as a file
     doc = BytesIO(content.encode("utf-8"))
     doc.name = filename
-    fmt_label = t_user(f"fmt_{fmt}", ud)
-    assert query.message is not None
-    await query.message.reply_document(
+    await bot.send_document(
+        chat_id=chat_id,
         document=doc,
         caption=t_user("config_generated", ud, format=fmt_label),
         parse_mode="HTML",
     )
 
-    # AmneziaWG deep-link (sent as a file – the link is too long for a message)
+    # AmneziaWG deep-link
     if fmt == "amnezia" and isinstance(generator, AmneziaWGGenerator):
         deeplink = generator.generate_deeplink(params)
         link_doc = BytesIO(deeplink.encode("utf-8"))
         link_doc.name = "warp-amnezia-deeplink.txt"
-        await query.message.reply_document(
+        await bot.send_document(
+            chat_id=chat_id,
             document=link_doc,
             caption=t_user("amnezia_deeplink", ud),
             parse_mode="HTML",
         )
 
     # Offer to generate another config
-    await query.message.reply_text(
-        t_user("btn_generate", ud),
+    await bot.send_message(
+        chat_id=chat_id,
+        text=t_user("generate_another_text", ud),
         reply_markup=generate_another_keyboard(ud),
     )
-    return SELECT_FORMAT
 
 
 # ------------------------------------------------------------------
-# "Generate another" callback (re-enter the conversation)
+# "Generate another" — standalone callback (outside conversation)
 # ------------------------------------------------------------------
 async def on_generate_another(
     update: Update, context: ContextTypes.DEFAULT_TYPE
-) -> int:
-    """Re-enter the conversation from the generate-another button."""
+) -> None:
+    """Show the format picker when user taps 'Generate another'."""
     query = update.callback_query
-    assert query is not None and context.user_data is not None
+    assert query is not None
     await query.answer()
 
     # Clear previous selections but keep user preferences (like lang)
-    for key in ("format", "dns_idx", "relay_idx", "routing", "selected_svcs"):
-        context.user_data.pop(key, None)
+    if context.user_data is not None:
+        for key in ("format", "dns_idx", "relay_idx", "routing", "selected_svcs"):
+            context.user_data.pop(key, None)
 
     await query.edit_message_text(
         t_user("step_format", _ud(context)),
         parse_mode="HTML",
         reply_markup=format_keyboard(_ud(context)),
     )
-    return SELECT_FORMAT
 
 
 # ------------------------------------------------------------------
@@ -462,6 +525,12 @@ def setup_handlers(app: Application) -> None:  # type: ignore[type-arg]
         MessageHandler(filters.Regex(r"^❓"), help_handler)
     )
 
+    # "Generate another" button — handled outside the conversation so it
+    # works even after the conversation has ended.
+    app.add_handler(
+        CallbackQueryHandler(on_generate_another, pattern=f"^{GENERATE_ANOTHER_CB}$")
+    )
+
     # Config-generation conversation
     conv = ConversationHandler(
         entry_points=[
@@ -470,7 +539,6 @@ def setup_handlers(app: Application) -> None:  # type: ignore[type-arg]
         states={
             SELECT_FORMAT: [
                 CallbackQueryHandler(on_format, pattern=f"^{FORMAT_CB}"),
-                CallbackQueryHandler(on_generate_another, pattern=f"^{GENERATE_ANOTHER_CB}$"),
             ],
             SELECT_DNS: [
                 CallbackQueryHandler(on_dns, pattern=f"^{DNS_CB}"),
@@ -492,5 +560,6 @@ def setup_handlers(app: Application) -> None:  # type: ignore[type-arg]
             ],
         },
         fallbacks=[CommandHandler("cancel", cancel)],
+        allow_reentry=True,
     )
     app.add_handler(conv)
