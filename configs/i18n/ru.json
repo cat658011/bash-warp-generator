@@ -1,7 +1,7 @@
 {
-  "welcome": "🚀 <b>WARP Генератор Конфигов</b>\n━━━━━━━━━━━━━━━━━━━━━━━━\n\nГенерация конфигов <b>Cloudflare WARP</b> VPN\nв различных форматах одним нажатием.\n\n📋 <b>Поддерживаемые форматы:</b>\n  🔐 WireGuard\n  🛡️ AmneziaWG\n  ⚔️ Clash / Clash Meta\n  🪟 WireSock (Windows)\n\nИспользуйте меню ниже ⬇️",
+  "welcome": "🚀 <b>WARP Генератор Конфигов</b>\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚡ Генерируйте конфиги <b>Cloudflare WARP</b> VPN\nмгновенно в нужном формате.\n\n📋 <b>Форматы и порты:</b>\n  🔐 WireGuard — порт {port_wg}\n  🛡️ AmneziaWG — порт {port_awg}\n  ⚔️ Clash / Clash Meta — порт {port_clash}\n  🪟 WireSock (Windows) — порт {port_ws}\n\n🌍 <b>{relay_count}</b> эндпоинтов по всему миру\n🔒 Уникальные ключи для каждого конфига\n🔀 Раздельный трафик для <b>{svc_count}+</b> сервисов\n\nИспользуйте меню ниже ⬇️",
 
-  "help": "❓ <b>Помощь и руководства</b>\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n📖 <b>Как добавить DNS сервер</b>\nОткройте <code>configs/dns_servers.json</code> и добавьте:\n<pre>{\n  \"name\": \"Мой DNS\",\n  \"servers\": [\"10.0.0.1\", \"10.0.0.2\"]\n}</pre>\n\n📖 <b>Как добавить relay endpoint</b>\nОткройте <code>configs/relay_servers.json</code> и добавьте:\n<pre>{\n  \"name\": \"Свой Relay\",\n  \"endpoint\": \"203.0.113.1:51820\"\n}</pre>\n\n📖 <b>Как добавить сервис для раздельного трафика</b>\nОткройте <code>configs/routing_services.json</code> и добавьте:\n<pre>{\n  \"name\": \"Мой Сервис\",\n  \"routes\": [\"203.0.113.0/24\"]\n}</pre>\n\n🔄 Перезапустите бота после редактирования конфигов.\n\n🛠️ <b>Команды:</b>\n/start — показать приветствие и меню\n/cancel — отменить текущую генерацию",
+  "help": "❓ <b>Помощь</b>\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n📖 <b>Как пользоваться ботом</b>\n1. Нажмите <b>🚀 Генерация конфига</b>\n2. Выберите формат VPN (WireGuard, AmneziaWG и др.)\n3. Выберите DNS-сервер и конечную точку\n4. Выберите режим маршрутизации (весь трафик или выборочно)\n5. Подтвердите — бот сгенерирует и отправит вам файл конфига\n\n🔌 <b>Порты протоколов</b>\nКаждый формат использует свой порт на эндпоинте автоматически — настройка не нужна.\n\n📦 <b>Форматы VPN</b>\n🔐 <b>WireGuard</b> — стандартный .conf для любого WireGuard-клиента\n🛡️ <b>AmneziaWG</b> — WireGuard с обходом DPI (приложение AmneziaVPN)\n⚔️ <b>Clash</b> — YAML прокси-конфиг для Clash / Clash Meta\n🪟 <b>WireSock</b> — конфиг WireGuard для Windows (WireSock)\n\n📲 <b>Как импортировать</b>\n• <b>WireGuard</b> — откройте приложение → Импорт из файла\n• <b>AmneziaVPN</b> — используйте ссылку <code>vpn://</code> или импортируйте .conf\n• <b>Clash</b> — вставьте YAML в профиль Clash\n• <b>WireSock</b> — загрузите .conf в клиент WireSock\n\n🛠️ <b>Команды:</b>\n/start — показать приветствие и меню\n/lang — сменить язык\n/cancel — отменить текущую генерацию",
 
   "warp_status": "📊 <b>Статус WARP</b>\n\nПроверьте текущий статус сервиса Cloudflare WARP:\n👉 <a href=\"https://t.me/cfwarpstatus\">@cfwarpstatus</a>",
 
@@ -10,13 +10,16 @@
   "step_relay": "🔄 <b>Шаг 3/5</b> — Выберите конечную точку:\n\n<i>По умолчанию — стандартный Cloudflare endpoint.\nСерверы стран могут помочь обойти региональные блокировки.</i>",
   "step_routing": "🔗 <b>Шаг 4/5</b> — Выберите режим маршрутизации:\n\n<i>Все сайты — весь трафик пойдёт через VPN.\nОпределённые сайты — только выбранные сервисы.</i>",
   "step_services": "🔗 Выберите сервисы для маршрутизации через WARP:\n(нажмите для переключения, затем нажмите <b>Готово</b>)",
-  "step_confirm": "📋 <b>Подтверждение генерации конфига</b>\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n📦 Формат: <b>{format}</b>\n🌐 DNS: <b>{dns}</b>\n🔄 Конечная точка: <b>{relay}</b>\n🔗 Сайты: <b>{routing}</b>\n\nНажмите <b>✅ Подтвердить</b> для генерации конфига.",
+  "step_confirm": "📋 <b>Подтверждение генерации конфига</b>\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n📦 Формат: <b>{format}</b>\n🌐 DNS: <b>{dns}</b>\n📡 Эндпоинт: <b>{endpoint}</b>\n🔌 Порт: <b>{port}</b>\n🔗 Сайты: <b>{routing}</b>\n\nНажмите <b>✅ Подтвердить</b> для генерации конфига.",
 
   "generating": "⏳ Генерация конфигурации WARP…",
   "generation_failed": "❌ Не удалось зарегистрироваться в Cloudflare WARP. Попробуйте позже.",
   "config_generated": "✅ <b>Конфиг WARP сгенерирован!</b>\n📄 Формат: <b>{format}</b>",
   "amnezia_deeplink": "🔗 <b>Ссылка AmneziaVPN</b>\nОткройте файл и скопируйте ссылку <code>vpn://</code> в AmneziaVPN.",
   "cancelled": "❌ Генерация отменена.",
+
+  "lang_prompt": "🌐 <b>Выберите язык:</b>",
+  "lang_changed": "✅ Язык изменён на <b>Русский</b>.",
 
   "btn_generate": "🚀 Генерация конфига",
   "btn_status": "📊 Статус WARP",
@@ -54,5 +57,44 @@
   "web_btn_generate": "⬇️ Сгенерировать и скачать",
   "web_footer_status": "📊 Статус WARP",
   "web_footer_github": "⭐ GitHub",
-  "web_error_warp": "Ошибка регистрации WARP. API Cloudflare может быть заблокирован в вашем регионе. Попробуйте запустить на VPS или облачном сервере."
+  "web_error_warp": "Ошибка регистрации WARP. API Cloudflare может быть заблокирован в вашем регионе. Попробуйте запустить на VPS или облачном сервере.",
+
+  "dns_cloudflare": "Cloudflare DNS",
+  "dns_cloudflare_family": "Cloudflare Семейный DNS",
+  "dns_xbox": "XBox DNS",
+  "dns_comss": "Comss DNS",
+  "dns_google": "Google DNS",
+  "dns_adguard": "AdGuard DNS",
+  "dns_quad9": "Quad9 DNS",
+  "dns_yandex": "Yandex DNS",
+
+  "relay_cloudflare": "Cloudflare",
+  "relay_finland_1": "Финляндия 1",
+  "relay_finland_2": "Финляндия 2",
+  "relay_netherlands_1": "Нидерланды 1",
+  "relay_netherlands_2": "Нидерланды 2",
+  "relay_poland_1": "Польша 1",
+  "relay_poland_2": "Польша 2",
+  "relay_germany_1": "Германия 1",
+  "relay_estonia_1": "Эстония 1",
+  "relay_russia_1": "Россия 1",
+
+  "svc_full_tunnel": "Весь трафик (полный туннель)",
+  "svc_google_youtube": "Google / YouTube",
+  "svc_meta": "Meta (Instagram / Facebook)",
+  "svc_twitter": "Twitter / X",
+  "svc_telegram": "Telegram",
+  "svc_discord": "Discord",
+  "svc_spotify": "Spotify",
+  "svc_netflix": "Netflix",
+  "svc_openai": "OpenAI (ChatGPT)",
+  "svc_tiktok": "TikTok",
+  "svc_steam": "Steam",
+
+  "web_lang_label": "Язык",
+  "web_theme_light": "Светлая",
+  "web_theme_dark": "Тёмная",
+  "web_generating": "Генерация…",
+  "web_generate_again": "⬇️ Сгенерировать ещё",
+  "web_generation_failed": "Ошибка генерации. Попробуйте ещё раз."
 }

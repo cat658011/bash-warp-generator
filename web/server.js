@@ -2,7 +2,7 @@
 
 const path = require('node:path');
 const express = require('express');
-const { loadConfigs, loadI18n } = require('./lib/config');
+const { loadConfigs, loadI18n, availableLanguages } = require('./lib/config');
 const { registerWarp } = require('./lib/warp');
 const { GENERATORS, FORMAT_LABELS } = require('./lib/generators');
 
@@ -13,21 +13,47 @@ const PORT = process.env.PORT || 3000;
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
 
 // Load configs once at startup
 const configs = loadConfigs();
-const i18n = loadI18n();
+const languages = availableLanguages();
+
+// Helper: resolve translated name for a config item
+function resolveNames(items, prefix, i18n) {
+  return items.map((item) => ({
+    ...item,
+    name: i18n[prefix + item.id] || item.id,
+  }));
+}
+
+// Helper: resolve format labels with localized descriptions
+function resolveFormatLabels(formatLabels, i18n) {
+  const resolved = {};
+  for (const [key, val] of Object.entries(formatLabels)) {
+    resolved[key] = {
+      name: val.name,
+      desc: i18n[val.descKey] || val.descKey,
+    };
+  }
+  return resolved;
+}
 
 // ── Routes ───────────────────────────────────────────────────────────────────
 
-app.get('/', (_req, res) => {
+app.get('/', (req, res) => {
+  const lang = req.query.lang || process.env.BOT_LANG || 'ru';
+  const i18n = loadI18n(lang);
+
   res.render('index', {
     formats: Object.keys(GENERATORS),
-    formatLabels: FORMAT_LABELS,
-    dnsServers: configs.dnsServers,
-    relayServers: configs.relayServers,
-    routingServices: configs.routingServices,
+    formatLabels: resolveFormatLabels(FORMAT_LABELS, i18n),
+    dnsServers: resolveNames(configs.dnsServers, 'dns_', i18n),
+    relayServers: resolveNames(configs.relayServers, 'relay_', i18n),
+    routingServices: resolveNames(configs.routingServices, 'svc_', i18n),
     t: i18n,
+    currentLang: lang,
+    languages,
   });
 });
 
@@ -45,6 +71,9 @@ app.post('/generate', async (req, res) => {
     : req.body.services
       ? [req.body.services]
       : [];
+
+  const lang = req.body.lang || process.env.BOT_LANG || 'ru';
+  const i18n = loadI18n(lang);
 
   const dns = configs.dnsServers[dnsIdx];
   const relay = configs.relayServers[relayIdx];
@@ -65,7 +94,7 @@ app.post('/generate', async (req, res) => {
     account = await registerWarp();
   } catch (err) {
     console.error('WARP registration failed:', err);
-    return res.status(502).send(i18n.web_error_warp);
+    return res.status(502).json({ error: i18n.web_error_warp || 'WARP registration failed' });
   }
 
   const params = {
@@ -93,7 +122,7 @@ app.post('/generate', async (req, res) => {
 // Only start listening when run directly (not when imported for testing)
 if (require.main === module) {
   app.listen(PORT, () => {
-    console.log(`🚀 WARP Config Generator запущен: http://localhost:${PORT}`);
+    console.log(`🚀 WARP Config Generator running: http://localhost:${PORT}`);
   });
 }
 

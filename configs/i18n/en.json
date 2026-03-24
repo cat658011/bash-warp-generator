@@ -1,7 +1,7 @@
 {
-  "welcome": "🚀 <b>WARP Config Generator</b>\n━━━━━━━━━━━━━━━━━━━━━━━━\n\nGenerate <b>Cloudflare WARP</b> VPN configs\nin multiple formats with one tap.\n\n📋 <b>Supported formats:</b>\n  🔐 WireGuard\n  🛡️ AmneziaWG\n  ⚔️ Clash / Clash Meta\n  🪟 WireSock (Windows)\n\nUse the menu below to get started ⬇️",
+  "welcome": "🚀 <b>WARP Config Generator</b>\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚡ Generate <b>Cloudflare WARP</b> VPN configs\ninstantly in any format you need.\n\n📋 <b>Supported formats &amp; ports:</b>\n  🔐 WireGuard — port {port_wg}\n  🛡️ AmneziaWG — port {port_awg}\n  ⚔️ Clash / Clash Meta — port {port_clash}\n  🪟 WireSock (Windows) — port {port_ws}\n\n🌍 <b>{relay_count}</b> endpoints worldwide\n🔒 Unique keys for every config\n🔀 Split-tunnel for <b>{svc_count}+</b> services\n\nUse the menu below to get started ⬇️",
 
-  "help": "❓ <b>Help &amp; Guides</b>\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n📖 <b>How to add a custom DNS server</b>\nOpen <code>configs/dns_servers.json</code> and add:\n<pre>{\n  \"name\": \"My DNS\",\n  \"servers\": [\"10.0.0.1\", \"10.0.0.2\"]\n}</pre>\n\n📖 <b>How to add a relay endpoint</b>\nOpen <code>configs/relay_servers.json</code> and add:\n<pre>{\n  \"name\": \"Custom Relay\",\n  \"endpoint\": \"203.0.113.1:51820\"\n}</pre>\n\n📖 <b>How to add a split-tunnel service</b>\nOpen <code>configs/routing_services.json</code> and add:\n<pre>{\n  \"name\": \"My Service\",\n  \"routes\": [\"203.0.113.0/24\"]\n}</pre>\n\n🔄 Restart the bot after editing config files.\n\n🛠️ <b>Commands:</b>\n/start — show welcome &amp; menu\n/cancel — cancel current generation",
+  "help": "❓ <b>Help &amp; Guides</b>\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n📖 <b>How to use this bot</b>\n1. Tap <b>🚀 Generate Config</b>\n2. Choose a VPN format (WireGuard, AmneziaWG, etc.)\n3. Pick a DNS server and endpoint\n4. Select routing mode (all traffic or specific sites)\n5. Confirm — the bot will generate and send you a config file\n\n🔌 <b>Protocol Ports</b>\nEach format uses its own port on the endpoint automatically — no manual setup needed.\n\n📦 <b>VPN Formats</b>\n🔐 <b>WireGuard</b> — standard .conf for any WireGuard client\n🛡️ <b>AmneziaWG</b> — WireGuard with DPI bypass (use AmneziaVPN app)\n⚔️ <b>Clash</b> — YAML proxy config for Clash / Clash Meta\n🪟 <b>WireSock</b> — WireGuard config for Windows (WireSock app)\n\n📲 <b>How to import</b>\n• <b>WireGuard</b> — open the app → Import from file\n• <b>AmneziaVPN</b> — use the <code>vpn://</code> deep link or import .conf\n• <b>Clash</b> — paste the YAML into your Clash profile\n• <b>WireSock</b> — load the .conf in the WireSock client\n\n🛠️ <b>Commands:</b>\n/start — show welcome &amp; menu\n/lang — change language\n/cancel — cancel current generation",
 
   "warp_status": "📊 <b>WARP Status</b>\n\nCheck the current Cloudflare WARP service status:\n👉 <a href=\"https://t.me/cfwarpstatus\">@cfwarpstatus</a>",
 
@@ -10,13 +10,16 @@
   "step_relay": "🔄 <b>Step 3/5</b> — Select endpoint:\n\n<i>Default — standard Cloudflare endpoint.\nCountry servers may help bypass regional blocks.</i>",
   "step_routing": "🔗 <b>Step 4/5</b> — Select routing mode:\n\n<i>All traffic — all traffic through VPN.\nSpecific sites — only selected services.</i>",
   "step_services": "🔗 Select services to route through WARP:\n(tap to toggle, then press <b>Done</b>)",
-  "step_confirm": "📋 <b>Confirm config generation</b>\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n📦 Format: <b>{format}</b>\n🌐 DNS: <b>{dns}</b>\n🔄 Endpoint: <b>{relay}</b>\n🔗 Routing: <b>{routing}</b>\n\nPress <b>✅ Confirm</b> to generate the config.",
+  "step_confirm": "📋 <b>Confirm config generation</b>\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n📦 Format: <b>{format}</b>\n🌐 DNS: <b>{dns}</b>\n📡 Endpoint: <b>{endpoint}</b>\n🔌 Port: <b>{port}</b>\n🔗 Routing: <b>{routing}</b>\n\nPress <b>✅ Confirm</b> to generate the config.",
 
   "generating": "⏳ Generating WARP configuration…",
   "generation_failed": "❌ Failed to register with Cloudflare WARP. Please try again later.",
   "config_generated": "✅ <b>WARP config generated!</b>\n📄 Format: <b>{format}</b>",
   "amnezia_deeplink": "🔗 <b>AmneziaVPN Deep Link</b>\nOpen the file and copy the <code>vpn://</code> link into AmneziaVPN.",
   "cancelled": "❌ Configuration cancelled.",
+
+  "lang_prompt": "🌐 <b>Choose language:</b>",
+  "lang_changed": "✅ Language changed to <b>English</b>.",
 
   "btn_generate": "🚀 Generate Config",
   "btn_status": "📊 WARP Status",
@@ -54,5 +57,44 @@
   "web_btn_generate": "⬇️ Generate & Download",
   "web_footer_status": "📊 WARP Status",
   "web_footer_github": "⭐ GitHub",
-  "web_error_warp": "WARP registration failed. Cloudflare API may be blocked in your region. Try running on a VPS or cloud server."
+  "web_error_warp": "WARP registration failed. Cloudflare API may be blocked in your region. Try running on a VPS or cloud server.",
+
+  "dns_cloudflare": "Cloudflare DNS",
+  "dns_cloudflare_family": "Cloudflare Family DNS",
+  "dns_xbox": "XBox DNS",
+  "dns_comss": "Comss DNS",
+  "dns_google": "Google DNS",
+  "dns_adguard": "AdGuard DNS",
+  "dns_quad9": "Quad9 DNS",
+  "dns_yandex": "Yandex DNS",
+
+  "relay_cloudflare": "Cloudflare",
+  "relay_finland_1": "Finland 1",
+  "relay_finland_2": "Finland 2",
+  "relay_netherlands_1": "Netherlands 1",
+  "relay_netherlands_2": "Netherlands 2",
+  "relay_poland_1": "Poland 1",
+  "relay_poland_2": "Poland 2",
+  "relay_germany_1": "Germany 1",
+  "relay_estonia_1": "Estonia 1",
+  "relay_russia_1": "Russia 1",
+
+  "svc_full_tunnel": "Full Tunnel (All Traffic)",
+  "svc_google_youtube": "Google / YouTube",
+  "svc_meta": "Meta (Instagram / Facebook)",
+  "svc_twitter": "Twitter / X",
+  "svc_telegram": "Telegram",
+  "svc_discord": "Discord",
+  "svc_spotify": "Spotify",
+  "svc_netflix": "Netflix",
+  "svc_openai": "OpenAI (ChatGPT)",
+  "svc_tiktok": "TikTok",
+  "svc_steam": "Steam",
+
+  "web_lang_label": "Language",
+  "web_theme_light": "Light",
+  "web_theme_dark": "Dark",
+  "web_generating": "Generating…",
+  "web_generate_again": "⬇️ Generate Another",
+  "web_generation_failed": "Generation failed. Try again."
 }

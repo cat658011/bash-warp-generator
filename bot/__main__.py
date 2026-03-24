@@ -34,10 +34,11 @@ def main() -> None:
 
     configs = load_configs()
     logger.info(
-        "Loaded %d DNS servers, %d relay servers, %d routing services",
+        "Loaded %d DNS servers, %d relay servers, %d routing services, %d endpoint ports",
         len(configs.dns_servers),
         len(configs.relay_servers),
         len(configs.routing_services),
+        len(configs.endpoint_ports),
     )
 
     app = Application.builder().token(token).build()

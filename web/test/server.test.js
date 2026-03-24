@@ -41,7 +41,7 @@ describe('GET /', () => {
   it('contains the form', async () => {
     const res = await request('GET', '/');
     assert.ok(res.body.includes('<form'));
-    assert.ok(res.body.includes('action="/generate"'));
+    assert.ok(res.body.includes('id="gen-form"'));
   });
 
   it('lists all formats', async () => {
@@ -59,13 +59,19 @@ describe('GET /', () => {
 
   it('lists relay servers', async () => {
     const res = await request('GET', '/');
-    assert.ok(res.body.includes('162.159.192.1'));
+    assert.ok(res.body.includes('engage.cloudflareclient.com'));
   });
 
   it('displays Russian text', async () => {
     const res = await request('GET', '/');
     assert.ok(res.body.includes('Генератор'));
     assert.ok(res.body.includes('Сгенерировать'));
+  });
+
+  it('supports lang parameter', async () => {
+    const res = await request('GET', '/?lang=en');
+    assert.ok(res.body.includes('WARP Generator'));
+    assert.ok(res.body.includes('Generate'));
   });
 });
 

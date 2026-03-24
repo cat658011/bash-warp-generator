@@ -28,10 +28,19 @@ function loadI18n(lang) {
   if (fs.existsSync(filePath)) {
     return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
   }
-  // Fallback to Russian
+  // Fallback to English
   return JSON.parse(
-    fs.readFileSync(path.join(CONFIGS_DIR, 'i18n', 'ru.json'), 'utf-8'),
+    fs.readFileSync(path.join(CONFIGS_DIR, 'i18n', 'en.json'), 'utf-8'),
   );
 }
 
-module.exports = { loadConfigs, loadWarpParams, loadI18n };
+function availableLanguages() {
+  const dir = path.join(CONFIGS_DIR, 'i18n');
+  return fs
+    .readdirSync(dir)
+    .filter((f) => f.endsWith('.json'))
+    .map((f) => f.replace('.json', ''))
+    .sort();
+}
+
+module.exports = { loadConfigs, loadWarpParams, loadI18n, availableLanguages };

@@ -14,7 +14,7 @@ CONFIGS_DIR = Path(__file__).resolve().parent.parent / "configs"
 class DnsServer:
     """A selectable DNS server option."""
 
-    name: str
+    id: str
     servers: list[str] = field(default_factory=list)
 
 
@@ -22,7 +22,7 @@ class DnsServer:
 class RelayServer:
     """A selectable relay / endpoint option."""
 
-    name: str
+    id: str
     endpoint: str = ""
 
 
@@ -30,7 +30,7 @@ class RelayServer:
 class RoutingService:
     """A selectable service with IP routes for split-tunnelling."""
 
-    name: str
+    id: str
     routes: list[str] = field(default_factory=list)
 
 
@@ -41,6 +41,12 @@ class BotConfigs:
     dns_servers: list[DnsServer] = field(default_factory=list)
     relay_servers: list[RelayServer] = field(default_factory=list)
     routing_services: list[RoutingService] = field(default_factory=list)
+    endpoint_ports: dict[str, int] = field(default_factory=dict)
+
+    def resolve_endpoint(self, relay: RelayServer, fmt: str) -> str:
+        """Return ``host:port`` combining *relay* host with port for *fmt*."""
+        port = self.endpoint_ports.get(fmt, 4500)
+        return f"{relay.endpoint}:{port}"
 
 
 def _load_json(filename: str) -> Any:
@@ -55,9 +61,11 @@ def load_configs() -> BotConfigs:
     dns_data = _load_json("dns_servers.json")
     relay_data = _load_json("relay_servers.json")
     routing_data = _load_json("routing_services.json")
+    endpoint_ports: dict[str, int] = _load_json("endpoint_ports.json")
 
     return BotConfigs(
         dns_servers=[DnsServer(**entry) for entry in dns_data],
         relay_servers=[RelayServer(**entry) for entry in relay_data],
         routing_services=[RoutingService(**entry) for entry in routing_data],
+        endpoint_ports=endpoint_ports,
     )
