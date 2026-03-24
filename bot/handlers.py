@@ -37,6 +37,7 @@ from bot.keyboards import (
     ROUTE_CB,
     SVC_CB,
     SVC_DONE_CB,
+    COUNT_CB,
     confirm_keyboard,
     dns_keyboard,
     format_keyboard,
@@ -46,6 +47,7 @@ from bot.keyboards import (
     relay_keyboard,
     routing_keyboard,
     services_keyboard,
+    count_keyboard,
 )
 
 logger = logging.getLogger(__name__)
@@ -57,8 +59,11 @@ logger = logging.getLogger(__name__)
     SELECT_RELAY,
     SELECT_ROUTING,
     SELECT_SERVICES,
+    SELECT_COUNT,
     CONFIRM,
-) = range(6)
+) = range(7)
+
+MAX_CONFIGS = 5
 
 
 def _configs(context: ContextTypes.DEFAULT_TYPE) -> BotConfigs:
@@ -68,6 +73,15 @@ def _configs(context: ContextTypes.DEFAULT_TYPE) -> BotConfigs:
 def _ud(context: ContextTypes.DEFAULT_TYPE) -> dict | None:
     """Shortcut to get user_data for translation."""
     return context.user_data
+
+
+def _sanitize_count(raw: int | str | None) -> int:
+    """Clamp requested count to a safe range."""
+    try:
+        count = int(raw) if raw is not None else 1
+    except (TypeError, ValueError):
+        return 1
+    return max(1, min(MAX_CONFIGS, count))
 
 
 # ------------------------------------------------------------------
@@ -235,7 +249,7 @@ async def on_routing(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
     if mode == "full":
         context.user_data["routing"] = "full"
-        return await _show_confirm(update, context)
+        return await _show_count(update, context)
 
     context.user_data["routing"] = "split"
     context.user_data["selected_svcs"] = set()
@@ -259,7 +273,7 @@ async def on_service_toggle(
     await query.answer()
 
     if query.data == SVC_DONE_CB:
-        return await _show_confirm(update, context)
+        return await _show_count(update, context)
 
     idx = int(query.data.removeprefix(SVC_CB))
     selected: set[int] = context.user_data.setdefault("selected_svcs", set())
@@ -278,6 +292,39 @@ async def on_service_toggle(
 
 
 # ------------------------------------------------------------------
+# Step 5 — how many configs?
+# ------------------------------------------------------------------
+async def _show_count(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> int:
+    """Prompt for how many configs to generate."""
+    query = update.callback_query
+    assert query is not None and context.user_data is not None
+    ud = _ud(context)
+
+    await query.edit_message_text(
+        t_user("step_count", ud, max=MAX_CONFIGS),
+        parse_mode="HTML",
+        reply_markup=count_keyboard(ud),
+    )
+    return SELECT_COUNT
+
+
+async def on_count(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> int:
+    """Handle count selection."""
+    query = update.callback_query
+    assert query is not None and query.data is not None and context.user_data is not None
+    await query.answer()
+
+    count = _sanitize_count(query.data.removeprefix(COUNT_CB))
+    context.user_data["count"] = count
+
+    return await _show_confirm(update, context)
+
+
+# ------------------------------------------------------------------
 # Step 5 — confirmation
 # ------------------------------------------------------------------
 async def _show_confirm(
@@ -290,6 +337,7 @@ async def _show_confirm(
     user = context.user_data
     ud = _ud(context)
 
+    count = _sanitize_count(user.get("count", 1))
     fmt = user["format"]
     fmt_label = t_user(f"fmt_{fmt}", ud)
     dns_label = t_user("dns_" + configs.dns_servers[user["dns_idx"]].id, ud)
@@ -306,7 +354,15 @@ async def _show_confirm(
         routing_label = t_user("routing_full_label", ud)
 
     await query.edit_message_text(
-        t_user("step_confirm", ud, format=fmt_label, dns=dns_label, relay=relay_label, routing=routing_label),
+        t_user(
+            "step_confirm",
+            ud,
+            format=fmt_label,
+            count=count,
+            dns=dns_label,
+            relay=relay_label,
+            routing=routing_label,
+        ),
         parse_mode="HTML",
         reply_markup=confirm_keyboard(ud),
     )
@@ -345,14 +401,14 @@ async def _generate(
     user = context.user_data
     ud = _ud(context)
 
-    await query.edit_message_text(t_user("generating", ud))
-
-    try:
-        account = await register_warp()
-    except Exception:
-        logger.exception("WARP registration failed")
-        await query.edit_message_text(t_user("generation_failed", ud))
-        return ConversationHandler.END
+    count = _sanitize_count(user.get("count", 1))
+    await query.edit_message_text(
+        t_user(
+            "generating_multi" if count > 1 else "generating",
+            ud,
+            count=count,
+        )
+    )
 
     # Resolve user selections
     dns = configs.dns_servers[user["dns_idx"]]
@@ -368,42 +424,56 @@ async def _generate(
     else:
         allowed_ips = ["0.0.0.0/0", "::/0"]
 
-    params = GeneratorParams(
-        private_key=account.private_key,
-        public_key=account.public_key,
-        peer_public_key=account.peer_public_key,
-        client_ipv4=account.client_ipv4,
-        client_ipv6=account.client_ipv6,
-        dns_servers=dns.servers,
-        endpoint=relay.endpoint,
-        allowed_ips=allowed_ips,
-    )
-
     fmt = user["format"]
     generator = GENERATORS[fmt]()
-    content, filename = generator.generate(params)
-
-    # Send config as a file
-    doc = BytesIO(content.encode("utf-8"))
-    doc.name = filename
     fmt_label = t_user(f"fmt_{fmt}", ud)
-    assert query.message is not None
-    await query.message.reply_document(
-        document=doc,
-        caption=t_user("config_generated", ud, format=fmt_label),
-        parse_mode="HTML",
-    )
 
-    # AmneziaWG deep-link (sent as a file – the link is too long for a message)
-    if fmt == "amnezia" and isinstance(generator, AmneziaWGGenerator):
-        deeplink = generator.generate_deeplink(params)
-        link_doc = BytesIO(deeplink.encode("utf-8"))
-        link_doc.name = "warp-amnezia-deeplink.txt"
+    for i in range(count):
+        try:
+            account = await register_warp()
+        except Exception:
+            logger.exception("WARP registration failed")
+            await query.edit_message_text(t_user("generation_failed", ud))
+            return ConversationHandler.END
+
+        params = GeneratorParams(
+            private_key=account.private_key,
+            public_key=account.public_key,
+            peer_public_key=account.peer_public_key,
+            client_ipv4=account.client_ipv4,
+            client_ipv6=account.client_ipv6,
+            dns_servers=dns.servers,
+            endpoint=relay.endpoint,
+            allowed_ips=allowed_ips,
+        )
+
+        content, filename = generator.generate(params)
+
+        # Send config as a file
+        doc = BytesIO(content.encode("utf-8"))
+        suffix = f"-{i + 1}" if count > 1 else ""
+        if "." in filename:
+            stem, dot, ext = filename.rpartition(".")
+            doc.name = f"{stem}{suffix}.{ext}" if stem else f"{filename}{suffix}"
+        else:
+            doc.name = f"{filename}{suffix}"
+        assert query.message is not None
         await query.message.reply_document(
-            document=link_doc,
-            caption=t_user("amnezia_deeplink", ud),
+            document=doc,
+            caption=t_user("config_generated", ud, format=fmt_label),
             parse_mode="HTML",
         )
+
+        # AmneziaWG deep-link (sent as a file – the link is too long for a message)
+        if fmt == "amnezia" and isinstance(generator, AmneziaWGGenerator):
+            deeplink = generator.generate_deeplink(params)
+            link_doc = BytesIO(deeplink.encode("utf-8"))
+            link_doc.name = f"warp-amnezia-deeplink{suffix or ''}.txt"
+            await query.message.reply_document(
+                document=link_doc,
+                caption=t_user("amnezia_deeplink", ud),
+                parse_mode="HTML",
+            )
 
     # Offer to generate another config
     await query.message.reply_text(
@@ -425,7 +495,7 @@ async def on_generate_another(
     await query.answer()
 
     # Clear previous selections but keep user preferences (like lang)
-    for key in ("format", "dns_idx", "relay_idx", "routing", "selected_svcs"):
+    for key in ("format", "dns_idx", "relay_idx", "routing", "selected_svcs", "count"):
         context.user_data.pop(key, None)
 
     await query.edit_message_text(
@@ -486,6 +556,9 @@ def setup_handlers(app: Application) -> None:  # type: ignore[type-arg]
                     on_service_toggle,
                     pattern=f"^{SVC_CB}",
                 ),
+            ],
+            SELECT_COUNT: [
+                CallbackQueryHandler(on_count, pattern=f"^{COUNT_CB}"),
             ],
             CONFIRM: [
                 CallbackQueryHandler(on_confirm, pattern=f"^({CONFIRM_CB}|{BACK_CB})"),

@@ -24,8 +24,11 @@ def _start_server():
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )
-    # Give the server a moment to start
-    time.sleep(1.5)
+    # Wait for server to start (up to ~3s)
+    for _ in range(6):
+        if proc.poll() is not None:
+            break
+        time.sleep(0.5)
     return proc
 
 

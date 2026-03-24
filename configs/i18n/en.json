@@ -5,14 +5,16 @@
 
   "warp_status": "📊 <b>WARP Status</b>\n\nCheck the current Cloudflare WARP service status:\n👉 <a href=\"https://t.me/cfwarpstatus\">@cfwarpstatus</a>",
 
-  "step_format": "⚙️ <b>Step 1/5</b> — Choose config format:\n\n<i>Select the output format for your VPN configuration.</i>",
-  "step_dns": "🔩 <b>Step 2/5</b> — Select DNS server:\n\n🌐 DNS servers marked <b>[C]</b> — community (may help bypass blocks).",
-  "step_relay": "🔄 <b>Step 3/5</b> — Select endpoint:\n\n<i>Default — standard Cloudflare endpoint.\nCountry servers may help bypass regional blocks.</i>",
-  "step_routing": "🔗 <b>Step 4/5</b> — Select routing mode:\n\n<i>All traffic — all traffic through VPN.\nSpecific sites — only selected services.</i>",
+  "step_format": "⚙️ <b>Step 1/6</b> — Choose config format:\n\n<i>Select the output format for your VPN configuration.</i>",
+  "step_dns": "🔩 <b>Step 2/6</b> — Select DNS server:\n\n🌐 DNS servers marked <b>[C]</b> — community (may help bypass blocks).",
+  "step_relay": "🔄 <b>Step 3/6</b> — Select endpoint:\n\n<i>Default — standard Cloudflare endpoint.\nCountry servers may help bypass regional blocks.</i>",
+  "step_routing": "🔗 <b>Step 4/6</b> — Select routing mode:\n\n<i>All traffic — all traffic through VPN.\nSpecific sites — only selected services.</i>",
   "step_services": "🔗 Select services to route through WARP:\n(tap to toggle, then press <b>Done</b>)",
-  "step_confirm": "📋 <b>Confirm config generation</b>\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n📦 Format: <b>{format}</b>\n🌐 DNS: <b>{dns}</b>\n🔄 Endpoint: <b>{relay}</b>\n🔗 Routing: <b>{routing}</b>\n\nPress <b>✅ Confirm</b> to generate the config.",
+  "step_count": "🔢 <b>Step 5/6</b> — How many configs?\n\n<i>Select how many configs to generate (max {max}).</i>",
+  "step_confirm": "📋 <b>Step 6/6</b> — Confirm config generation\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n📦 Format: <b>{format}</b>\n🔢 Count: <b>{count}</b>\n🌐 DNS: <b>{dns}</b>\n🔄 Endpoint: <b>{relay}</b>\n🔗 Routing: <b>{routing}</b>\n\nPress <b>✅ Confirm</b> to generate the config.",
 
   "generating": "⏳ Generating WARP configuration…",
+  "generating_multi": "⏳ Generating {count} WARP configurations…",
   "generation_failed": "❌ Failed to register with Cloudflare WARP. Please try again later.",
   "config_generated": "✅ <b>WARP config generated!</b>\n📄 Format: <b>{format}</b>",
   "amnezia_deeplink": "🔗 <b>AmneziaVPN Deep Link</b>\nOpen the file and copy the <code>vpn://</code> link into AmneziaVPN.",
@@ -42,6 +44,7 @@
   "btn_done": "✔️ Done",
   "btn_confirm": "✅ Confirm",
   "btn_back": "◀️ Back",
+  "count_option": "{count}×",
 
   "web_title": "WARP Generator",
   "web_subtitle": "Create a Cloudflare WARP config in a few clicks",
