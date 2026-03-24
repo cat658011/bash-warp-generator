@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>WARP Config Generator</title>
-  <meta name="description" content="Generate Cloudflare WARP VPN configurations in WireGuard, AmneziaWG, Clash, and WireSock formats.">
+  <title>WARP Генератор конфигов</title>
+  <meta name="description" content="Генерация конфигов Cloudflare WARP VPN в форматах WireGuard, AmneziaWG, Clash и WireSock.">
   <style>
     :root { --bg: #0f172a; --card: #1e293b; --card-hover: #263348; --accent: #3b82f6; --accent-hover: #2563eb; --success: #22c55e; --text: #e2e8f0; --muted: #94a3b8; --border: #334155; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -46,68 +46,68 @@
 </head>
 <body>
   <div class="container">
-    <h1>🚀 WARP Config Generator</h1>
-    <p class="subtitle">Generate Cloudflare WARP VPN configurations</p>
+    <h1>🚀 WARP Генератор конфигов</h1>
+    <p class="subtitle">Генерация конфигов Cloudflare WARP VPN</p>
 
     <form action="/generate" method="post">
       <div class="card">
-        <h2><span class="step-badge">1</span> 📦 Output Format</h2>
+        <h2><span class="step-badge">1</span> 📦 Формат</h2>
         <select name="format">
-          {% for fmt in formats %}
-          <option value="{{ fmt }}">{{ fmt | upper }}</option>
-          {% endfor %}
+          <% formats.forEach(function(fmt) { %>
+          <option value="<%= fmt %>"><%= formatLabels[fmt].name %> — <%= formatLabels[fmt].desc %></option>
+          <% }); %>
         </select>
-        <p class="hint">Choose the VPN client format for your configuration file.</p>
+        <p class="hint">Выберите формат конфига для вашего VPN-клиента.</p>
       </div>
 
       <div class="card">
-        <h2><span class="step-badge">2</span> 🌐 DNS Server</h2>
+        <h2><span class="step-badge">2</span> 🌐 DNS-сервер</h2>
         <select name="dns">
-          {% for dns in dns_servers %}
-          <option value="{{ loop.index0 }}">{{ dns.name }} ({{ dns.servers | join(', ') }})</option>
-          {% endfor %}
+          <% dnsServers.forEach(function(dns, i) { %>
+          <option value="<%= i %>"><%= dns.name %> (<%= dns.servers.join(', ') %>)</option>
+          <% }); %>
         </select>
-        <p class="hint">Select a DNS resolver. Community DNS may help bypass regional blocks.</p>
+        <p class="hint">Выберите DNS-резолвер. Альтернативные DNS могут помочь обойти блокировки.</p>
       </div>
 
       <div class="card">
-        <h2><span class="step-badge">3</span> 📡 Relay / Endpoint</h2>
+        <h2><span class="step-badge">3</span> 📡 Релей / Эндпоинт</h2>
         <select name="relay">
-          {% for relay in relay_servers %}
-          <option value="{{ loop.index0 }}">{{ relay.name }} — {{ relay.endpoint }}</option>
-          {% endfor %}
+          <% relayServers.forEach(function(relay, i) { %>
+          <option value="<%= i %>"><%= relay.name %> — <%= relay.endpoint %></option>
+          <% }); %>
         </select>
-        <p class="hint">Default is the standard Cloudflare endpoint. Alternative endpoints may improve connectivity.</p>
+        <p class="hint">По умолчанию — стандартный эндпоинт Cloudflare. Альтернативные могут улучшить подключение.</p>
       </div>
 
       <div class="card">
-        <h2><span class="step-badge">4</span> 🔀 Routing Mode</h2>
+        <h2><span class="step-badge">4</span> 🔀 Маршрутизация</h2>
         <div class="radio-group">
-          <label><input type="radio" name="routing" value="full" checked id="route-full"><span>🌍 Full Tunnel</span></label>
-          <label><input type="radio" name="routing" value="split" id="route-split"><span>🔀 Split Tunnel</span></label>
+          <label><input type="radio" name="routing" value="full" checked><span>🌍 Весь трафик</span></label>
+          <label><input type="radio" name="routing" value="split"><span>🔀 Раздельный туннель</span></label>
         </div>
-        <p class="hint">Full tunnel routes all traffic. Split tunnel routes only selected services.</p>
+        <p class="hint">Весь трафик — всё через VPN. Раздельный — только выбранные сервисы.</p>
         <div class="services" id="services">
-          {% for svc in routing_services %}
-            {% if loop.index0 > 0 %}
-            <label><input type="checkbox" name="services" value="{{ loop.index0 }}"> {{ svc.name }}</label>
-            {% endif %}
-          {% endfor %}
+          <% routingServices.forEach(function(svc, i) { %>
+            <% if (i > 0) { %>
+            <label><input type="checkbox" name="services" value="<%= i %>"> <%= svc.name %></label>
+            <% } %>
+          <% }); %>
         </div>
       </div>
 
-      <button type="submit">⬇️ Generate &amp; Download</button>
+      <button type="submit">⬇️ Сгенерировать и скачать</button>
     </form>
 
     <div class="footer">
-      <a href="https://t.me/cfwarpstatus" target="_blank" rel="noopener">📊 WARP Status</a> ·
+      <a href="https://t.me/cfwarpstatus" target="_blank" rel="noopener">📊 Статус WARP</a> ·
       <a href="https://github.com/cat658011/bash-warp-generator" target="_blank" rel="noopener">GitHub</a>
     </div>
   </div>
 
   <script>
-    document.querySelectorAll('input[name="routing"]').forEach(r => {
-      r.addEventListener('change', () => {
+    document.querySelectorAll('input[name="routing"]').forEach(function(r) {
+      r.addEventListener('change', function() {
         document.getElementById('services').classList.toggle('show', r.value === 'split' && r.checked);
       });
     });
