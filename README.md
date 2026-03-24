@@ -1,37 +1,41 @@
-# WARP Config Generator
+# 🚀 WARP Config Generator
 
-Generate **Cloudflare WARP** VPN configurations via a **Telegram bot** or a **web interface**.
+Генератор конфигов **Cloudflare WARP** VPN через **Telegram-бота** или **веб-интерфейс**.
 
-## Supported Formats
+![Веб-интерфейс](https://github.com/user-attachments/assets/84ae89b2-b679-4f03-9acd-b79cbda99180)
 
-| Format | Description |
-|--------|-------------|
-| **WireGuard** | Standard `.conf` for any WireGuard client |
-| **AmneziaWG** | `.conf` with obfuscation parameters + `vpn://` deep-link for AmneziaVPN |
-| **Clash** | YAML proxy config for Clash / Clash Meta |
-| **WireSock** | `.conf` tailored for WireSock on Windows |
+## Поддерживаемые форматы
 
-## Features
+| Формат | Описание |
+|--------|----------|
+| **WireGuard** | Стандартный `.conf` для любого WireGuard-клиента |
+| **AmneziaWG** | `.conf` с параметрами обфускации + `vpn://` deeplink для AmneziaVPN |
+| **Clash** | YAML-конфиг прокси для Clash / Clash Meta |
+| **WireSock** | `.conf` для WireSock на Windows |
 
-- **DNS server selection** — choose from Cloudflare, Google, Quad9, AdGuard, OpenDNS, and more
-- **Relay / endpoint selection** — pick an alternative Cloudflare edge endpoint
-- **Routing modes** — full tunnel (all traffic) or split tunnel with per-service routing
-- **Confirmation step** — review your choices before generating
-- **Persistent keyboard menu** — Generate Config, WARP Status, Help buttons always visible
-- **WARP Status** — links to [@cfwarpstatus](https://t.me/cfwarpstatus) for service monitoring
-- **Localisation** — supports multiple languages (English, Russian out of the box; easily extensible)
-- **In-bot help** — guides for adding DNS, relay, and split-tunnel services
-- **Fully configurable** — all options are stored in JSON files under `configs/`
-- **Web interface** — Flask web app for browser-based config generation
+## Возможности
 
-## Quick Start
+- **Выбор DNS-сервера** — Cloudflare, Google, Quad9, AdGuard, OpenDNS и другие
+- **Выбор релея / эндпоинта** — альтернативные Cloudflare edge-эндпоинты
+- **Режимы маршрутизации** — весь трафик (full tunnel) или раздельный туннель (split tunnel) с маршрутами для конкретных сервисов
+- **Подтверждение перед генерацией** — просмотр настроек перед созданием конфига
+- **Постоянная клавиатура** — кнопки «Генерация», «Статус WARP», «Помощь» всегда видны
+- **Статус WARP** — ссылка на [@cfwarpstatus](https://t.me/cfwarpstatus) для мониторинга
+- **Локализация** — русский и английский (легко добавить новые языки)
+- **Помощь прямо в боте** — инструкции по добавлению DNS, релеев и сервисов
+- **Полная настройка** — все параметры хранятся в JSON-файлах в `configs/`
+- **Веб-интерфейс** — Node.js/Express приложение на русском языке
 
-### 1. Create a bot
+---
 
-Talk to [@BotFather](https://t.me/BotFather) on Telegram and create a new bot.
-Copy the API token.
+## Быстрый старт
 
-### 2. Clone & install
+### 1. Создайте бота
+
+Напишите [@BotFather](https://t.me/BotFather) в Telegram и создайте нового бота.
+Скопируйте API-токен.
+
+### 2. Клонируйте и установите
 
 ```bash
 git clone https://github.com/cat658011/bash-warp-generator.git
@@ -39,42 +43,49 @@ cd bash-warp-generator
 pip install -r requirements.txt
 ```
 
-### 3. Run the Telegram bot
+### 3. Запустите Telegram-бота
 
 ```bash
-export BOT_TOKEN="your-telegram-bot-token"
-export BOT_LANG="en"   # or "ru" for Russian
+export BOT_TOKEN="ваш-токен-бота"
+export BOT_LANG="ru"
 python -m bot
 ```
 
-The bot will start polling for updates. Send `/start` in your Telegram chat to begin.
+Бот начнёт получать обновления. Отправьте `/start` в чате, чтобы начать.
 
-### 4. Run the web interface
+### 4. Запустите веб-интерфейс
 
-**Development:**
-
-```bash
-python web/app.py
-```
-
-Open `http://localhost:5000` in your browser.
-
-**Production (with gunicorn):**
+**Установка зависимостей:**
 
 ```bash
-pip install gunicorn
-gunicorn web.app:app --bind 0.0.0.0:8000 --workers 4
+cd web
+npm install
 ```
 
-**Production with nginx (recommended):**
-
-1. Run gunicorn as a systemd service or via a process manager:
+**Запуск в режиме разработки:**
 
 ```bash
-gunicorn web.app:app --bind 127.0.0.1:8000 --workers 4
+node web/server.js
 ```
 
-2. Configure nginx as a reverse proxy:
+Откройте `http://localhost:3000` в браузере.
+
+**Продакшн (с pm2):**
+
+```bash
+npm install -g pm2
+pm2 start web/server.js --name warp-web
+```
+
+**Продакшн с nginx (рекомендуется):**
+
+1. Запустите сервер через pm2 или systemd:
+
+```bash
+PORT=3000 node web/server.js
+```
+
+2. Настройте nginx как реверс-прокси:
 
 ```nginx
 server {
@@ -82,7 +93,7 @@ server {
     server_name your-domain.com;
 
     location / {
-        proxy_pass http://127.0.0.1:8000;
+        proxy_pass http://127.0.0.1:3000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -91,152 +102,301 @@ server {
 }
 ```
 
-3. Use the `/health` endpoint for monitoring:
+3. Используйте эндпоинт `/health` для мониторинга:
 
 ```bash
-curl http://localhost:8000/health
-# {"status": "ok"}
+curl http://localhost:3000/health
+# {"status":"ok"}
 ```
 
-## Localisation
+---
 
-The bot supports multiple languages via JSON files in `bot/lang/`.
+## 📁 Файлы конфигурации
 
-| File | Language |
-|------|----------|
-| `bot/lang/en.json` | English (default) |
-| `bot/lang/ru.json` | Russian |
+Все настройки хранятся в JSON-файлах в папке `configs/`. Редактируйте их — **никаких изменений в коде не требуется**.
 
-Set the language via the `BOT_LANG` environment variable:
+| Файл | Назначение |
+|------|-----------|
+| `dns_servers.json` | DNS-серверы (имя + адреса) |
+| `relay_servers.json` | Альтернативные эндпоинты Cloudflare WARP |
+| `routing_services.json` | IP-диапазоны сервисов для раздельного туннеля |
+
+---
+
+### 📡 Как добавить свой релей (эндпоинт)
+
+Откройте файл `configs/relay_servers.json` и добавьте новый объект в массив:
+
+```json
+[
+  {
+    "name": "Default (Cloudflare)",
+    "endpoint": "162.159.192.1:500"
+  },
+  {
+    "name": "Мой кастомный релей",
+    "endpoint": "203.0.113.1:51820"
+  }
+]
+```
+
+**Поля:**
+
+| Поле | Описание | Пример |
+|------|----------|--------|
+| `name` | Отображаемое имя в боте и на сайте | `"Мой релей (Германия)"` |
+| `endpoint` | IP-адрес и порт эндпоинта WARP | `"203.0.113.1:51820"` |
+
+**Где найти альтернативные эндпоинты:**
+
+```bash
+# Через DNS
+dig +short engage.cloudflareclient.com
+
+# Через утилиту nslookup
+nslookup engage.cloudflareclient.com
+```
+
+Также можно найти актуальные эндпоинты в сообществах и на форумах.
+
+**Поддерживаемые порты:** `500`, `854`, `859`, `1701`, `2408`, `4500`, `51820`
+
+**Поддержка IPv6:**
+
+```json
+{
+  "name": "Cloudflare IPv6",
+  "endpoint": "[2606:4700:d0::a29f:c001]:500"
+}
+```
+
+> 💡 После редактирования перезапустите бота и/или веб-сервер.
+
+---
+
+### 🌐 Как добавить DNS-сервер
+
+Откройте файл `configs/dns_servers.json` и добавьте объект:
+
+```json
+{
+  "name": "Мой DNS",
+  "servers": ["10.0.0.1", "10.0.0.2"]
+}
+```
+
+**Поля:**
+
+| Поле | Описание | Пример |
+|------|----------|--------|
+| `name` | Отображаемое имя | `"AdGuard Family"` |
+| `servers` | Массив IP-адресов DNS-серверов | `["94.140.14.15", "94.140.15.16"]` |
+
+---
+
+### 🔀 Как добавить сервис для раздельного туннеля
+
+Откройте файл `configs/routing_services.json` и добавьте объект:
+
+```json
+{
+  "name": "Мой Сервис",
+  "routes": ["203.0.113.0/24", "198.51.100.0/24"]
+}
+```
+
+**Поля:**
+
+| Поле | Описание | Пример |
+|------|----------|--------|
+| `name` | Название сервиса | `"Яндекс"` |
+| `routes` | Массив CIDR-подсетей | `["77.88.55.0/24", "5.255.255.0/24"]` |
+
+**Как найти IP-диапазоны сервиса:**
+
+```bash
+# Через whois
+whois -h whois.radb.net -- '-i origin AS13238' | grep route
+
+# Через BGP
+# Используйте bgp.he.net для поиска ASN и их префиксов
+
+# Через DNS
+dig +short yandex.ru
+```
+
+> ⚠️ Первый элемент массива (`index 0`) — это «Весь трафик» (Full Tunnel) и он не отображается в меню выбора сервисов. Ваши сервисы должны идти после него.
+
+---
+
+### 📦 Как изменить названия протоколов (форматов)
+
+#### В Telegram-боте
+
+Отредактируйте файл `bot/lang/ru.json`:
+
+```json
+{
+  "fmt_wireguard": "🔐 WireGuard",
+  "fmt_amnezia": "🛡️ AmneziaWG",
+  "fmt_clash": "⚔️ Clash",
+  "fmt_wiresock": "🪟 WireSock",
+  "fmt_wireguard_desc": "Стандартный WireGuard конфиг (.conf)",
+  "fmt_amnezia_desc": "AmneziaWG с защитой от DPI",
+  "fmt_clash_desc": "Конфиг прокси Clash / Clash Meta",
+  "fmt_wiresock_desc": "WireSock для Windows"
+}
+```
+
+Измените значения `fmt_*` и `fmt_*_desc` на нужные. Ключи менять нельзя.
+
+#### В веб-интерфейсе
+
+Отредактируйте `web/lib/generators.js`, секция `FORMAT_LABELS`:
+
+```javascript
+const FORMAT_LABELS = {
+  wireguard: { name: 'WireGuard', desc: 'Стандартный WireGuard конфиг (.conf)' },
+  amnezia: { name: 'AmneziaWG', desc: 'AmneziaWG с защитой от DPI' },
+  clash: { name: 'Clash', desc: 'Конфиг прокси Clash / Clash Meta' },
+  wiresock: { name: 'WireSock', desc: 'WireSock для Windows' },
+};
+```
+
+---
+
+## 🌍 Локализация
+
+Бот поддерживает несколько языков через JSON-файлы в `bot/lang/`.
+
+| Файл | Язык |
+|------|------|
+| `bot/lang/ru.json` | Русский (по умолчанию) |
+| `bot/lang/en.json` | Английский |
+
+Язык задаётся через переменную `BOT_LANG`:
 
 ```bash
 export BOT_LANG="ru"
 python -m bot
 ```
 
-### Adding a new language
+### Как добавить новый язык
 
-1. Copy `bot/lang/en.json` to `bot/lang/<code>.json` (e.g. `de.json`)
-2. Translate all values (keep the keys unchanged)
-3. Set `BOT_LANG=de` and restart the bot
+1. Скопируйте `bot/lang/ru.json` в `bot/lang/<код>.json` (например, `uk.json`)
+2. Переведите все значения (ключи менять нельзя)
+3. Установите `BOT_LANG=uk` и перезапустите бота
 
-All message strings, button labels, step descriptions, and UI text are defined
-in the language file. No code changes required.
+Все строки сообщений, надписи на кнопках, описания шагов и UI-текст определены
+в файле языка. Изменений в коде не требуется.
 
-## Configuration Files
+---
 
-All selectable options live in `configs/`:
-
-| File | Purpose |
-|------|---------|
-| `dns_servers.json` | DNS resolver options (name + server addresses) |
-| `relay_servers.json` | Cloudflare WARP endpoint alternatives |
-| `routing_services.json` | Service IP ranges for split-tunnel routing |
-
-Edit these files to add, remove, or modify the available options. No code changes required.
-
-### Adding a custom DNS server
-
-Add an object to the array in `configs/dns_servers.json` and restart the bot:
-
-```json
-{
-  "name": "My DNS",
-  "servers": ["10.0.0.1", "10.0.0.2"]
-}
-```
-
-### Adding a custom relay endpoint
-
-Add an object to the array in `configs/relay_servers.json`:
-
-```json
-{
-  "name": "Custom Relay",
-  "endpoint": "203.0.113.1:51820"
-}
-```
-
-> **Tip:** you can find alternative Cloudflare WARP endpoints by running
-> `dig +short engage.cloudflareclient.com` or by checking community lists.
-
-### Adding a split-tunnel service
-
-Add an object to the array in `configs/routing_services.json`:
-
-```json
-{
-  "name": "My Service",
-  "routes": ["203.0.113.0/24", "198.51.100.0/24"]
-}
-```
-
-> **Finding IP ranges:** use `whois` lookups, BGP route databases (e.g. bgp.he.net),
-> or check the service's official documentation for their published IP blocks.
-
-## Project Structure
+## 📂 Структура проекта
 
 ```
-├── core/                    # Core library (no Telegram dependency)
+├── core/                    # Основная библиотека (без зависимости от Telegram)
 │   ├── __init__.py
-│   ├── config.py            # JSON config loading & dataclasses
-│   ├── generators.py        # WireGuard / AmneziaWG / Clash / WireSock generators
-│   └── warp.py              # Cloudflare WARP API client
-├── bot/                     # Telegram bot front-end
+│   ├── config.py            # Загрузка JSON-конфигов и dataclasses
+│   ├── generators.py        # Генераторы WireGuard / AmneziaWG / Clash / WireSock
+│   └── warp.py              # Клиент API Cloudflare WARP
+├── bot/                     # Telegram-бот
 │   ├── __init__.py
-│   ├── __main__.py          # Entry-point (python -m bot)
-│   ├── handlers.py          # Conversation flow + menu handlers
-│   ├── keyboards.py         # Inline & reply keyboard builders
-│   ├── i18n.py              # Localisation loader
-│   └── lang/                # Language files
-│       ├── en.json          # English
-│       └── ru.json          # Russian
-├── web/                     # Web front-end
-│   ├── app.py               # Flask application
-│   └── templates/
-│       └── index.html       # Generator form
+│   ├── __main__.py          # Точка входа (python -m bot)
+│   ├── handlers.py          # Логика диалога + обработчики меню
+│   ├── keyboards.py         # Построение inline- и reply-клавиатур
+│   ├── i18n.py              # Загрузчик локализации
+│   └── lang/                # Языковые файлы
+│       ├── en.json          # Английский
+│       └── ru.json          # Русский
+├── web/                     # Веб-интерфейс (Node.js / Express)
+│   ├── package.json         # Зависимости Node.js
+│   ├── server.js            # Express-приложение
+│   ├── lib/
+│   │   ├── config.js        # Загрузка JSON-конфигов
+│   │   ├── generators.js    # Генераторы конфигов
+│   │   └── warp.js          # Клиент API WARP (X25519 + регистрация)
+│   ├── views/
+│   │   └── index.ejs        # HTML-шаблон (EJS)
+│   └── test/
+│       └── server.test.js   # Тесты веб-сервера
 ├── configs/
-│   ├── dns_servers.json
-│   ├── relay_servers.json
-│   └── routing_services.json
+│   ├── dns_servers.json     # DNS-серверы
+│   ├── relay_servers.json   # Эндпоинты Cloudflare WARP
+│   └── routing_services.json # IP-маршруты сервисов
 ├── tests/
-│   ├── test_config.py
-│   ├── test_generators.py
-│   ├── test_i18n.py
-│   ├── test_warp.py
-│   └── test_web.py
-├── warp_generator.sh        # Original bash script (kept for reference)
-├── requirements.txt
-├── .env.example
+│   ├── test_config.py       # Тесты конфигурации
+│   ├── test_generators.py   # Тесты генераторов
+│   ├── test_i18n.py         # Тесты локализации
+│   ├── test_warp.py         # Тесты API WARP
+│   └── test_web.py          # Тесты веб-сервера (Node.js)
+├── warp_generator.sh        # Оригинальный bash-скрипт (для справки)
+├── requirements.txt         # Зависимости Python (бот + core)
+├── .env.example             # Пример переменных окружения
 └── README.md
 ```
 
-The `core/` package contains all WARP generation logic and has **no** dependency
-on the Telegram bot. It can be imported by any front-end — bot, web app, CLI, etc.
+Пакет `core/` содержит всю логику генерации WARP и **не зависит** от Telegram.
+Его может использовать любой фронтенд — бот, веб-приложение, CLI и т.д.
 
-## Legacy Bash Script
+Пакет `web/` — полностью автономный Node.js-проект со своими зависимостями
+и генераторами. Он читает конфиги из `configs/` и самостоятельно выполняет
+регистрацию WARP и генерацию конфигов.
 
-The original `warp_generator.sh` is kept for reference.
-Run it directly if you prefer the CLI approach:
+---
 
-```bash
-bash warp_generator.sh
-```
+## 🧪 Тестирование
 
-## Running Tests
+**Python-тесты (бот + core + веб-интеграция):**
 
 ```bash
 pip install pytest
 python -m pytest tests/ -v
 ```
 
-## Troubleshooting
+**JavaScript-тесты (веб-интерфейс):**
 
-- **Bot doesn't respond** — make sure `BOT_TOKEN` is set correctly.
-- **WARP registration fails** — the Cloudflare API may be blocked in your region; run the bot on a VPS or cloud server.
-- **Import errors** — run `pip install -r requirements.txt` first.
-- **Language not loading** — check that `BOT_LANG` matches a file in `bot/lang/` (e.g. `en`, `ru`).
+```bash
+cd web
+npm test
+```
 
-## License
+---
+
+## 🔧 Переменные окружения
+
+| Переменная | Описание | По умолчанию |
+|-----------|----------|-------------|
+| `BOT_TOKEN` | Токен Telegram-бота от @BotFather | — (обязательно) |
+| `BOT_LANG` | Язык бота (`ru`, `en`) | `ru` |
+| `PORT` | Порт веб-интерфейса | `3000` |
+
+---
+
+## 🔄 Legacy Bash-скрипт
+
+Оригинальный `warp_generator.sh` оставлен для справки.
+Запустите его напрямую, если предпочитаете CLI:
+
+```bash
+bash warp_generator.sh
+```
+
+---
+
+## ❓ Решение проблем
+
+| Проблема | Решение |
+|----------|---------|
+| Бот не отвечает | Убедитесь, что `BOT_TOKEN` задан правильно |
+| Ошибка регистрации WARP | API Cloudflare может быть заблокирован; запустите на VPS |
+| Ошибки импорта (Python) | Выполните `pip install -r requirements.txt` |
+| Язык не загружается | Проверьте, что `BOT_LANG` соответствует файлу в `bot/lang/` |
+| Веб-сервер не запускается | Выполните `cd web && npm install` |
+| Порт занят | Измените порт: `PORT=8080 node web/server.js` |
+
+---
+
+## 📜 Лицензия
 
 MIT
