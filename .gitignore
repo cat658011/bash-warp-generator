@@ -26,3 +26,5 @@ htmlcov/
 *.swo
 *~
 node_modules/
+warp-*.conf
+warp-*.yaml

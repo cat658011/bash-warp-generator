@@ -8,6 +8,7 @@ const { loadWarpParams, loadI18n } = require('./config');
 const _warpParams = loadWarpParams();
 const _amneziaConf = _warpParams.amnezia;
 const _i1Payloads = _warpParams.i1_payloads;
+const _persistentKeepalive = _warpParams.persistent_keepalive || 25;
 
 const AMNEZIA = {
   JC: _amneziaConf.Jc,
@@ -41,7 +42,8 @@ function generateWireGuard(params) {
     '[Peer]\n' +
     `PublicKey = ${params.peerPublicKey}\n` +
     `AllowedIPs = ${allowed}\n` +
-    `Endpoint = ${params.endpoint}\n`;
+    `Endpoint = ${params.endpoint}\n` +
+    `PersistentKeepalive = ${_persistentKeepalive}\n`;
   return { content: config, filename: 'warp-wireguard.conf' };
 }
 
@@ -55,6 +57,9 @@ function generateAmnezia(params) {
   const config =
     '[Interface]\n' +
     `PrivateKey = ${params.privateKey}\n` +
+    `Address = ${params.clientIpv4}, ${params.clientIpv6}\n` +
+    `DNS = ${dns}\n` +
+    `MTU = ${params.mtu}\n` +
     `S1 = ${AMNEZIA.S1}\n` +
     `S2 = ${AMNEZIA.S2}\n` +
     `Jc = ${AMNEZIA.JC}\n` +
@@ -64,15 +69,13 @@ function generateAmnezia(params) {
     `H2 = ${AMNEZIA.H2}\n` +
     `H3 = ${AMNEZIA.H3}\n` +
     `H4 = ${AMNEZIA.H4}\n` +
-    `MTU = ${params.mtu}\n` +
     `I1 = ${i1}\n` +
-    `Address = ${params.clientIpv4}, ${params.clientIpv6}\n` +
-    `DNS = ${dns}\n` +
     '\n' +
     '[Peer]\n' +
     `PublicKey = ${params.peerPublicKey}\n` +
     `AllowedIPs = ${allowed}\n` +
-    `Endpoint = ${params.endpoint}\n`;
+    `Endpoint = ${params.endpoint}\n` +
+    `PersistentKeepalive = ${_persistentKeepalive}\n`;
   return { content: config, filename: 'warp-amnezia.conf' };
 }
 
@@ -209,6 +212,8 @@ function generateWireSock(params) {
       }
     }
   }
+
+  lines.push(`PersistentKeepalive = ${_persistentKeepalive}`);
 
   return { content: lines.join('\n') + '\n', filename: 'warp-wiresock.conf' };
 }

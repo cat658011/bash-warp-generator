@@ -62,6 +62,10 @@ class TestWireGuard:
         assert _PARAMS.client_ipv4 in content
         assert _PARAMS.client_ipv6 in content
 
+    def test_has_persistent_keepalive(self) -> None:
+        content, _ = WireGuardGenerator().generate(_PARAMS)
+        assert "PersistentKeepalive = 25" in content
+
 
 # ── AmneziaWG ─────────────────────────────────────────────────────
 class TestAmneziaWG:
@@ -91,6 +95,19 @@ class TestAmneziaWG:
         payload = base64.b64decode(deeplink[len("vpn://"):])
         data = json.loads(payload)
         assert "containers" in data
+
+    def test_has_persistent_keepalive(self) -> None:
+        content, _ = AmneziaWGGenerator().generate(_PARAMS)
+        assert "PersistentKeepalive = 25" in content
+
+    def test_address_before_obfuscation(self) -> None:
+        """Address and DNS must appear before obfuscation params."""
+        content, _ = AmneziaWGGenerator().generate(_PARAMS)
+        addr_pos = content.index("Address =")
+        dns_pos = content.index("DNS =")
+        s1_pos = content.index("S1 =")
+        assert addr_pos < s1_pos, "Address must come before S1"
+        assert dns_pos < s1_pos, "DNS must come before S1"
 
 
 # ── Clash ─────────────────────────────────────────────────────────
@@ -130,3 +147,7 @@ class TestWireSock:
         content, _ = WireSockGenerator().generate(_SPLIT_PARAMS)
         assert "AllowedIPs = 142.250.0.0/15" in content
         assert "AllowedIPs = 172.217.0.0/16" in content
+
+    def test_has_persistent_keepalive(self) -> None:
+        content, _ = WireSockGenerator().generate(_PARAMS)
+        assert "PersistentKeepalive = 25" in content

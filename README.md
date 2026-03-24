@@ -351,6 +351,7 @@ python -m bot
 │   ├── test_i18n.py         # Тесты локализации
 │   ├── test_warp.py         # Тесты API WARP
 │   └── test_web.py          # Тесты веб-сервера (Node.js)
+├── generate.py              # CLI-генератор (python generate.py)
 ├── warp_generator.sh        # Оригинальный bash-скрипт (для справки)
 ├── requirements.txt         # Зависимости Python (бот + core)
 ├── .env.example             # Пример переменных окружения
@@ -388,6 +389,20 @@ npm test
 | `BOT_TOKEN` | Токен Telegram-бота от @BotFather | — (обязательно) |
 | `BOT_LANG` | Язык бота (`ru`, `en`) | `ru` |
 | `PORT` | Порт веб-интерфейса | `3000` |
+
+---
+
+## 🖥️ CLI-генератор
+
+Для быстрой генерации конфига через командную строку:
+
+```bash
+python generate.py
+```
+
+Скрипт зарегистрируется в Cloudflare WARP, сгенерирует AmneziaWG-конфиг
+и выведет его вместе с deep-link для AmneziaVPN. Конфиг также сохраняется
+в файл `warp-amnezia.conf`.
 
 ---
 

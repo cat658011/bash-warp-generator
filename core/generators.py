@@ -35,6 +35,7 @@ _AMNEZIA_H3 = _AMNEZIA_CONF["H3"]
 _AMNEZIA_H4 = _AMNEZIA_CONF["H4"]
 
 _I1_PAYLOADS: list[str] = _WARP_PARAMS["i1_payloads"]
+_PERSISTENT_KEEPALIVE: int = _WARP_PARAMS.get("persistent_keepalive", 25)
 
 
 def _random_i1() -> str:
@@ -89,6 +90,7 @@ class WireGuardGenerator:
             f"PublicKey = {params.peer_public_key}\n"
             f"AllowedIPs = {allowed}\n"
             f"Endpoint = {params.endpoint}\n"
+            f"PersistentKeepalive = {_PERSISTENT_KEEPALIVE}\n"
         )
         return config, "warp-wireguard.conf"
 
@@ -108,6 +110,9 @@ class AmneziaWGGenerator:
         config = (
             "[Interface]\n"
             f"PrivateKey = {params.private_key}\n"
+            f"Address = {params.client_ipv4}, {params.client_ipv6}\n"
+            f"DNS = {dns}\n"
+            f"MTU = {params.mtu}\n"
             f"S1 = {_AMNEZIA_S1}\n"
             f"S2 = {_AMNEZIA_S2}\n"
             f"Jc = {_AMNEZIA_JC}\n"
@@ -117,15 +122,13 @@ class AmneziaWGGenerator:
             f"H2 = {_AMNEZIA_H2}\n"
             f"H3 = {_AMNEZIA_H3}\n"
             f"H4 = {_AMNEZIA_H4}\n"
-            f"MTU = {params.mtu}\n"
             f"I1 = {i1}\n"
-            f"Address = {params.client_ipv4}, {params.client_ipv6}\n"
-            f"DNS = {dns}\n"
             "\n"
             "[Peer]\n"
             f"PublicKey = {params.peer_public_key}\n"
             f"AllowedIPs = {allowed}\n"
             f"Endpoint = {params.endpoint}\n"
+            f"PersistentKeepalive = {_PERSISTENT_KEEPALIVE}\n"
         )
         return config, "warp-amnezia.conf"
 
@@ -263,6 +266,8 @@ class WireSockGenerator:
             for cidr in params.allowed_ips:
                 if ":" not in cidr:
                     lines.append(f"AllowedIPs = {cidr}")
+
+        lines.append(f"PersistentKeepalive = {_PERSISTENT_KEEPALIVE}")
 
         config = "\n".join(lines) + "\n"
         return config, "warp-wiresock.conf"
