@@ -4,7 +4,15 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import sys
 from io import BytesIO
+from pathlib import Path
+
+# Ensure the project root is importable when running ``python web/app.py``
+# directly (i.e. not via ``python -m`` or gunicorn from the project root).
+_PROJECT_ROOT = str(Path(__file__).resolve().parent.parent)
+if _PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, _PROJECT_ROOT)
 
 from flask import Flask, Response, render_template, request, send_file
 
