@@ -126,10 +126,12 @@ def test_t_user_with_format_args() -> None:
 
 def test_help_text_is_user_facing() -> None:
     """Help text should contain user-facing guides, not developer instructions."""
+    for lang in available_languages():
+        load_language(lang)
+        help_text = t("help")
+        # Should NOT contain developer instructions
+        assert "configs/dns_servers.json" not in help_text, f"[{lang}] help contains dev path"
+        assert "configs/relay_servers.json" not in help_text, f"[{lang}] help contains dev path"
+        assert "configs/routing_services.json" not in help_text, f"[{lang}] help contains dev path"
+        assert "i18n file" not in help_text.lower(), f"[{lang}] help contains dev reference"
     load_language("en")
-    help_text = t("help")
-    # Should NOT contain developer instructions
-    assert "configs/dns_servers.json" not in help_text
-    assert "configs/relay_servers.json" not in help_text
-    assert "configs/routing_services.json" not in help_text
-    assert "i18n file" not in help_text.lower()

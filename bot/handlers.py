@@ -362,15 +362,22 @@ async def on_confirm(
         )
 
         # Launch generation in background so user can start a new one
-        context.application.create_task(
-            _generate_task(
-                context.bot,
-                query.message.chat_id,
-                query.message.message_id,
-                selections,
-                configs,
+        try:
+            context.application.create_task(
+                _generate_task(
+                    context.bot,
+                    query.message.chat_id,
+                    query.message.message_id,
+                    selections,
+                    configs,
+                )
             )
-        )
+        except Exception:
+            logger.exception("Failed to create generation task")
+            await query.edit_message_text(
+                t_user("generation_failed", _ud(context)),
+                parse_mode="HTML",
+            )
         return ConversationHandler.END
 
     # Back → restart the conversation from step 1
