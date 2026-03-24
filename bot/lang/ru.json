@@ -1,0 +1,42 @@
+{
+  "welcome": "🚀 <b>WARP Генератор Конфигов</b>\n━━━━━━━━━━━━━━━━━━━━━━━━\n\nГенерация конфигов <b>Cloudflare WARP</b> VPN\nв различных форматах одним нажатием.\n\n📋 <b>Поддерживаемые форматы:</b>\n  🔐 WireGuard\n  🛡️ AmneziaWG\n  ⚔️ Clash / Clash Meta\n  🪟 WireSock (Windows)\n\nИспользуйте меню ниже ⬇️",
+
+  "help": "❓ <b>Помощь и руководства</b>\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n📖 <b>Как добавить DNS сервер</b>\nОткройте <code>configs/dns_servers.json</code> и добавьте:\n<pre>{\n  \"name\": \"Мой DNS\",\n  \"servers\": [\"10.0.0.1\", \"10.0.0.2\"]\n}</pre>\n\n📖 <b>Как добавить relay endpoint</b>\nОткройте <code>configs/relay_servers.json</code> и добавьте:\n<pre>{\n  \"name\": \"Свой Relay\",\n  \"endpoint\": \"203.0.113.1:51820\"\n}</pre>\n\n📖 <b>Как добавить сервис для раздельного трафика</b>\nОткройте <code>configs/routing_services.json</code> и добавьте:\n<pre>{\n  \"name\": \"Мой Сервис\",\n  \"routes\": [\"203.0.113.0/24\"]\n}</pre>\n\n🔄 Перезапустите бота после редактирования конфигов.\n\n🛠️ <b>Команды:</b>\n/start — показать приветствие и меню\n/cancel — отменить текущую генерацию",
+
+  "warp_status": "📊 <b>Статус WARP</b>\n\nПроверьте текущий статус сервиса Cloudflare WARP:\n👉 <a href=\"https://t.me/cfwarpstatus\">@cfwarpstatus</a>",
+
+  "step_format": "⚙️ <b>Шаг 1/5</b> — Выберите формат конфигурации:\n\n<i>Выберите формат для вашей VPN конфигурации.</i>",
+  "step_dns": "🔩 <b>Шаг 2/5</b> — Выберите DNS сервер:\n\n🌐 DNS с пометкой <b>[C]</b> — community (обход блокировок).",
+  "step_relay": "🔄 <b>Шаг 3/5</b> — Выберите конечную точку:\n\n<i>По умолчанию — стандартный Cloudflare endpoint.\nСерверы стран могут помочь обойти региональные блокировки.</i>",
+  "step_routing": "🔗 <b>Шаг 4/5</b> — Выберите режим маршрутизации:\n\n<i>Все сайты — весь трафик пойдёт через VPN.\nОпределённые сайты — только выбранные сервисы.</i>",
+  "step_services": "🔗 Выберите сервисы для маршрутизации через WARP:\n(нажмите для переключения, затем нажмите <b>Готово</b>)",
+  "step_confirm": "📋 <b>Подтверждение генерации конфига</b>\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n📦 Формат: <b>{format}</b>\n🌐 DNS: <b>{dns}</b>\n🔄 Конечная точка: <b>{relay}</b>\n🔗 Сайты: <b>{routing}</b>\n\nНажмите <b>✅ Подтвердить</b> для генерации конфига.",
+
+  "generating": "⏳ Генерация конфигурации WARP…",
+  "generation_failed": "❌ Не удалось зарегистрироваться в Cloudflare WARP. Попробуйте позже.",
+  "config_generated": "✅ <b>Конфиг WARP сгенерирован!</b>\n📄 Формат: <b>{format}</b>",
+  "amnezia_deeplink": "🔗 <b>Ссылка AmneziaVPN</b>\nОткройте файл и скопируйте ссылку <code>vpn://</code> в AmneziaVPN.",
+  "cancelled": "❌ Генерация отменена.",
+
+  "btn_generate": "🚀 Генерация конфига",
+  "btn_status": "📊 Статус WARP",
+  "btn_help": "❓ Помощь",
+
+  "fmt_wireguard": "🔐 WireGuard",
+  "fmt_amnezia": "🛡️ AmneziaWG",
+  "fmt_clash": "⚔️ Clash",
+  "fmt_wiresock": "🪟 WireSock",
+  "fmt_wireguard_desc": "Стандартный конфиг WireGuard (.conf)",
+  "fmt_amnezia_desc": "AmneziaWG — защита от DPI",
+  "fmt_clash_desc": "Clash / Clash Meta прокси конфиг",
+  "fmt_wiresock_desc": "WireSock для Windows",
+
+  "route_full": "🌍 Все сайты (весь трафик через VPN)",
+  "route_split": "🔀 Определённые сайты (раздельный трафик)",
+  "routing_full_label": "Все сайты (весь трафик через VPN)",
+  "routing_split_label": "Определённые сайты",
+
+  "btn_done": "✔️ Готово",
+  "btn_confirm": "✅ Подтвердить",
+  "btn_back": "◀️ Назад"
+}

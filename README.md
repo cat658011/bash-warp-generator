@@ -13,20 +13,22 @@ Generate **Cloudflare WARP** VPN configurations via a **Telegram bot** or a **we
 
 ## Features
 
-- **DNS server selection** — choose from Cloudflare, Google, Quad9, AdGuard, OpenDNS, and more (see `configs/dns_servers.json`)
-- **Relay / endpoint selection** — pick an alternative Cloudflare edge endpoint (see `configs/relay_servers.json`)
-- **Routing modes** — full tunnel (all traffic) or split tunnel with per-service routing (see `configs/routing_services.json`)
+- **DNS server selection** — choose from Cloudflare, Google, Quad9, AdGuard, OpenDNS, and more
+- **Relay / endpoint selection** — pick an alternative Cloudflare edge endpoint
+- **Routing modes** — full tunnel (all traffic) or split tunnel with per-service routing
+- **Confirmation step** — review your choices before generating
 - **Persistent keyboard menu** — Generate Config, WARP Status, Help buttons always visible
 - **WARP Status** — links to [@cfwarpstatus](https://t.me/cfwarpstatus) for service monitoring
-- **In-bot help** — guides for adding DNS, relay, and split-tunnel services right inside the bot
-- **Fully configurable** — all options are stored in JSON files under `configs/` and can be extended without code changes
-- **Web interface** — simple Flask web app for browser-based config generation
+- **Localisation** — supports multiple languages (English, Russian out of the box; easily extensible)
+- **In-bot help** — guides for adding DNS, relay, and split-tunnel services
+- **Fully configurable** — all options are stored in JSON files under `configs/`
+- **Web interface** — Flask web app for browser-based config generation
 
 ## Quick Start
 
 ### 1. Create a bot
 
-Talk to [@BotFather](https://t.me/BotFather) on Telegram and create a new bot.  
+Talk to [@BotFather](https://t.me/BotFather) on Telegram and create a new bot.
 Copy the API token.
 
 ### 2. Clone & install
@@ -41,18 +43,85 @@ pip install -r requirements.txt
 
 ```bash
 export BOT_TOKEN="your-telegram-bot-token"
+export BOT_LANG="en"   # or "ru" for Russian
 python -m bot
 ```
 
 The bot will start polling for updates. Send `/start` in your Telegram chat to begin.
 
-### 4. Run the web interface (optional)
+### 4. Run the web interface
+
+**Development:**
 
 ```bash
 python web/app.py
 ```
 
 Open `http://localhost:5000` in your browser.
+
+**Production (with gunicorn):**
+
+```bash
+pip install gunicorn
+gunicorn web.app:app --bind 0.0.0.0:8000 --workers 4
+```
+
+**Production with nginx (recommended):**
+
+1. Run gunicorn as a systemd service or via a process manager:
+
+```bash
+gunicorn web.app:app --bind 127.0.0.1:8000 --workers 4
+```
+
+2. Configure nginx as a reverse proxy:
+
+```nginx
+server {
+    listen 80;
+    server_name your-domain.com;
+
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+3. Use the `/health` endpoint for monitoring:
+
+```bash
+curl http://localhost:8000/health
+# {"status": "ok"}
+```
+
+## Localisation
+
+The bot supports multiple languages via JSON files in `bot/lang/`.
+
+| File | Language |
+|------|----------|
+| `bot/lang/en.json` | English (default) |
+| `bot/lang/ru.json` | Russian |
+
+Set the language via the `BOT_LANG` environment variable:
+
+```bash
+export BOT_LANG="ru"
+python -m bot
+```
+
+### Adding a new language
+
+1. Copy `bot/lang/en.json` to `bot/lang/<code>.json` (e.g. `de.json`)
+2. Translate all values (keep the keys unchanged)
+3. Set `BOT_LANG=de` and restart the bot
+
+All message strings, button labels, step descriptions, and UI text are defined
+in the language file. No code changes required.
 
 ## Configuration Files
 
@@ -117,7 +186,11 @@ Add an object to the array in `configs/routing_services.json`:
 │   ├── __init__.py
 │   ├── __main__.py          # Entry-point (python -m bot)
 │   ├── handlers.py          # Conversation flow + menu handlers
-│   └── keyboards.py         # Inline & reply keyboard builders
+│   ├── keyboards.py         # Inline & reply keyboard builders
+│   ├── i18n.py              # Localisation loader
+│   └── lang/                # Language files
+│       ├── en.json          # English
+│       └── ru.json          # Russian
 ├── web/                     # Web front-end
 │   ├── app.py               # Flask application
 │   └── templates/
@@ -129,6 +202,7 @@ Add an object to the array in `configs/routing_services.json`:
 ├── tests/
 │   ├── test_config.py
 │   ├── test_generators.py
+│   ├── test_i18n.py
 │   ├── test_warp.py
 │   └── test_web.py
 ├── warp_generator.sh        # Original bash script (kept for reference)
@@ -142,7 +216,7 @@ on the Telegram bot. It can be imported by any front-end — bot, web app, CLI, 
 
 ## Legacy Bash Script
 
-The original `warp_generator.sh` is kept for reference.  
+The original `warp_generator.sh` is kept for reference.
 Run it directly if you prefer the CLI approach:
 
 ```bash
@@ -161,6 +235,7 @@ python -m pytest tests/ -v
 - **Bot doesn't respond** — make sure `BOT_TOKEN` is set correctly.
 - **WARP registration fails** — the Cloudflare API may be blocked in your region; run the bot on a VPS or cloud server.
 - **Import errors** — run `pip install -r requirements.txt` first.
+- **Language not loading** — check that `BOT_LANG` matches a file in `bot/lang/` (e.g. `en`, `ru`).
 
 ## License
 

@@ -7,6 +7,7 @@ import os
 
 from telegram.ext import Application
 
+from bot.i18n import load_language
 from core.config import load_configs
 from bot.handlers import setup_handlers
 
@@ -25,6 +26,11 @@ def main() -> None:
             "BOT_TOKEN environment variable is not set. "
             "Create a bot via @BotFather and export BOT_TOKEN."
         )
+
+    # Load language (BOT_LANG env var, default "en")
+    load_language()
+    lang = os.environ.get("BOT_LANG", "en")
+    logger.info("Language: %s", lang)
 
     configs = load_configs()
     logger.info(

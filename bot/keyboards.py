@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
 
+from bot.i18n import t
 from core.config import BotConfigs
 
 # Callback-data prefixes
@@ -13,34 +14,51 @@ RELAY_CB = "relay:"
 ROUTE_CB = "route:"
 SVC_CB = "svc:"
 SVC_DONE_CB = "svc:done"
+CONFIRM_CB = "confirm"
+BACK_CB = "back:"
 
-# Persistent reply-keyboard button labels
-BTN_GENERATE = "\U0001f680 Generate Config"
-BTN_STATUS = "\U0001f4ca WARP Status"
-BTN_HELP = "\u2753 Help"
+# Format keys (used as callback data values)
+FORMAT_KEYS = ("wireguard", "amnezia", "clash", "wiresock")
 
-_FORMAT_LABELS: dict[str, str] = {
-    "wireguard": "\U0001f512 WireGuard",
-    "amnezia": "\U0001f6e1\ufe0f AmneziaWG",
-    "clash": "\u2694\ufe0f Clash",
-    "wiresock": "\U0001fa9f WireSock",
-}
+
+def _btn_generate() -> str:
+    return t("btn_generate")
+
+
+def _btn_status() -> str:
+    return t("btn_status")
+
+
+def _btn_help() -> str:
+    return t("btn_help")
+
+
+# Expose button labels as functions so handler filters can match them.
+BTN_GENERATE = property(lambda self: t("btn_generate"))  # not used directly
+BTN_STATUS = property(lambda self: t("btn_status"))
+BTN_HELP = property(lambda self: t("btn_help"))
 
 
 def main_menu_keyboard() -> ReplyKeyboardMarkup:
     """Persistent reply-keyboard shown below the chat input."""
     return ReplyKeyboardMarkup(
-        [[KeyboardButton(BTN_GENERATE)], [KeyboardButton(BTN_STATUS), KeyboardButton(BTN_HELP)]],
+        [
+            [KeyboardButton(t("btn_generate"))],
+            [KeyboardButton(t("btn_status")), KeyboardButton(t("btn_help"))],
+        ],
         resize_keyboard=True,
     )
 
 
 def format_keyboard() -> InlineKeyboardMarkup:
     """Keyboard with VPN-config format options."""
-    buttons = [
-        [InlineKeyboardButton(label, callback_data=f"{FORMAT_CB}{key}")]
-        for key, label in _FORMAT_LABELS.items()
-    ]
+    buttons = []
+    for key in FORMAT_KEYS:
+        label = t(f"fmt_{key}")
+        desc = t(f"fmt_{key}_desc")
+        buttons.append(
+            [InlineKeyboardButton(f"{label} — {desc}", callback_data=f"{FORMAT_CB}{key}")]
+        )
     return InlineKeyboardMarkup(buttons)
 
 
@@ -49,7 +67,7 @@ def dns_keyboard(configs: BotConfigs) -> InlineKeyboardMarkup:
     buttons = [
         [
             InlineKeyboardButton(
-                f"\U0001f310 {dns.name} ({', '.join(dns.servers)})",
+                f"🌐 {dns.name} ({', '.join(dns.servers)})",
                 callback_data=f"{DNS_CB}{i}",
             )
         ]
@@ -59,16 +77,21 @@ def dns_keyboard(configs: BotConfigs) -> InlineKeyboardMarkup:
 
 
 def relay_keyboard(configs: BotConfigs) -> InlineKeyboardMarkup:
-    """Keyboard listing available relay endpoints."""
-    buttons = [
-        [
+    """Keyboard listing available relay endpoints in a two-column grid."""
+    buttons: list[list[InlineKeyboardButton]] = []
+    row: list[InlineKeyboardButton] = []
+    for i, relay in enumerate(configs.relay_servers):
+        row.append(
             InlineKeyboardButton(
-                f"\U0001f4e1 {relay.name}",
+                f"📡 {relay.name}",
                 callback_data=f"{RELAY_CB}{i}",
             )
-        ]
-        for i, relay in enumerate(configs.relay_servers)
-    ]
+        )
+        if len(row) == 2:
+            buttons.append(row)
+            row = []
+    if row:
+        buttons.append(row)
     return InlineKeyboardMarkup(buttons)
 
 
@@ -78,13 +101,13 @@ def routing_keyboard() -> InlineKeyboardMarkup:
         [
             [
                 InlineKeyboardButton(
-                    "\U0001f30d Full Tunnel (All Traffic)",
+                    t("route_full"),
                     callback_data=f"{ROUTE_CB}full",
                 )
             ],
             [
                 InlineKeyboardButton(
-                    "\U0001f500 Split Tunnel (Select Services)",
+                    t("route_split"),
                     callback_data=f"{ROUTE_CB}split",
                 )
             ],
@@ -101,7 +124,7 @@ def services_keyboard(
         if i == 0:
             # Index 0 is "Full Tunnel" – skip it in the split-tunnel picker
             continue
-        check = "\u2705" if i in selected else "\u2b1c"
+        check = "✅" if i in selected else "⬜"
         buttons.append(
             [
                 InlineKeyboardButton(
@@ -111,6 +134,16 @@ def services_keyboard(
             ]
         )
     buttons.append(
-        [InlineKeyboardButton("\u2714\ufe0f Done", callback_data=SVC_DONE_CB)]
+        [InlineKeyboardButton(t("btn_done"), callback_data=SVC_DONE_CB)]
     )
     return InlineKeyboardMarkup(buttons)
+
+
+def confirm_keyboard() -> InlineKeyboardMarkup:
+    """Confirmation keyboard before generating the config."""
+    return InlineKeyboardMarkup(
+        [
+            [InlineKeyboardButton(t("btn_confirm"), callback_data=CONFIRM_CB)],
+            [InlineKeyboardButton(t("btn_back"), callback_data=f"{BACK_CB}start")],
+        ]
+    )

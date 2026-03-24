@@ -1,4 +1,4 @@
-"""WARP Config Generator — simple Flask web interface."""
+"""WARP Config Generator — Flask web interface."""
 
 from __future__ import annotations
 
@@ -28,6 +28,12 @@ def index() -> str:
         relay_servers=configs.relay_servers,
         routing_services=configs.routing_services,
     )
+
+
+@app.route("/health")
+def health() -> dict[str, str]:
+    """Health-check endpoint for monitoring / reverse proxies."""
+    return {"status": "ok"}
 
 
 @app.route("/generate", methods=["POST"])

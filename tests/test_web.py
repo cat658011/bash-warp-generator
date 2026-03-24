@@ -31,3 +31,10 @@ def test_index_lists_dns_servers() -> None:
     with app.test_client() as client:
         html = client.get("/").data.decode()
         assert "Cloudflare" in html
+
+
+def test_health_returns_ok() -> None:
+    with app.test_client() as client:
+        response = client.get("/health")
+        assert response.status_code == 200
+        assert response.json == {"status": "ok"}
