@@ -17,12 +17,10 @@ SVC_DONE_CB = "svc:done"
 CONFIRM_CB = "confirm"
 BACK_CB = "back:"
 LANG_CB = "lang:"
-GENERATE_ANOTHER_CB = "gen_another"
-COUNT_CB = "count:"
+    GENERATE_ANOTHER_CB = "gen_another"
 
 # Format keys (used as callback data values)
 FORMAT_KEYS = ("wireguard", "amnezia", "clash", "wiresock")
-COUNT_CHOICES = (1, 2, 3, 5)
 
 
 def main_menu_keyboard(user_data: dict | None = None) -> ReplyKeyboardMarkup:
@@ -99,26 +97,6 @@ def routing_keyboard(user_data: dict | None = None) -> InlineKeyboardMarkup:
             ],
         ]
     )
-
-
-def count_keyboard(user_data: dict | None = None) -> InlineKeyboardMarkup:
-    """Keyboard for choosing how many configs to generate."""
-    buttons: list[list[InlineKeyboardButton]] = []
-    row: list[InlineKeyboardButton] = []
-    for count in COUNT_CHOICES:
-        row.append(
-            InlineKeyboardButton(
-                t_user("count_option", user_data, count=count),
-                callback_data=f"{COUNT_CB}{count}",
-            )
-        )
-        if len(row) == 3:
-            buttons.append(row)
-            row = []
-    if row:
-        buttons.append(row)
-    return InlineKeyboardMarkup(buttons)
-
 
 def services_keyboard(
     configs: BotConfigs, selected: set[int], user_data: dict | None = None

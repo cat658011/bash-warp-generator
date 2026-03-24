@@ -620,23 +620,6 @@
           </div>
         </div>
 
-        <!-- Step 5: Count -->
-        <div class="card">
-          <div class="card-header">
-            <span class="step-num"><%= step++ %></span>
-            <h2><%= t.web_step_count %></h2>
-          </div>
-          <div class="select-wrap">
-            <select name="count" id="count">
-              <option value="1">1×</option>
-              <option value="2">2×</option>
-              <option value="3">3×</option>
-              <option value="5">5×</option>
-            </select>
-          </div>
-          <p class="hint"><%= t.web_hint_count %></p>
-        </div>
-
         <button type="submit" class="btn-generate" id="btn-generate">
           <span class="btn-text"><%= t.web_btn_generate %></span>
           <span class="spinner"></span>
@@ -656,7 +639,7 @@
     // Localised strings for JS
     var errorMsg = <%- JSON.stringify(t.web_generation_failed || "Generation failed") %>;
     var anotherLabel = <%- JSON.stringify(t.web_generate_again || "Generate Another") %>;
-    var downloadMulti = <%- JSON.stringify(t.web_download_multi || "Downloaded {count} configs.") %>;
+    var downloadReady = <%- JSON.stringify(t.web_download_ready || "Ready to generate again.") %>;
 
     // ── Language selection ──────────────────────────────────
     document.getElementById('lang-select').addEventListener('change', function() {
@@ -722,7 +705,6 @@
 
       var formData = new FormData(this);
       var body = new URLSearchParams(formData).toString();
-      var count = parseInt(formData.get('count') || '1', 10) || 1;
 
       fetch('/generate', {
         method: 'POST',
@@ -749,10 +731,7 @@
         btn.classList.remove('loading');
         btn.querySelector('.btn-text').textContent = anotherLabel;
         statusEl.className = 'status-msg success';
-        var successMsg = count > 1
-          ? downloadMulti.replace('{count}', count)
-          : '✅ ' + result.filename;
-        statusEl.textContent = successMsg;
+        statusEl.textContent = downloadReady + ' (' + result.filename + ')';
       }).catch(function(err) {
         btn.classList.remove('loading');
         statusEl.className = 'status-msg error';

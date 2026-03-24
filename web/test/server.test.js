@@ -44,6 +44,12 @@ describe('GET /', () => {
     assert.ok(res.body.includes('id="gen-form"'));
   });
 
+  it('does not render a count selector', async () => {
+    const res = await request('GET', '/');
+    assert.equal(res.body.includes('name="count"'), false);
+    assert.equal(res.body.includes('How many configs?'), false);
+  });
+
   it('lists all formats', async () => {
     const res = await request('GET', '/');
     assert.ok(res.body.includes('WireGuard'));
