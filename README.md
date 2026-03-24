@@ -1,6 +1,6 @@
-# WARP Config Generator — Telegram Bot
+# WARP Config Generator
 
-Telegram bot that generates **Cloudflare WARP** VPN configurations in multiple formats.
+Generate **Cloudflare WARP** VPN configurations via a **Telegram bot** or a **web interface**.
 
 ## Supported Formats
 
@@ -16,7 +16,11 @@ Telegram bot that generates **Cloudflare WARP** VPN configurations in multiple f
 - **DNS server selection** — choose from Cloudflare, Google, Quad9, AdGuard, OpenDNS, and more (see `configs/dns_servers.json`)
 - **Relay / endpoint selection** — pick an alternative Cloudflare edge endpoint (see `configs/relay_servers.json`)
 - **Routing modes** — full tunnel (all traffic) or split tunnel with per-service routing (see `configs/routing_services.json`)
+- **Persistent keyboard menu** — Generate Config, WARP Status, Help buttons always visible
+- **WARP Status** — links to [@cfwarpstatus](https://t.me/cfwarpstatus) for service monitoring
+- **In-bot help** — guides for adding DNS, relay, and split-tunnel services right inside the bot
 - **Fully configurable** — all options are stored in JSON files under `configs/` and can be extended without code changes
+- **Web interface** — simple Flask web app for browser-based config generation
 
 ## Quick Start
 
@@ -33,7 +37,7 @@ cd bash-warp-generator
 pip install -r requirements.txt
 ```
 
-### 3. Run
+### 3. Run the Telegram bot
 
 ```bash
 export BOT_TOKEN="your-telegram-bot-token"
@@ -41,6 +45,14 @@ python -m bot
 ```
 
 The bot will start polling for updates. Send `/start` in your Telegram chat to begin.
+
+### 4. Run the web interface (optional)
+
+```bash
+python web/app.py
+```
+
+Open `http://localhost:5000` in your browser.
 
 ## Configuration Files
 
@@ -54,7 +66,9 @@ All selectable options live in `configs/`:
 
 Edit these files to add, remove, or modify the available options. No code changes required.
 
-### Example: adding a custom DNS server
+### Adding a custom DNS server
+
+Add an object to the array in `configs/dns_servers.json` and restart the bot:
 
 ```json
 {
@@ -63,9 +77,9 @@ Edit these files to add, remove, or modify the available options. No code change
 }
 ```
 
-Add the object to the array in `configs/dns_servers.json` and restart the bot.
+### Adding a custom relay endpoint
 
-### Example: adding a custom relay endpoint
+Add an object to the array in `configs/relay_servers.json`:
 
 ```json
 {
@@ -74,7 +88,12 @@ Add the object to the array in `configs/dns_servers.json` and restart the bot.
 }
 ```
 
-### Example: adding a routable service
+> **Tip:** you can find alternative Cloudflare WARP endpoints by running
+> `dig +short engage.cloudflareclient.com` or by checking community lists.
+
+### Adding a split-tunnel service
+
+Add an object to the array in `configs/routing_services.json`:
 
 ```json
 {
@@ -83,17 +102,26 @@ Add the object to the array in `configs/dns_servers.json` and restart the bot.
 }
 ```
 
+> **Finding IP ranges:** use `whois` lookups, BGP route databases (e.g. bgp.he.net),
+> or check the service's official documentation for their published IP blocks.
+
 ## Project Structure
 
 ```
-├── bot/
+├── core/                    # Core library (no Telegram dependency)
 │   ├── __init__.py
-│   ├── __main__.py        # Entry-point (python -m bot)
-│   ├── config.py          # JSON config loading
-│   ├── generators.py      # WireGuard / AmneziaWG / Clash / WireSock generators
-│   ├── handlers.py        # Telegram conversation flow
-│   ├── keyboards.py       # Inline-keyboard builders
-│   └── warp.py            # Cloudflare WARP API client
+│   ├── config.py            # JSON config loading & dataclasses
+│   ├── generators.py        # WireGuard / AmneziaWG / Clash / WireSock generators
+│   └── warp.py              # Cloudflare WARP API client
+├── bot/                     # Telegram bot front-end
+│   ├── __init__.py
+│   ├── __main__.py          # Entry-point (python -m bot)
+│   ├── handlers.py          # Conversation flow + menu handlers
+│   └── keyboards.py         # Inline & reply keyboard builders
+├── web/                     # Web front-end
+│   ├── app.py               # Flask application
+│   └── templates/
+│       └── index.html       # Generator form
 ├── configs/
 │   ├── dns_servers.json
 │   ├── relay_servers.json
@@ -101,12 +129,16 @@ Add the object to the array in `configs/dns_servers.json` and restart the bot.
 ├── tests/
 │   ├── test_config.py
 │   ├── test_generators.py
-│   └── test_warp.py
-├── warp_generator.sh      # Original bash script (kept for reference)
+│   ├── test_warp.py
+│   └── test_web.py
+├── warp_generator.sh        # Original bash script (kept for reference)
 ├── requirements.txt
 ├── .env.example
 └── README.md
 ```
+
+The `core/` package contains all WARP generation logic and has **no** dependency
+on the Telegram bot. It can be imported by any front-end — bot, web app, CLI, etc.
 
 ## Legacy Bash Script
 

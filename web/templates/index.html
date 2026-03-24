@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WARP Config Generator</title>
+  <style>
+    :root { --bg: #0f172a; --card: #1e293b; --accent: #3b82f6; --text: #e2e8f0; --muted: #94a3b8; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; justify-content: center; padding: 2rem 1rem; }
+    .container { width: 100%; max-width: 540px; }
+    h1 { text-align: center; font-size: 1.8rem; margin-bottom: .3rem; }
+    .subtitle { text-align: center; color: var(--muted); margin-bottom: 2rem; }
+    .card { background: var(--card); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    .card h2 { font-size: 1.1rem; margin-bottom: 1rem; }
+    label { display: block; margin-bottom: .5rem; color: var(--muted); font-size: .9rem; }
+    select, button { width: 100%; padding: .65rem .9rem; border: 1px solid #334155; border-radius: 8px; background: var(--bg); color: var(--text); font-size: .95rem; margin-bottom: 1rem; }
+    select:focus { outline: 2px solid var(--accent); }
+    .radio-group { display: flex; gap: .5rem; margin-bottom: 1rem; }
+    .radio-group label { flex: 1; text-align: center; padding: .55rem; border: 1px solid #334155; border-radius: 8px; cursor: pointer; color: var(--text); font-size: .9rem; }
+    .radio-group input { display: none; }
+    .radio-group input:checked + span { color: var(--accent); }
+    .radio-group label:has(input:checked) { border-color: var(--accent); background: rgba(59,130,246,.1); }
+    .services { display: none; margin-bottom: 1rem; }
+    .services.show { display: block; }
+    .services label { display: flex; align-items: center; gap: .5rem; color: var(--text); margin-bottom: .4rem; cursor: pointer; }
+    .services input[type="checkbox"] { accent-color: var(--accent); }
+    button[type="submit"] { background: var(--accent); border: none; color: #fff; font-weight: 600; cursor: pointer; padding: .8rem; font-size: 1rem; transition: background .2s; }
+    button[type="submit"]:hover { background: #2563eb; }
+    .footer { text-align: center; color: var(--muted); font-size: .8rem; margin-top: 1rem; }
+    .footer a { color: var(--accent); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🚀 WARP Config Generator</h1>
+    <p class="subtitle">Generate Cloudflare WARP VPN configs</p>
+
+    <form action="/generate" method="post">
+      <div class="card">
+        <h2>📦 Output Format</h2>
+        <select name="format">
+          {% for fmt in formats %}
+          <option value="{{ fmt }}">{{ fmt | upper }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="card">
+        <h2>🌐 DNS Server</h2>
+        <select name="dns">
+          {% for dns in dns_servers %}
+          <option value="{{ loop.index0 }}">{{ dns.name }} ({{ dns.servers | join(', ') }})</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="card">
+        <h2>📡 Relay Server</h2>
+        <select name="relay">
+          {% for relay in relay_servers %}
+          <option value="{{ loop.index0 }}">{{ relay.name }} — {{ relay.endpoint }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="card">
+        <h2>🔀 Routing</h2>
+        <div class="radio-group">
+          <label><input type="radio" name="routing" value="full" checked id="route-full"><span>🌍 Full Tunnel</span></label>
+          <label><input type="radio" name="routing" value="split" id="route-split"><span>🔀 Split Tunnel</span></label>
+        </div>
+        <div class="services" id="services">
+          {% for svc in routing_services %}
+            {% if loop.index0 > 0 %}
+            <label><input type="checkbox" name="services" value="{{ loop.index0 }}"> {{ svc.name }}</label>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+
+      <button type="submit">⬇️ Generate & Download</button>
+    </form>
+
+    <div class="footer">
+      <a href="https://t.me/cfwarpstatus" target="_blank">📊 WARP Status</a> ·
+      <a href="https://github.com/cat658011/bash-warp-generator" target="_blank">GitHub</a>
+    </div>
+  </div>
+
+  <script>
+    document.querySelectorAll('input[name="routing"]').forEach(r => {
+      r.addEventListener('change', () => {
+        document.getElementById('services').classList.toggle('show', r.value === 'split' && r.checked);
+      });
+    });
+  </script>
+</body>
+</html>
