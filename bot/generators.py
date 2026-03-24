@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 import json
 from dataclasses import dataclass, field
+from typing import Protocol
 
 # ---------------------------------------------------------------------------
 # AmneziaWG obfuscation payload (I1) – identical to the original bash script.
@@ -70,6 +71,14 @@ class GeneratorParams:
     endpoint: str = "162.159.192.1:500"
     allowed_ips: list[str] = field(default_factory=lambda: ["0.0.0.0/0", "::/0"])
     mtu: int = 1280
+
+
+class ConfigGenerator(Protocol):
+    """Interface that every config generator must satisfy."""
+
+    def generate(self, params: GeneratorParams) -> tuple[str, str]:
+        """Return ``(config_text, filename)``."""
+        ...
 
 
 # ---------------------------------------------------------------------------
@@ -282,7 +291,7 @@ class WireSockGenerator:
 # ---------------------------------------------------------------------------
 # Registry
 # ---------------------------------------------------------------------------
-GENERATORS: dict[str, type[WireGuardGenerator | AmneziaWGGenerator | ClashGenerator | WireSockGenerator]] = {
+GENERATORS: dict[str, type[ConfigGenerator]] = {
     "wireguard": WireGuardGenerator,
     "amnezia": AmneziaWGGenerator,
     "clash": ClashGenerator,
