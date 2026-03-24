@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from io import BytesIO
 
-from telegram import Bot, Update
+from telegram import Update
 from telegram.ext import (
     Application,
     CallbackQueryHandler,
@@ -344,41 +344,7 @@ async def on_confirm(
     await query.answer()
 
     if query.data == CONFIRM_CB:
-        # Snapshot user selections before ending the conversation
-        configs = _configs(context)
-        user = context.user_data
-        selections = {
-            "format": user["format"],
-            "dns_idx": user["dns_idx"],
-            "relay_idx": user["relay_idx"],
-            "routing": user.get("routing", "full"),
-            "selected_svcs": set(user.get("selected_svcs", set())),
-            "lang": user.get("lang"),
-        }
-
-        await query.edit_message_text(
-            t_user("generating", _ud(context)),
-            parse_mode="HTML",
-        )
-
-        # Launch generation in background so user can start a new one
-        try:
-            context.application.create_task(
-                _generate_task(
-                    context.bot,
-                    query.message.chat_id,
-                    query.message.message_id,
-                    selections,
-                    configs,
-                )
-            )
-        except Exception:
-            logger.exception("Failed to create generation task")
-            await query.edit_message_text(
-                t_user("generation_failed", _ud(context)),
-                parse_mode="HTML",
-            )
-        return ConversationHandler.END
+        return await _generate(update, context)
 
     # Back → restart the conversation from step 1
     await query.edit_message_text(
@@ -390,38 +356,36 @@ async def on_confirm(
 
 
 # ------------------------------------------------------------------
-# Background generation task
+# Generation
 # ------------------------------------------------------------------
-async def _generate_task(
-    bot: Bot,
-    chat_id: int,
-    status_message_id: int,
-    selections: dict,
-    configs: BotConfigs,
-) -> None:
-    """Generate a WARP config in the background and send it to the user."""
-    ud = {"lang": selections.get("lang")} if selections.get("lang") else None
+async def _generate(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> int:
+    query = update.callback_query
+    assert query is not None and context.user_data is not None
+    configs = _configs(context)
+    user = context.user_data
+    ud = _ud(context)
+
+    await query.edit_message_text(t_user("generating", ud), parse_mode="HTML")
 
     try:
         account = await register_warp()
     except Exception:
         logger.exception("WARP registration failed")
-        await bot.edit_message_text(
-            chat_id=chat_id,
-            message_id=status_message_id,
-            text=t_user("generation_failed", ud),
-            parse_mode="HTML",
+        await query.edit_message_text(
+            t_user("generation_failed", ud), parse_mode="HTML"
         )
-        return
+        return ConversationHandler.END
 
     # Resolve user selections
-    fmt = selections["format"]
-    dns = configs.dns_servers[selections["dns_idx"]]
-    relay = configs.relay_servers[selections["relay_idx"]]
+    fmt = user["format"]
+    dns = configs.dns_servers[user["dns_idx"]]
+    relay = configs.relay_servers[user["relay_idx"]]
     endpoint = configs.resolve_endpoint(relay, fmt)
 
-    if selections.get("routing") == "split":
-        selected_set: set[int] = selections.get("selected_svcs", set())
+    if user.get("routing") == "split":
+        selected_set: set[int] = user.get("selected_svcs", set())
         allowed_ips: list[str] = []
         for idx in sorted(selected_set):
             allowed_ips.extend(configs.routing_services[idx].routes)
@@ -444,66 +408,57 @@ async def _generate_task(
     generator = GENERATORS[fmt]()
     content, filename = generator.generate(params)
 
-    # Update status message
-    fmt_label = t_user(f"fmt_{fmt}", ud)
-    await bot.edit_message_text(
-        chat_id=chat_id,
-        message_id=status_message_id,
-        text=t_user("config_generated", ud, format=fmt_label),
-        parse_mode="HTML",
-    )
-
     # Send config as a file
     doc = BytesIO(content.encode("utf-8"))
     doc.name = filename
-    await bot.send_document(
-        chat_id=chat_id,
+    fmt_label = t_user(f"fmt_{fmt}", ud)
+    assert query.message is not None
+    await query.message.reply_document(
         document=doc,
         caption=t_user("config_generated", ud, format=fmt_label),
         parse_mode="HTML",
     )
 
-    # AmneziaWG deep-link
+    # AmneziaWG deep-link (sent as a file – the link is too long for a message)
     if fmt == "amnezia" and isinstance(generator, AmneziaWGGenerator):
         deeplink = generator.generate_deeplink(params)
         link_doc = BytesIO(deeplink.encode("utf-8"))
         link_doc.name = "warp-amnezia-deeplink.txt"
-        await bot.send_document(
-            chat_id=chat_id,
+        await query.message.reply_document(
             document=link_doc,
             caption=t_user("amnezia_deeplink", ud),
             parse_mode="HTML",
         )
 
     # Offer to generate another config
-    await bot.send_message(
-        chat_id=chat_id,
-        text=t_user("generate_another_text", ud),
+    await query.message.reply_text(
+        t_user("btn_generate", ud),
         reply_markup=generate_another_keyboard(ud),
     )
+    return SELECT_FORMAT
 
 
 # ------------------------------------------------------------------
-# "Generate another" — standalone callback (outside conversation)
+# "Generate another" callback (re-enter the conversation)
 # ------------------------------------------------------------------
 async def on_generate_another(
     update: Update, context: ContextTypes.DEFAULT_TYPE
-) -> None:
-    """Show the format picker when user taps 'Generate another'."""
+) -> int:
+    """Re-enter the conversation from the generate-another button."""
     query = update.callback_query
-    assert query is not None
+    assert query is not None and context.user_data is not None
     await query.answer()
 
     # Clear previous selections but keep user preferences (like lang)
-    if context.user_data is not None:
-        for key in ("format", "dns_idx", "relay_idx", "routing", "selected_svcs"):
-            context.user_data.pop(key, None)
+    for key in ("format", "dns_idx", "relay_idx", "routing", "selected_svcs"):
+        context.user_data.pop(key, None)
 
     await query.edit_message_text(
         t_user("step_format", _ud(context)),
         parse_mode="HTML",
         reply_markup=format_keyboard(_ud(context)),
     )
+    return SELECT_FORMAT
 
 
 # ------------------------------------------------------------------
@@ -532,12 +487,6 @@ def setup_handlers(app: Application) -> None:  # type: ignore[type-arg]
         MessageHandler(filters.Regex(r"^❓"), help_handler)
     )
 
-    # "Generate another" button — handled outside the conversation so it
-    # works even after the conversation has ended.
-    app.add_handler(
-        CallbackQueryHandler(on_generate_another, pattern=f"^{GENERATE_ANOTHER_CB}$")
-    )
-
     # Config-generation conversation
     conv = ConversationHandler(
         entry_points=[
@@ -546,6 +495,7 @@ def setup_handlers(app: Application) -> None:  # type: ignore[type-arg]
         states={
             SELECT_FORMAT: [
                 CallbackQueryHandler(on_format, pattern=f"^{FORMAT_CB}"),
+                CallbackQueryHandler(on_generate_another, pattern=f"^{GENERATE_ANOTHER_CB}$"),
             ],
             SELECT_DNS: [
                 CallbackQueryHandler(on_dns, pattern=f"^{DNS_CB}"),
@@ -567,6 +517,5 @@ def setup_handlers(app: Application) -> None:  # type: ignore[type-arg]
             ],
         },
         fallbacks=[CommandHandler("cancel", cancel)],
-        allow_reentry=True,
     )
     app.add_handler(conv)
