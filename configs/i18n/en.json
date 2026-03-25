@@ -14,6 +14,8 @@
 
   "generating": "⏳ Generating WARP configuration…",
   "generation_failed": "❌ Failed to register with Cloudflare WARP. Please try again later.",
+  "flood_wait": "⏳ Too many actions in a short time. Please wait a few seconds and try again.",
+  "generation_cooldown_wait": "⏳ Please wait {seconds}s before generating again.",
   "config_generated": "✅ <b>WARP config generated!</b>\n📄 Format: <b>{format}</b>",
   "amnezia_deeplink": "🔗 <b>AmneziaVPN Deep Link</b>\nOpen the file and copy the <code>vpn://</code> link into AmneziaVPN.",
   "cancelled": "❌ Configuration cancelled.",
