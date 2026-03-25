@@ -23,7 +23,8 @@ class RelayServer:
     """A selectable relay / endpoint option."""
 
     id: str
-    endpoint: str = ""
+    host: str = ""
+    ports: list[int] = field(default_factory=list)
 
 
 @dataclass(frozen=True)

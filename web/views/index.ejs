@@ -594,7 +594,7 @@
           <div class="select-wrap">
             <select name="relay">
               <% relayServers.forEach(function(relay, i) { %>
-              <option value="<%= i %>"><%= relay.name %> — <%= relay.endpoint %></option>
+              <option value="<%= i %>"><%= relay.name %> — <%= relay.host %></option>
               <% }); %>
             </select>
           </div>
