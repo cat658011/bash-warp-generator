@@ -1,7 +1,7 @@
 {
-  "welcome": "🚀 <b>WARP Config Generator</b>\n━━━━━━━━━━━━━━━━━━━━━━━━\n\nGenerate <b>Cloudflare WARP</b> VPN configs\nin multiple formats with one tap.\n\n📋 <b>Supported formats:</b>\n  🔐 WireGuard\n  🛡️ AmneziaWG\n  ⚔️ Clash / Clash Meta\n  🪟 WireSock (Windows)\n\nUse the menu below to get started ⬇️",
+  "welcome": "🚀 <b>WARP Config Generator</b>\n━━━━━━━━━━━━━━━━━━━━━━━━\n\nGenerate <b>Cloudflare WARP</b> VPN configs\nin multiple formats with one tap.\n\n📋 <b>Supported formats:</b>\n  🔐 WireGuard\n  🛡️ AmneziaWG\n  ⚔️ Clash / Clash Meta\n  🪟 WireSock (Windows)\n\n📌 <b>Commands:</b>\n  /start — main menu\n  /lang — change language\n  /cancel — cancel generation\n\nUse the menu below to get started ⬇️",
 
-  "help": "❓ <b>Help &amp; Guides</b>\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n📖 <b>How to use this bot</b>\n1. Tap <b>🚀 Generate Config</b>\n2. Choose a VPN format (WireGuard, AmneziaWG, etc.)\n3. Pick a DNS server and endpoint\n4. Select routing mode (all traffic or specific sites)\n5. Confirm — the bot will generate and send you a config file\n\n📦 <b>VPN Formats</b>\n🔐 <b>WireGuard</b> — standard .conf for any WireGuard client\n🛡️ <b>AmneziaWG</b> — WireGuard with DPI bypass (use AmneziaVPN app)\n⚔️ <b>Clash</b> — YAML proxy config for Clash / Clash Meta\n🪟 <b>WireSock</b> — WireGuard config for Windows (WireSock app)\n\n📲 <b>How to import</b>\n• <b>WireGuard</b> — open the app → Import from file\n• <b>AmneziaVPN</b> — use the <code>vpn://</code> deep link or import .conf\n• <b>Clash</b> — paste the YAML into your Clash profile\n• <b>WireSock</b> — load the .conf in the WireSock client\n\n🛠️ <b>Commands:</b>\n/start — show welcome &amp; menu\n/lang — change language\n/cancel — cancel current generation",
+  "help": "❓ <b>Help &amp; Guides</b>\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n📌 <b>Basic Commands:</b>\n/start — show welcome &amp; menu\n/lang — change language\n/cancel — cancel current generation\n\n📖 <b>How to use this bot</b>\n1. Tap <b>🚀 Generate Config</b>\n2. Choose a VPN format (WireGuard, AmneziaWG, etc.)\n3. Pick a DNS server and endpoint\n4. Select routing mode (all traffic or specific sites)\n5. Confirm — the bot will generate and send you a config file\n\n📦 <b>VPN Formats</b>\n🔐 <b>WireGuard</b> — standard .conf for any WireGuard client\n🛡️ <b>AmneziaWG</b> — WireGuard with DPI bypass (use AmneziaVPN app)\n⚔️ <b>Clash</b> — YAML proxy config for Clash / Clash Meta\n🪟 <b>WireSock</b> — WireGuard config for Windows (WireSock app)\n\n📲 <b>How to import</b>\n• <b>WireGuard</b> — open the app → Import from file\n• <b>AmneziaVPN</b> — use the <code>vpn://</code> deep link or import .conf\n• <b>Clash</b> — paste the YAML into your Clash profile\n• <b>WireSock</b> — load the .conf in the WireSock client",
 
   "warp_status": "📊 <b>WARP Status</b>\n\nCheck the current Cloudflare WARP service status:\n👉 <a href=\"https://t.me/cfwarpstatus\">@cfwarpstatus</a>",
 
@@ -29,8 +29,8 @@
   "fmt_amnezia": "🛡️ AmneziaWG",
   "fmt_clash": "⚔️ Clash",
   "fmt_wiresock": "🪟 WireSock",
-  "fmt_wireguard_desc": "Standard WireGuard config (.conf)",
-  "fmt_amnezia_desc": "AmneziaWG with DPI protection",
+  "fmt_wireguard_desc": "Standard WireGuard config",
+  "fmt_amnezia_desc": "AmneziaWG config",
   "fmt_clash_desc": "Clash / Clash Meta proxy config",
   "fmt_wiresock_desc": "WireSock for Windows",
 
