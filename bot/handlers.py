@@ -19,6 +19,7 @@ from telegram.ext import (
 from bot.i18n import t_user, available_languages
 from core.config import BotConfigs
 from core.generators import (
+    FORMATS,
     GENERATORS,
     AmneziaWGGenerator,
     GeneratorParams,
@@ -380,6 +381,8 @@ async def _generate(
     )
 
     fmt = user["format"]
+    if fmt not in FORMATS:
+        fmt = "wireguard"
     generator = GENERATORS[fmt]()
     content, filename = generator.generate(params)
 

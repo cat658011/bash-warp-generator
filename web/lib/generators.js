@@ -1,6 +1,7 @@
 'use strict';
 
 const { loadWarpParams } = require('./config');
+const { FORMATS } = require('./ports');
 
 // ---------------------------------------------------------------------------
 // Load AmneziaWG parameters from shared config
@@ -236,4 +237,4 @@ const FORMAT_LABELS = {
   wiresock: { name: 'WireSock', descKey: 'fmt_wiresock_desc' },
 };
 
-module.exports = { GENERATORS, FORMAT_LABELS, generateAmneziaDeeplink };
+module.exports = { GENERATORS, FORMAT_LABELS, FORMATS, generateAmneziaDeeplink };

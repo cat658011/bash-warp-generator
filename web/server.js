@@ -4,7 +4,7 @@ const path = require('node:path');
 const express = require('express');
 const { loadConfigs, loadI18n, availableLanguages } = require('./lib/config');
 const { registerWarp } = require('./lib/warp');
-const { GENERATORS, FORMAT_LABELS } = require('./lib/generators');
+const { GENERATORS, FORMAT_LABELS, FORMATS } = require('./lib/generators');
 const { resolveEndpoint } = require('./lib/ports');
 
 const app = express();
@@ -110,7 +110,7 @@ app.post('/generate', async (req, res) => {
     mtu: 1280,
   };
 
-  if (!(fmt in GENERATORS)) {
+  if (!FORMATS.has(fmt)) {
     fmt = 'wireguard';
   }
   const { content, filename } = GENERATORS[fmt](params);

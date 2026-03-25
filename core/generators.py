@@ -273,9 +273,9 @@ class WireSockGenerator:
         return config, "warp-wiresock.conf"
 
 
-# ---------------------------------------------------------------------------
+from core.ports import FORMATS
+
 # Registry
-# ---------------------------------------------------------------------------
 GENERATORS: dict[str, type[ConfigGenerator]] = {
     "wireguard": WireGuardGenerator,
     "amnezia": AmneziaWGGenerator,
