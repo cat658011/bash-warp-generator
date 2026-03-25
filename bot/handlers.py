@@ -53,9 +53,26 @@ from bot.keyboards import (
 )
 
 logger = logging.getLogger(__name__)
-FLOOD_WINDOW_SEC = max(1, int(os.environ.get("BOT_FLOOD_WINDOW_SEC", "10")))
-FLOOD_MAX_EVENTS = max(1, int(os.environ.get("BOT_FLOOD_MAX_EVENTS", "8")))
-GENERATE_COOLDOWN_SEC = max(1, int(os.environ.get("BOT_GENERATE_COOLDOWN_SEC", "20")))
+
+
+def _positive_int_env(name: str, default: int) -> int:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    try:
+        value = int(raw)
+    except ValueError:
+        logger.warning("Invalid %s=%r, using default %d", name, raw, default)
+        return default
+    if value <= 0:
+        logger.warning("Invalid %s=%r, using default %d", name, raw, default)
+        return default
+    return value
+
+
+FLOOD_WINDOW_SEC = _positive_int_env("BOT_FLOOD_WINDOW_SEC", 10)
+FLOOD_MAX_EVENTS = _positive_int_env("BOT_FLOOD_MAX_EVENTS", 8)
+GENERATE_COOLDOWN_SEC = _positive_int_env("BOT_GENERATE_COOLDOWN_SEC", 20)
 
 # Conversation states
 (
@@ -87,10 +104,29 @@ def _flood_state(context: ContextTypes.DEFAULT_TYPE) -> dict:
     )
 
 
+def _cleanup_flood_state(context: ContextTypes.DEFAULT_TYPE, now: float) -> None:
+    state = _flood_state(context)
+    events: defaultdict[int, deque[float]] = state["events"]
+    cooldowns: dict[int, float] = state["generate_cooldowns"]
+
+    threshold = now - FLOOD_WINDOW_SEC
+    stale_users: list[int] = []
+    for user_id, q in events.items():
+        while q and q[0] < threshold:
+            q.popleft()
+        if not q and cooldowns.get(user_id, 0.0) <= now:
+            stale_users.append(user_id)
+
+    for user_id in stale_users:
+        events.pop(user_id, None)
+        cooldowns.pop(user_id, None)
+
+
 def _is_flooded(context: ContextTypes.DEFAULT_TYPE, user_id: int) -> bool:
     state = _flood_state(context)
     events: defaultdict[int, deque[float]] = state["events"]
     now = time.monotonic()
+    _cleanup_flood_state(context, now)
     q = events[user_id]
 
     threshold = now - FLOOD_WINDOW_SEC
@@ -107,8 +143,9 @@ def _is_flooded(context: ContextTypes.DEFAULT_TYPE, user_id: int) -> bool:
 def _generate_cooldown_left(context: ContextTypes.DEFAULT_TYPE, user_id: int) -> int:
     state = _flood_state(context)
     cooldowns: dict[int, float] = state["generate_cooldowns"]
-    ready_at = cooldowns.get(user_id, 0.0)
     now = time.monotonic()
+    _cleanup_flood_state(context, now)
+    ready_at = cooldowns.get(user_id, 0.0)
     if ready_at > now:
         return int(ready_at - now) + 1
     return 0

@@ -7,10 +7,23 @@ const { registerWarp } = require('./lib/warp');
 const { GENERATORS, FORMAT_LABELS, FORMATS } = require('./lib/generators');
 const { resolveEndpoint } = require('./lib/ports');
 
+function parsePositiveIntEnv(name, defaultValue) {
+  const raw = process.env[name];
+  if (raw === undefined) {
+    return defaultValue;
+  }
+  const parsed = Number.parseInt(raw, 10);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    console.warn(`Invalid ${name}="${raw}", using default ${defaultValue}`);
+    return defaultValue;
+  }
+  return parsed;
+}
+
 const app = express();
 const PORT = process.env.PORT || 3000;
-const RATE_LIMIT_WINDOW_MS = Math.max(1, parseInt(process.env.RATE_LIMIT_WINDOW_MS || '60000', 10));
-const RATE_LIMIT_GENERATE_MAX = Math.max(1, parseInt(process.env.RATE_LIMIT_GENERATE_MAX || '15', 10));
+const RATE_LIMIT_WINDOW_MS = parsePositiveIntEnv('RATE_LIMIT_WINDOW_MS', 60000);
+const RATE_LIMIT_GENERATE_MAX = parsePositiveIntEnv('RATE_LIMIT_GENERATE_MAX', 15);
 const TRUST_PROXY = process.env.TRUST_PROXY === '1';
 const rateLimitStore = new Map();
 
@@ -56,6 +69,12 @@ function getClientIp(req) {
 
 function isRateLimited(req) {
   const now = Date.now();
+  for (const [key, value] of rateLimitStore) {
+    if (now >= value.resetAt) {
+      rateLimitStore.delete(key);
+    }
+  }
+
   const ip = getClientIp(req);
   const entry = rateLimitStore.get(ip);
 
