@@ -1,8 +1,17 @@
 # 🚀 WARP Config Generator
 
-Генератор конфигов **Cloudflare WARP** VPN через **Telegram-бота** или **веб-интерфейс**.
+[Русский](README.md) | [English](README.en.md)
+
+Генератор конфигов **Cloudflare WARP** VPN через **Telegram-бота**, **веб-интерфейс** или **CLI**.
 
 ![Веб-интерфейс](https://github.com/user-attachments/assets/84ae89b2-b679-4f03-9acd-b79cbda99180)
+
+## 🆕 Последние изменения
+
+- Добавлены новые пресеты для **split tunnel**: **Spotify**, **Netflix**, **OpenAI**, **TikTok** и **Steam**.
+- Расширены IP-диапазоны для существующих сервисов маршрутизации в `configs/routing_services.json`.
+- Параметры **Clash** и **WireSock** приведены в соответствие с актуальными значениями **AmneziaWG** из `configs/warp_params.json`.
+- Основная документация теперь ведётся на русском языке, английская версия доступна в [README.en.md](README.en.md).
 
 ## Поддерживаемые форматы
 
@@ -15,16 +24,18 @@
 
 ## Возможности
 
-- **Выбор DNS-сервера** — Cloudflare, Google, Quad9, AdGuard, OpenDNS и другие
-- **Выбор релея / эндпоинта** — альтернативные Cloudflare edge-эндпоинты
-- **Режимы маршрутизации** — весь трафик (full tunnel) или раздельный туннель (split tunnel) с маршрутами для конкретных сервисов
-- **Подтверждение перед генерацией** — просмотр настроек перед созданием конфига
-- **Постоянная клавиатура** — кнопки «Генерация», «Статус WARP», «Помощь» всегда видны
-- **Статус WARP** — ссылка на [@cfwarpstatus](https://t.me/cfwarpstatus) для мониторинга
-- **Локализация** — русский и английский (легко добавить новые языки)
-- **Помощь прямо в боте** — инструкции по добавлению DNS, релеев и сервисов
-- **Полная настройка** — все параметры хранятся в JSON-файлах в `configs/`
-- **Веб-интерфейс** — Node.js/Express приложение на русском языке
+- **Выбор DNS-сервера** — Cloudflare, Google, Quad9, AdGuard, OpenDNS и другие.
+- **Выбор релея / эндпоинта** — альтернативные Cloudflare edge-эндпоинты.
+- **Режимы маршрутизации** — весь трафик (full tunnel) или раздельный туннель (split tunnel) с маршрутами для конкретных сервисов.
+- **Готовые пресеты split tunnel** — Google/YouTube, Meta, Twitter/X, Telegram, Discord, Spotify, Netflix, OpenAI, TikTok и Steam.
+- **Подтверждение перед генерацией** — просмотр настроек перед созданием конфига.
+- **Постоянная клавиатура** — кнопки «Генерация», «Статус WARP», «Помощь» всегда видны.
+- **Статус WARP** — ссылка на [@cfwarpstatus](https://t.me/cfwarpstatus) для мониторинга.
+- **Локализация** — русский и английский (легко добавить новые языки).
+- **Помощь прямо в боте** — инструкции по добавлению DNS, релеев и сервисов.
+- **Полная настройка** — все параметры хранятся в JSON-файлах в `configs/`.
+- **Веб-интерфейс** — Node.js/Express приложение с поддержкой локализации.
+- **CLI-генератор** — быстрый запуск через `python generate.py`.
 
 ---
 
@@ -120,9 +131,25 @@ curl http://localhost:3000/health
 | `dns_servers.json` | DNS-серверы (имя + адреса) |
 | `relay_servers.json` | Альтернативные эндпоинты Cloudflare WARP |
 | `routing_services.json` | IP-диапазоны сервисов для раздельного туннеля |
-| `warp_params.json` | Параметры AmneziaWG (Jc, Jmin, …), MTU, I1 payloads |
+| `warp_params.json` | Параметры AmneziaWG, Clash и WireSock: Jc, Jmin, Jmax, H1–H4, MTU, I1 payloads |
 | `i18n/ru.json` | Русская локализация (бот + веб) |
 | `i18n/en.json` | Английская локализация (бот + веб) |
+
+### Доступные пресеты маршрутизации
+
+`configs/routing_services.json` уже включает готовые наборы маршрутов:
+
+- `full_tunnel`
+- `google_youtube`
+- `meta`
+- `twitter`
+- `telegram`
+- `discord`
+- `spotify`
+- `netflix`
+- `openai`
+- `tiktok`
+- `steam`
 
 ---
 
@@ -263,11 +290,17 @@ dig +short yandex.ru
 | `configs/i18n/ru.json` | Русский (по умолчанию) |
 | `configs/i18n/en.json` | Английский |
 
-Язык задаётся через переменную `BOT_LANG`:
+Язык бота задаётся через переменную `BOT_LANG`:
 
 ```bash
 export BOT_LANG="ru"
 python -m bot
+```
+
+Для веб-интерфейса можно использовать ту же переменную окружения или параметр `lang` в URL:
+
+```text
+http://localhost:3000/?lang=en
 ```
 
 ### Как добавить новый язык
@@ -276,22 +309,26 @@ python -m bot
 2. Переведите все значения (ключи менять нельзя)
 3. Установите `BOT_LANG=uk` и перезапустите бота
 
-Все строки сообщений, надписи на кнопках, описания форматов и весь UI-текст
-определены в файле языка. Один файл используется **и ботом, и веб-интерфейсом**
-— изменений в коде не требуется.
+Все строки сообщений, надписи на кнопках, описания форматов и весь UI-текст определены в файле языка. Один файл используется **и ботом, и веб-интерфейсом** — изменений в коде не требуется.
 
 ---
 
-## ⚙️ Параметры WARP (AmneziaWG)
+## ⚙️ Параметры WARP (AmneziaWG / Clash / WireSock)
 
-Параметры обфускации AmneziaWG и payload I1 хранятся в `configs/warp_params.json`:
+Параметры обфускации и payload I1 хранятся в `configs/warp_params.json`:
 
 ```json
 {
   "amnezia": {
-    "Jc": 120, "Jmin": 23, "Jmax": 911,
-    "S1": 0, "S2": 0,
-    "H1": 1, "H2": 2, "H3": 3, "H4": 4
+    "Jc": 4,
+    "Jmin": 40,
+    "Jmax": 70,
+    "S1": 0,
+    "S2": 0,
+    "H1": 1,
+    "H2": 2,
+    "H3": 3,
+    "H4": 4
   },
   "mtu": 1280,
   "i1_payloads": [
@@ -314,53 +351,57 @@ python -m bot
 
 ## 📂 Структура проекта
 
-```
-├── core/                    # Основная библиотека (без зависимости от Telegram)
+```text
+├── core/                     # Основная библиотека (без зависимости от Telegram)
 │   ├── __init__.py
-│   ├── config.py            # Загрузка JSON-конфигов и dataclasses
-│   ├── generators.py        # Генераторы WireGuard / AmneziaWG / Clash / WireSock
-│   └── warp.py              # Клиент API Cloudflare WARP
-├── bot/                     # Telegram-бот
+│   ├── config.py             # Загрузка JSON-конфигов и dataclasses
+│   ├── generators.py         # Генераторы WireGuard / AmneziaWG / Clash / WireSock
+│   ├── ports.py              # Выбор портов для разных форматов
+│   └── warp.py               # Клиент API Cloudflare WARP
+├── bot/                      # Telegram-бот
 │   ├── __init__.py
-│   ├── __main__.py          # Точка входа (python -m bot)
-│   ├── handlers.py          # Логика диалога + обработчики меню
-│   ├── keyboards.py         # Построение inline- и reply-клавиатур
-│   └── i18n.py              # Загрузчик локализации (→ configs/i18n/)
-├── web/                     # Веб-интерфейс (Node.js / Express)
-│   ├── package.json         # Зависимости Node.js
-│   ├── server.js            # Express-приложение
+│   ├── __main__.py           # Точка входа (python -m bot)
+│   ├── handlers.py           # Логика диалога + обработчики меню
+│   ├── keyboards.py          # Построение inline- и reply-клавиатур
+│   └── i18n.py               # Загрузчик локализации (→ configs/i18n/)
+├── web/                      # Веб-интерфейс (Node.js / Express)
+│   ├── package.json          # Зависимости Node.js
+│   ├── package-lock.json
+│   ├── server.js             # Express-приложение
 │   ├── lib/
-│   │   ├── config.js        # Загрузка JSON-конфигов + i18n + warp_params
-│   │   ├── generators.js    # Генераторы конфигов (из warp_params.json)
-│   │   └── warp.js          # Клиент API WARP (X25519 + регистрация)
+│   │   ├── config.js         # Загрузка JSON-конфигов + i18n + warp_params
+│   │   ├── generators.js     # Генераторы конфигов
+│   │   ├── ports.js          # Выбор портов для веб-форматов
+│   │   └── warp.js           # Клиент API WARP (X25519 + регистрация)
 │   ├── views/
-│   │   └── index.ejs        # HTML-шаблон (EJS, i18n-строки)
+│   │   └── index.ejs         # HTML-шаблон (EJS, i18n-строки)
 │   └── test/
-│       └── server.test.js   # Тесты веб-сервера
+│       └── server.test.js    # Тесты веб-сервера
 ├── configs/
-│   ├── i18n/                # Локализация (бот + веб)
-│   │   ├── ru.json          # Русский
-│   │   └── en.json          # Английский
-│   ├── dns_servers.json     # DNS-серверы
-│   ├── relay_servers.json   # Эндпоинты Cloudflare WARP
+│   ├── i18n/                 # Локализация (бот + веб)
+│   │   ├── ru.json           # Русский
+│   │   └── en.json           # Английский
+│   ├── dns_servers.json      # DNS-серверы
+│   ├── relay_servers.json    # Эндпоинты Cloudflare WARP
 │   ├── routing_services.json # IP-маршруты сервисов
-│   └── warp_params.json     # Параметры AmneziaWG + I1 payloads
+│   └── warp_params.json      # Параметры AmneziaWG + I1 payloads
 ├── tests/
-│   ├── test_config.py       # Тесты конфигурации
-│   ├── test_generators.py   # Тесты генераторов
-│   ├── test_i18n.py         # Тесты локализации
-│   ├── test_warp.py         # Тесты API WARP
-│   └── test_web.py          # Тесты веб-сервера (Node.js)
-├── generate.py              # CLI-генератор (python generate.py)
-├── warp_generator.sh        # Оригинальный bash-скрипт (для справки)
-├── requirements.txt         # Зависимости Python (бот + core)
-├── .env.example             # Пример переменных окружения
-└── README.md
+│   ├── test_config.py        # Тесты конфигурации
+│   ├── test_generators.py    # Тесты генераторов
+│   ├── test_i18n.py          # Тесты локализации
+│   ├── test_ports.py         # Тесты выбора портов
+│   ├── test_warp.py          # Тесты API WARP
+│   └── test_web.py           # Интеграционные тесты веб-сервера
+├── .env.example              # Пример переменных окружения
+├── generate.py               # CLI-генератор
+├── LICENSE
+├── README.en.md              # Английская документация
+├── README.md                 # Основная русская документация
+└── requirements.txt          # Зависимости Python (бот + core)
 ```
 
 Пакет `core/` содержит всю логику генерации WARP и **не зависит** от Telegram.
-Оба фронтенда (бот и веб) читают параметры из общих конфигов в `configs/`:
-локализацию из `configs/i18n/`, параметры обфускации из `configs/warp_params.json`.
+Оба фронтенда (бот и веб) читают параметры из общих конфигов в `configs/`: локализацию из `configs/i18n/`, параметры обфускации из `configs/warp_params.json`, а маршруты split tunnel — из `configs/routing_services.json`.
 
 ---
 
@@ -369,7 +410,7 @@ python -m bot
 **Python-тесты (бот + core + веб-интеграция):**
 
 ```bash
-pip install pytest
+pip install -r requirements.txt pytest
 python -m pytest tests/ -v
 ```
 
@@ -377,6 +418,7 @@ python -m pytest tests/ -v
 
 ```bash
 cd web
+npm install
 npm test
 ```
 
@@ -387,7 +429,7 @@ npm test
 | Переменная | Описание | По умолчанию |
 |-----------|----------|-------------|
 | `BOT_TOKEN` | Токен Telegram-бота от @BotFather | — (обязательно) |
-| `BOT_LANG` | Язык бота (`ru`, `en`) | `ru` |
+| `BOT_LANG` | Язык бота и веб-интерфейса по умолчанию (`ru`, `en`) | `ru` |
 | `PORT` | Порт веб-интерфейса | `3000` |
 
 ---
@@ -400,20 +442,13 @@ npm test
 python generate.py
 ```
 
-Скрипт зарегистрируется в Cloudflare WARP, сгенерирует AmneziaWG-конфиг
-и выведет его вместе с deep-link для AmneziaVPN. Конфиг также сохраняется
-в файл `warp-amnezia.conf`.
+Скрипт зарегистрируется в Cloudflare WARP, сгенерирует AmneziaWG-конфиг и выведет его вместе с deep-link для AmneziaVPN. Конфиг также сохраняется в файл `warp-amnezia.conf`.
 
 ---
 
 ## 🔄 Legacy Bash-скрипт
 
-Оригинальный `warp_generator.sh` оставлен для справки.
-Запустите его напрямую, если предпочитаете CLI:
-
-```bash
-bash warp_generator.sh
-```
+Оригинальный bash-скрипт в текущем репозитории отсутствует — актуальная реализация перенесена в Python-ядро, Telegram-бот и веб-интерфейс. Если вам нужен терминальный режим, используйте `python generate.py`.
 
 ---
 
