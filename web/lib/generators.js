@@ -8,6 +8,8 @@ const { FORMATS } = require('./ports');
 // ---------------------------------------------------------------------------
 const _warpParams = loadWarpParams();
 const _amneziaConf = _warpParams.amnezia;
+const _wiresockConf = _warpParams.wiresock;
+const _clashConf = _warpParams.clash;
 const _i1Payloads = _warpParams.i1_payloads;
 const _persistentKeepalive = _warpParams.persistent_keepalive || 25;
 
@@ -23,17 +25,32 @@ const AMNEZIA = {
   H4: _amneziaConf.H4,
 };
 
-// ---------------------------------------------------------------------------
-// WireSock / Clash obfuscation constants (fixed values, not from JSON)
-// ---------------------------------------------------------------------------
-const OBF = { S1: 0, S2: 0, JC: 120, JMIN: 23, JMAX: 911, H1: 1, H2: 2, H3: 3, H4: 4 };
+const WIRESOCK = {
+  JC: _wiresockConf.Jc,
+  JMIN: _wiresockConf.Jmin,
+  JMAX: _wiresockConf.Jmax,
+  S1: _wiresockConf.S1,
+  S2: _wiresockConf.S2,
+  H1: _wiresockConf.H1,
+  H2: _wiresockConf.H2,
+  H3: _wiresockConf.H3,
+  H4: _wiresockConf.H4,
+  MASKING: _wiresockConf.masking,
+};
 
-// Clash uses a slightly different H3/H4 assignment in its amnezia-wg-option block.
-const CLASH_H3 = 4;
-const CLASH_H4 = 3;
-
-// Fixed I1 payload used in the Clash amnezia-wg-option block.
-const CLASH_I1 = _i1Payloads[0];
+const CLASH = {
+  JC: _clashConf.Jc,
+  JMIN: _clashConf.Jmin,
+  JMAX: _clashConf.Jmax,
+  S1: _clashConf.S1,
+  S2: _clashConf.S2,
+  H1: _clashConf.H1,
+  H2: _clashConf.H2,
+  H3: _clashConf.H3,
+  H4: _clashConf.H4,
+  RESERVED: _clashConf.reserved,
+  I1: _i1Payloads[0],
+};
 
 function randomI1() {
   return _i1Payloads[Math.floor(Math.random() * _i1Payloads.length)];
@@ -184,19 +201,19 @@ function generateClash(params) {
     `    public-key: ${params.peerPublicKey}\n` +
     '    udp: true\n' +
     '    remote-dns-resolve: true\n' +
-    '    reserved: [177, 85, 135]\n' +
+    '    reserved: ' + JSON.stringify(CLASH.RESERVED) + '\n' +
     `    mtu: ${params.mtu}\n` +
     '    amnezia-wg-option:\n' +
-    `      jc: ${OBF.JC}\n` +
-    `      jmin: ${OBF.JMIN}\n` +
-    `      jmax: ${OBF.JMAX}\n` +
-    `      s1: ${OBF.S1}\n` +
-    `      s2: ${OBF.S2}\n` +
-    `      h1: ${OBF.H1}\n` +
-    `      h2: ${OBF.H2}\n` +
-    `      h3: ${CLASH_H3}\n` +
-    `      h4: ${CLASH_H4}\n` +
-    `      i1: ${CLASH_I1}\n` +
+    `      jc: ${CLASH.JC}\n` +
+    `      jmin: ${CLASH.JMIN}\n` +
+    `      jmax: ${CLASH.JMAX}\n` +
+    `      s1: ${CLASH.S1}\n` +
+    `      s2: ${CLASH.S2}\n` +
+    `      h1: ${CLASH.H1}\n` +
+    `      h2: ${CLASH.H2}\n` +
+    `      h3: ${CLASH.H3}\n` +
+    `      h4: ${CLASH.H4}\n` +
+    `      i1: ${CLASH.I1}\n` +
     '\n' +
     'proxy-groups:\n' +
     '  - name: Proxy\n' +
@@ -223,20 +240,20 @@ function generateWireSock(params) {
     `Address = ${params.clientIpv4}/32`,
     `DNS = ${dns}`,
     `MTU = ${params.mtu}`,
-    `S1 = ${OBF.S1}`,
-    `S2 = ${OBF.S2}`,
-    `Jc = ${OBF.JC}`,
-    `Jmin = ${OBF.JMIN}`,
-    `Jmax = ${OBF.JMAX}`,
-    `H1 = ${OBF.H1}`,
-    `H2 = ${OBF.H2}`,
-    `H3 = ${OBF.H3}`,
-    `H4 = ${OBF.H4}`,
+    `S1 = ${WIRESOCK.S1}`,
+    `S2 = ${WIRESOCK.S2}`,
+    `Jc = ${WIRESOCK.JC}`,
+    `Jmin = ${WIRESOCK.JMIN}`,
+    `Jmax = ${WIRESOCK.JMAX}`,
+    `H1 = ${WIRESOCK.H1}`,
+    `H2 = ${WIRESOCK.H2}`,
+    `H3 = ${WIRESOCK.H3}`,
+    `H4 = ${WIRESOCK.H4}`,
     '',
     '# Protocol masking',
-    'Id = gosuslugi.ru',
-    'Ip = quic',
-    'Ib = firefox',
+    `Id = ${WIRESOCK.MASKING.Id}`,
+    `Ip = ${WIRESOCK.MASKING.Ip}`,
+    `Ib = ${WIRESOCK.MASKING.Ib}`,
     '',
     '[Peer]',
     `PublicKey = ${params.peerPublicKey}`,
