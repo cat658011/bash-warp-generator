@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 from core.generators import (
     AmneziaWGGenerator,
     ClashGenerator,
@@ -9,6 +12,14 @@ from core.generators import (
     WireGuardGenerator,
     WireSockGenerator,
 )
+
+_WARP_PARAMS = json.loads(
+    (Path(__file__).resolve().parent.parent / "configs" / "warp_params.json").read_text(
+        encoding="utf-8"
+    )
+)
+_CLASH_CFG = _WARP_PARAMS["clash"]
+_WIRESOCK_CFG = _WARP_PARAMS["wiresock"]
 
 _PARAMS = GeneratorParams(
     private_key="cHJpdmF0ZV9rZXlfYmFzZTY0X2VuY29kZWQ=",
@@ -146,15 +157,15 @@ class TestClash:
 
     def test_amnezia_wg_option_values(self) -> None:
         content, _ = ClashGenerator().generate(_PARAMS)
-        assert "jc: 120" in content
-        assert "jmin: 23" in content
-        assert "jmax: 911" in content
-        assert "s1: 0" in content
-        assert "s2: 0" in content
-        assert "h1: 1" in content
-        assert "h2: 2" in content
-        assert "h3: 4" in content
-        assert "h4: 3" in content
+        assert f"jc: {_CLASH_CFG['Jc']}" in content
+        assert f"jmin: {_CLASH_CFG['Jmin']}" in content
+        assert f"jmax: {_CLASH_CFG['Jmax']}" in content
+        assert f"s1: {_CLASH_CFG['S1']}" in content
+        assert f"s2: {_CLASH_CFG['S2']}" in content
+        assert f"h1: {_CLASH_CFG['H1']}" in content
+        assert f"h2: {_CLASH_CFG['H2']}" in content
+        assert f"h3: {_CLASH_CFG['H3']}" in content
+        assert f"h4: {_CLASH_CFG['H4']}" in content
 
     def test_has_i1_field(self) -> None:
         content, _ = ClashGenerator().generate(_PARAMS)
@@ -192,15 +203,15 @@ class TestWireSock:
 
     def test_has_obfuscation_params(self) -> None:
         content, _ = WireSockGenerator().generate(_PARAMS)
-        assert "Jc = 120" in content
-        assert "Jmin = 23" in content
-        assert "Jmax = 911" in content
-        assert "S1 = 0" in content
-        assert "S2 = 0" in content
-        assert "H1 = 1" in content
-        assert "H2 = 2" in content
-        assert "H3 = 3" in content
-        assert "H4 = 4" in content
+        assert f"Jc = {_WIRESOCK_CFG['Jc']}" in content
+        assert f"Jmin = {_WIRESOCK_CFG['Jmin']}" in content
+        assert f"Jmax = {_WIRESOCK_CFG['Jmax']}" in content
+        assert f"S1 = {_WIRESOCK_CFG['S1']}" in content
+        assert f"S2 = {_WIRESOCK_CFG['S2']}" in content
+        assert f"H1 = {_WIRESOCK_CFG['H1']}" in content
+        assert f"H2 = {_WIRESOCK_CFG['H2']}" in content
+        assert f"H3 = {_WIRESOCK_CFG['H3']}" in content
+        assert f"H4 = {_WIRESOCK_CFG['H4']}" in content
 
     def test_has_protocol_masking_section(self) -> None:
         content, _ = WireSockGenerator().generate(_PARAMS)
