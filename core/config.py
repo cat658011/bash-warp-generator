@@ -23,7 +23,13 @@ class RelayServer:
     """A selectable relay / endpoint option."""
 
     id: str
-    endpoint: str = ""
+    host: str = ""
+    ports: list[int] = field(default_factory=list)
+
+    def endpoint_for(self, fmt: str) -> str:
+        """Return ``host:port`` resolved for the given format ID."""
+        from core.ports import resolve_endpoint  # local import avoids circularity
+        return resolve_endpoint(fmt, self.host, self.ports)
 
 
 @dataclass(frozen=True)

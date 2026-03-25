@@ -1,12 +1,15 @@
 'use strict';
 
 const { loadWarpParams } = require('./config');
+const { FORMATS } = require('./ports');
 
 // ---------------------------------------------------------------------------
 // Load AmneziaWG parameters from shared config
 // ---------------------------------------------------------------------------
 const _warpParams = loadWarpParams();
 const _amneziaConf = _warpParams.amnezia;
+const _wiresockConf = _warpParams.wiresock;
+const _clashConf = _warpParams.clash;
 const _i1Payloads = _warpParams.i1_payloads;
 const _persistentKeepalive = _warpParams.persistent_keepalive || 25;
 
@@ -20,6 +23,33 @@ const AMNEZIA = {
   H2: _amneziaConf.H2,
   H3: _amneziaConf.H3,
   H4: _amneziaConf.H4,
+};
+
+const WIRESOCK = {
+  JC: _wiresockConf.Jc,
+  JMIN: _wiresockConf.Jmin,
+  JMAX: _wiresockConf.Jmax,
+  S1: _wiresockConf.S1,
+  S2: _wiresockConf.S2,
+  H1: _wiresockConf.H1,
+  H2: _wiresockConf.H2,
+  H3: _wiresockConf.H3,
+  H4: _wiresockConf.H4,
+  MASKING: _wiresockConf.masking,
+};
+
+const CLASH = {
+  JC: _clashConf.Jc,
+  JMIN: _clashConf.Jmin,
+  JMAX: _clashConf.Jmax,
+  S1: _clashConf.S1,
+  S2: _clashConf.S2,
+  H1: _clashConf.H1,
+  H2: _clashConf.H2,
+  H3: _clashConf.H3,
+  H4: _clashConf.H4,
+  RESERVED: _clashConf.reserved,
+  I1: _i1Payloads[0],
 };
 
 function randomI1() {
@@ -127,7 +157,7 @@ function generateAmneziaDeeplink(params) {
 }
 
 // ---------------------------------------------------------------------------
-// Clash
+// Clash / Mihomo
 // ---------------------------------------------------------------------------
 function generateClash(params) {
   const lastColon = params.endpoint.lastIndexOf(':');
@@ -170,7 +200,20 @@ function generateClash(params) {
     `    private-key: ${params.privateKey}\n` +
     `    public-key: ${params.peerPublicKey}\n` +
     '    udp: true\n' +
+    '    remote-dns-resolve: true\n' +
+    '    reserved: ' + JSON.stringify(CLASH.RESERVED) + '\n' +
     `    mtu: ${params.mtu}\n` +
+    '    amnezia-wg-option:\n' +
+    `      jc: ${CLASH.JC}\n` +
+    `      jmin: ${CLASH.JMIN}\n` +
+    `      jmax: ${CLASH.JMAX}\n` +
+    `      s1: ${CLASH.S1}\n` +
+    `      s2: ${CLASH.S2}\n` +
+    `      h1: ${CLASH.H1}\n` +
+    `      h2: ${CLASH.H2}\n` +
+    `      h3: ${CLASH.H3}\n` +
+    `      h4: ${CLASH.H4}\n` +
+    `      i1: ${CLASH.I1}\n` +
     '\n' +
     'proxy-groups:\n' +
     '  - name: Proxy\n' +
@@ -197,6 +240,20 @@ function generateWireSock(params) {
     `Address = ${params.clientIpv4}/32`,
     `DNS = ${dns}`,
     `MTU = ${params.mtu}`,
+    `S1 = ${WIRESOCK.S1}`,
+    `S2 = ${WIRESOCK.S2}`,
+    `Jc = ${WIRESOCK.JC}`,
+    `Jmin = ${WIRESOCK.JMIN}`,
+    `Jmax = ${WIRESOCK.JMAX}`,
+    `H1 = ${WIRESOCK.H1}`,
+    `H2 = ${WIRESOCK.H2}`,
+    `H3 = ${WIRESOCK.H3}`,
+    `H4 = ${WIRESOCK.H4}`,
+    '',
+    '# Protocol masking',
+    `Id = ${WIRESOCK.MASKING.Id}`,
+    `Ip = ${WIRESOCK.MASKING.Ip}`,
+    `Ib = ${WIRESOCK.MASKING.Ib}`,
     '',
     '[Peer]',
     `PublicKey = ${params.peerPublicKey}`,
@@ -236,4 +293,4 @@ const FORMAT_LABELS = {
   wiresock: { name: 'WireSock', descKey: 'fmt_wiresock_desc' },
 };
 
-module.exports = { GENERATORS, FORMAT_LABELS, generateAmneziaDeeplink };
+module.exports = { GENERATORS, FORMAT_LABELS, FORMATS, generateAmneziaDeeplink };

@@ -1,46 +1,57 @@
 [
   {
     "id": "cloudflare",
-    "endpoint": "engage.cloudflareclient.com:4500"
+    "host": "engage.cloudflareclient.com",
+    "ports": [2408, 4500]
   },
   {
     "id": "cloudflare_alt",
-    "endpoint": "engage.cloudflareclient.com:2408"
+    "host": "engage.cloudflareclient.com",
+    "ports": [2408, 4500]
   },
   {
     "id": "finland_1",
-    "endpoint": "fi.tribukvy.ltd:4500"
+    "host": "fi.tribukvy.ltd",
+    "ports": [2408, 4500]
   },
   {
     "id": "finland_2",
-    "endpoint": "fi0.tribukvy.ltd:4500"
+    "host": "fi0.tribukvy.ltd",
+    "ports": [2408, 4500]
   },
   {
     "id": "netherlands_1",
-    "endpoint": "nl.tribukvy.ltd:4500"
+    "host": "nl.tribukvy.ltd",
+    "ports": [2408, 4500]
   },
   {
     "id": "netherlands_2",
-    "endpoint": "nl0.tribukvy.ltd:4500"
+    "host": "nl0.tribukvy.ltd",
+    "ports": [2408, 4500]
   },
   {
     "id": "poland_1",
-    "endpoint": "pl.tribukvy.ltd:4500"
+    "host": "pl.tribukvy.ltd",
+    "ports": [2408, 4500]
   },
   {
     "id": "poland_2",
-    "endpoint": "pl0.tribukvy.ltd:4500"
+    "host": "pl0.tribukvy.ltd",
+    "ports": [2408, 4500]
   },
   {
     "id": "germany_1",
-    "endpoint": "de.tribukvy.ltd:4500"
+    "host": "de.tribukvy.ltd",
+    "ports": [2408, 4500]
   },
   {
     "id": "estonia_1",
-    "endpoint": "ee.tribukvy.ltd:4500"
+    "host": "ee.tribukvy.ltd",
+    "ports": [2408, 4500]
   },
   {
     "id": "russia_1",
-    "endpoint": "ru.tribukvy.ltd:4500"
+    "host": "ru.tribukvy.ltd",
+    "ports": [2408, 4500]
   }
 ]

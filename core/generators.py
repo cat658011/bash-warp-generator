@@ -9,6 +9,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Protocol
 
+from core.ports import FORMATS
+
 # ---------------------------------------------------------------------------
 # Load AmneziaWG parameters from shared config
 # ---------------------------------------------------------------------------
@@ -36,6 +38,31 @@ _AMNEZIA_H4 = _AMNEZIA_CONF["H4"]
 
 _I1_PAYLOADS: list[str] = _WARP_PARAMS["i1_payloads"]
 _PERSISTENT_KEEPALIVE: int = _WARP_PARAMS.get("persistent_keepalive", 25)
+
+_WIRESOCK_CONF = _WARP_PARAMS["wiresock"]
+_WIRESOCK_JC: int = _WIRESOCK_CONF["Jc"]
+_WIRESOCK_JMIN: int = _WIRESOCK_CONF["Jmin"]
+_WIRESOCK_JMAX: int = _WIRESOCK_CONF["Jmax"]
+_WIRESOCK_S1: int = _WIRESOCK_CONF["S1"]
+_WIRESOCK_S2: int = _WIRESOCK_CONF["S2"]
+_WIRESOCK_H1: int = _WIRESOCK_CONF["H1"]
+_WIRESOCK_H2: int = _WIRESOCK_CONF["H2"]
+_WIRESOCK_H3: int = _WIRESOCK_CONF["H3"]
+_WIRESOCK_H4: int = _WIRESOCK_CONF["H4"]
+_WIRESOCK_MASKING: dict[str, str] = _WIRESOCK_CONF["masking"]
+
+_CLASH_CONF = _WARP_PARAMS["clash"]
+_CLASH_JC: int = _CLASH_CONF["Jc"]
+_CLASH_JMIN: int = _CLASH_CONF["Jmin"]
+_CLASH_JMAX: int = _CLASH_CONF["Jmax"]
+_CLASH_S1: int = _CLASH_CONF["S1"]
+_CLASH_S2: int = _CLASH_CONF["S2"]
+_CLASH_H1: int = _CLASH_CONF["H1"]
+_CLASH_H2: int = _CLASH_CONF["H2"]
+_CLASH_H3: int = _CLASH_CONF["H3"]
+_CLASH_H4: int = _CLASH_CONF["H4"]
+_CLASH_RESERVED: list[int] = _CLASH_CONF["reserved"]
+_CLASH_I1: str = _I1_PAYLOADS[0]
 
 
 def _random_i1() -> str:
@@ -181,10 +208,10 @@ class AmneziaWGGenerator:
 
 
 # ---------------------------------------------------------------------------
-# Clash
+# Clash / Mihomo
 # ---------------------------------------------------------------------------
 class ClashGenerator:
-    """Clash proxy configuration (YAML)."""
+    """Clash/Mihomo proxy configuration (YAML) with AmneziaWG obfuscation."""
 
     def generate(self, params: GeneratorParams) -> tuple[str, str]:
         host, port = params.endpoint.rsplit(":", 1)
@@ -223,7 +250,20 @@ class ClashGenerator:
             f"    private-key: {params.private_key}\n"
             f"    public-key: {params.peer_public_key}\n"
             "    udp: true\n"
+            "    remote-dns-resolve: true\n"
+            "    reserved: " + json.dumps(_CLASH_RESERVED) + "\n"
             f"    mtu: {params.mtu}\n"
+            "    amnezia-wg-option:\n"
+            f"      jc: {_CLASH_JC}\n"
+            f"      jmin: {_CLASH_JMIN}\n"
+            f"      jmax: {_CLASH_JMAX}\n"
+            f"      s1: {_CLASH_S1}\n"
+            f"      s2: {_CLASH_S2}\n"
+            f"      h1: {_CLASH_H1}\n"
+            f"      h2: {_CLASH_H2}\n"
+            f"      h3: {_CLASH_H3}\n"
+            f"      h4: {_CLASH_H4}\n"
+            f"      i1: {_CLASH_I1}\n"
             "\n"
             "proxy-groups:\n"
             "  - name: Proxy\n"
@@ -242,7 +282,7 @@ class ClashGenerator:
 # WireSock
 # ---------------------------------------------------------------------------
 class WireSockGenerator:
-    """WireSock configuration (Windows WireGuard variant)."""
+    """WireSock configuration with AmneziaWG obfuscation and protocol masking."""
 
     def generate(self, params: GeneratorParams) -> tuple[str, str]:
         dns = ", ".join(params.dns_servers)
@@ -254,6 +294,20 @@ class WireSockGenerator:
             f"Address = {params.client_ipv4}/32",
             f"DNS = {dns}",
             f"MTU = {params.mtu}",
+            f"S1 = {_WIRESOCK_S1}",
+            f"S2 = {_WIRESOCK_S2}",
+            f"Jc = {_WIRESOCK_JC}",
+            f"Jmin = {_WIRESOCK_JMIN}",
+            f"Jmax = {_WIRESOCK_JMAX}",
+            f"H1 = {_WIRESOCK_H1}",
+            f"H2 = {_WIRESOCK_H2}",
+            f"H3 = {_WIRESOCK_H3}",
+            f"H4 = {_WIRESOCK_H4}",
+            "",
+            "# Protocol masking",
+            f"Id = {_WIRESOCK_MASKING['Id']}",
+            f"Ip = {_WIRESOCK_MASKING['Ip']}",
+            f"Ib = {_WIRESOCK_MASKING['Ib']}",
             "",
             "[Peer]",
             f"PublicKey = {params.peer_public_key}",
@@ -273,9 +327,7 @@ class WireSockGenerator:
         return config, "warp-wiresock.conf"
 
 
-# ---------------------------------------------------------------------------
 # Registry
-# ---------------------------------------------------------------------------
 GENERATORS: dict[str, type[ConfigGenerator]] = {
     "wireguard": WireGuardGenerator,
     "amnezia": AmneziaWGGenerator,

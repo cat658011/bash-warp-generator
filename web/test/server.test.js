@@ -4,6 +4,7 @@ const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const http = require('node:http');
 const app = require('../server');
+const { FORMATS, resolveEndpoint } = require('../lib/ports');
 
 // Helper: start server on a random port, make a request, close it
 function request(method, path) {
@@ -81,5 +82,62 @@ describe('GET /health', () => {
     assert.equal(res.status, 200);
     const data = JSON.parse(res.body);
     assert.deepEqual(data, { status: 'ok' });
+  });
+});
+
+// ── Port resolution (lib/ports.js) ───────────────────────────────────────────
+
+describe('FORMATS', () => {
+  it('contains all four canonical format IDs', () => {
+    for (const fmt of ['wireguard', 'amnezia', 'wiresock', 'clash']) {
+      assert.ok(FORMATS.has(fmt), `FORMATS is missing "${fmt}"`);
+    }
+  });
+
+  it('wireguard is not an AWG format (uses ports[0])', () => {
+    const dualRelay = { host: 'relay.example.com', ports: [2408, 4500] };
+    assert.equal(resolveEndpoint('wireguard', dualRelay), 'relay.example.com:2408');
+  });
+});
+
+describe('resolveEndpoint — index-based', () => {
+  // ports are [wireguard_port, amneziawg_port]
+  const dualRelay   = { host: 'relay.example.com', ports: [2408, 4500] };
+  const singleRelay = { host: 'relay.example.com', ports: [4500] };
+
+  it('wireguard uses ports[0]', () => {
+    assert.equal(resolveEndpoint('wireguard', dualRelay), 'relay.example.com:2408');
+  });
+
+  it('amnezia uses ports[1]', () => {
+    assert.equal(resolveEndpoint('amnezia', dualRelay), 'relay.example.com:4500');
+  });
+
+  it('wiresock uses ports[1]', () => {
+    assert.equal(resolveEndpoint('wiresock', dualRelay), 'relay.example.com:4500');
+  });
+
+  it('clash uses ports[1]', () => {
+    assert.equal(resolveEndpoint('clash', dualRelay), 'relay.example.com:4500');
+  });
+
+  it('amnezia falls back to ports[0] for single-port relay', () => {
+    assert.equal(resolveEndpoint('amnezia', singleRelay), 'relay.example.com:4500');
+  });
+
+  it('wiresock falls back to ports[0] for single-port relay', () => {
+    assert.equal(resolveEndpoint('wiresock', singleRelay), 'relay.example.com:4500');
+  });
+
+  it('unknown format uses ports[0]', () => {
+    assert.equal(resolveEndpoint('unknown_format', dualRelay), 'relay.example.com:2408');
+  });
+
+  it('all known formats produce a port within relay.ports', () => {
+    for (const fmt of FORMATS) {
+      const ep = resolveEndpoint(fmt, dualRelay);
+      const port = parseInt(ep.split(':').pop(), 10);
+      assert.ok(dualRelay.ports.includes(port), `${fmt}: port ${port} not in relay.ports`);
+    }
   });
 });

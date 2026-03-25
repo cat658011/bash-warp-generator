@@ -25,7 +25,8 @@ def test_relay_servers_loaded() -> None:
     for relay in configs.relay_servers:
         assert isinstance(relay, RelayServer)
         assert relay.id
-        assert relay.endpoint
+        assert relay.host
+        assert len(relay.ports) > 0
 
 
 def test_routing_services_loaded() -> None:

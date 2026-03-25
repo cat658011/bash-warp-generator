@@ -12,56 +12,55 @@
     /* ── Theme variables ───────────────────────────────── */
     :root,
     [data-theme="dark"] {
-      --bg: #060918;
-      --card: rgba(15, 23, 42, 0.65);
-      --card-border: rgba(99, 102, 241, 0.12);
-      --card-glow: rgba(99, 102, 241, 0.06);
-      --accent: #6366f1;
-      --accent-light: #818cf8;
-      --accent-dark: #4f46e5;
-      --accent-glow: rgba(99, 102, 241, 0.35);
+      --bg: #0d1117;
+      --card: rgba(22, 27, 34, 0.75);
+      --card-border: rgba(244, 129, 32, 0.15);
+      --card-glow: rgba(244, 129, 32, 0.08);
+      --accent: #F48120;
+      --accent-light: #f6a348;
+      --accent-dark: #c96810;
+      --accent-glow: rgba(244, 129, 32, 0.35);
+      --accent-ring: rgba(244, 129, 32, 0.15);
       --green: #10b981;
       --green-glow: rgba(16, 185, 129, 0.25);
-      --orange: #f97316;
-      --pink: #ec4899;
-      --text: #f1f5f9;
-      --text-secondary: #94a3b8;
-      --text-dim: #64748b;
-      --surface: rgba(30, 41, 59, 0.5);
-      --surface-hover: rgba(30, 41, 59, 0.8);
-      --border: rgba(148, 163, 184, 0.08);
+      --text: #f0f6fc;
+      --text-secondary: #8b949e;
+      --text-dim: #6e7681;
+      --surface: rgba(33, 38, 45, 0.6);
+      --surface-hover: rgba(48, 54, 61, 0.85);
+      --border: rgba(240, 246, 252, 0.07);
       --radius: 16px;
       --radius-sm: 10px;
       --radius-xs: 8px;
-      --select-option-bg: #1e293b;
-      --orb1: rgba(99,102,241,.12);
-      --orb2: rgba(16,185,129,.08);
-      --orb3: rgba(244,63,94,.06);
-      --bg-grad1: rgba(99,102,241,.15);
-      --bg-grad2: rgba(16,185,129,.08);
-      --bg-grad3: rgba(244,63,94,.06);
-      --dots: rgba(255,255,255,.015);
+      --select-option-bg: #161b22;
+      --orb1: rgba(244,129,32,.10);
+      --orb2: rgba(16,185,129,.07);
+      --orb3: rgba(244,63,94,.05);
+      --bg-grad1: rgba(244,129,32,.12);
+      --bg-grad2: rgba(16,185,129,.07);
+      --bg-grad3: rgba(244,63,94,.05);
+      --dots: rgba(255,255,255,.012);
     }
 
     [data-theme="light"] {
-      --bg: #f0f2f5;
-      --card: rgba(255, 255, 255, 0.85);
-      --card-border: rgba(99, 102, 241, 0.15);
-      --card-glow: rgba(99, 102, 241, 0.08);
-      --text: #1e293b;
-      --text-secondary: #475569;
-      --text-dim: #64748b;
-      --surface: rgba(241, 245, 249, 0.8);
-      --surface-hover: rgba(226, 232, 240, 0.9);
-      --border: rgba(100, 116, 139, 0.12);
+      --bg: #f6f8fa;
+      --card: rgba(255, 255, 255, 0.90);
+      --card-border: rgba(244, 129, 32, 0.18);
+      --card-glow: rgba(244, 129, 32, 0.08);
+      --text: #1f2328;
+      --text-secondary: #57606a;
+      --text-dim: #8c959f;
+      --surface: rgba(246, 248, 250, 0.85);
+      --surface-hover: rgba(234, 238, 242, 0.95);
+      --border: rgba(31, 35, 40, 0.10);
       --select-option-bg: #fff;
-      --orb1: rgba(99,102,241,.06);
+      --orb1: rgba(244,129,32,.06);
       --orb2: rgba(16,185,129,.04);
       --orb3: rgba(244,63,94,.03);
-      --bg-grad1: rgba(99,102,241,.06);
+      --bg-grad1: rgba(244,129,32,.07);
       --bg-grad2: rgba(16,185,129,.04);
       --bg-grad3: rgba(244,63,94,.03);
-      --dots: rgba(0,0,0,.02);
+      --dots: rgba(0,0,0,.018);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -153,7 +152,7 @@
     .toolbar button:hover {
       background: var(--surface-hover);
       color: var(--text);
-      border-color: rgba(99,102,241,.25);
+      border-color: rgba(244,129,32,.25);
     }
     .toolbar select:focus,
     .toolbar button:focus {
@@ -174,7 +173,7 @@
     .logo {
       display: inline-flex; align-items: center; justify-content: center;
       width: 72px; height: 72px;
-      background: linear-gradient(135deg, var(--accent), #a78bfa);
+      background: linear-gradient(135deg, var(--accent), var(--accent-light));
       border-radius: 22px;
       font-size: 2rem;
       margin-bottom: 1.2rem;
@@ -204,7 +203,7 @@
       transition: border-color .3s, box-shadow .3s, background .3s;
     }
     .card:hover {
-      border-color: rgba(99,102,241,.22);
+      border-color: rgba(244,129,32,.22);
       box-shadow: 0 4px 24px var(--card-glow);
     }
     .card-header {
@@ -244,13 +243,13 @@
     }
     .format-card:hover {
       background: var(--surface-hover);
-      border-color: rgba(99,102,241,.2);
+      border-color: rgba(244,129,32,.2);
       transform: translateY(-1px);
     }
     .format-card.active {
       border-color: var(--accent);
-      background: rgba(99, 102, 241, .08);
-      box-shadow: 0 0 0 1px var(--accent), 0 4px 16px rgba(99,102,241,.12);
+      background: rgba(244, 129, 32, .08);
+      box-shadow: 0 0 0 1px var(--accent), 0 4px 16px rgba(244,129,32,.12);
     }
     .format-card input { display: none; }
     .format-card .fc-icon {
@@ -317,12 +316,12 @@
     }
     .select-wrap select:hover {
       background: var(--surface-hover);
-      border-color: rgba(99,102,241,.25);
+      border-color: rgba(244,129,32,.25);
     }
     .select-wrap select:focus {
       outline: none;
       border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(99,102,241,.12);
+      box-shadow: 0 0 0 3px var(--accent-ring);
     }
     .select-wrap select option {
       background: var(--select-option-bg); color: var(--text);
@@ -387,7 +386,7 @@
       color: var(--text-secondary);
     }
     .svc-item:hover {
-      background: rgba(99,102,241,.06);
+      background: rgba(244,129,32,.06);
       color: var(--text);
     }
     .svc-item input[type="checkbox"] {
@@ -590,7 +589,7 @@
           <div class="select-wrap">
             <select name="relay">
               <% relayServers.forEach(function(relay, i) { %>
-              <option value="<%= i %>"><%= relay.name %> — <%= relay.endpoint %></option>
+              <option value="<%= i %>"><%= relay.name %> — <%= relay.host %></option>
               <% }); %>
             </select>
           </div>
