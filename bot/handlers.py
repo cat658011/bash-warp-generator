@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import logging
+import os
+import time
+from collections import defaultdict, deque
 from io import BytesIO
 
 from telegram import Update
@@ -51,6 +54,26 @@ from bot.keyboards import (
 
 logger = logging.getLogger(__name__)
 
+
+def _positive_int_env(name: str, default: int) -> int:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    try:
+        value = int(raw)
+    except ValueError:
+        logger.warning("Invalid %s=%r, using default %d", name, raw, default)
+        return default
+    if value <= 0:
+        logger.warning("Invalid %s=%r, using default %d", name, raw, default)
+        return default
+    return value
+
+
+FLOOD_WINDOW_SEC = _positive_int_env("BOT_FLOOD_WINDOW_SEC", 10)
+FLOOD_MAX_EVENTS = _positive_int_env("BOT_FLOOD_MAX_EVENTS", 8)
+GENERATE_COOLDOWN_SEC = _positive_int_env("BOT_GENERATE_COOLDOWN_SEC", 20)
+
 # Conversation states
 (
     SELECT_FORMAT,
@@ -69,6 +92,76 @@ def _configs(context: ContextTypes.DEFAULT_TYPE) -> BotConfigs:
 def _ud(context: ContextTypes.DEFAULT_TYPE) -> dict | None:
     """Shortcut to get user_data for translation."""
     return context.user_data
+
+
+def _flood_state(context: ContextTypes.DEFAULT_TYPE) -> dict:
+    return context.bot_data.setdefault(
+        "_flood_state",
+        {
+            "events": defaultdict(deque),
+            "generate_cooldowns": {},
+            "ops_since_cleanup": 0,
+        },
+    )
+
+
+def _cleanup_flood_state(context: ContextTypes.DEFAULT_TYPE, now: float) -> None:
+    state = _flood_state(context)
+    state["ops_since_cleanup"] += 1
+    if state["ops_since_cleanup"] < 25:
+        return
+    state["ops_since_cleanup"] = 0
+
+    events: defaultdict[int, deque[float]] = state["events"]
+    cooldowns: dict[int, float] = state["generate_cooldowns"]
+
+    threshold = now - FLOOD_WINDOW_SEC
+    for user_id, q in events.items():
+        while q and q[0] < threshold:
+            q.popleft()
+
+    for user_id, ready_at in list(cooldowns.items()):
+        if ready_at <= now:
+            cooldowns.pop(user_id, None)
+
+    for user_id, q in list(events.items()):
+        if not q and user_id not in cooldowns:
+        events.pop(user_id, None)
+
+
+def _is_flooded(context: ContextTypes.DEFAULT_TYPE, user_id: int) -> bool:
+    state = _flood_state(context)
+    events: defaultdict[int, deque[float]] = state["events"]
+    now = time.monotonic()
+    _cleanup_flood_state(context, now)
+    q = events[user_id]
+
+    threshold = now - FLOOD_WINDOW_SEC
+    while q and q[0] < threshold:
+        q.popleft()
+
+    if len(q) >= FLOOD_MAX_EVENTS:
+        return True
+
+    q.append(now)
+    return False
+
+
+def _generate_cooldown_left(context: ContextTypes.DEFAULT_TYPE, user_id: int) -> int:
+    state = _flood_state(context)
+    cooldowns: dict[int, float] = state["generate_cooldowns"]
+    now = time.monotonic()
+    _cleanup_flood_state(context, now)
+    ready_at = cooldowns.get(user_id, 0.0)
+    if ready_at > now:
+        return int(ready_at - now) + 1
+    return 0
+
+
+def _mark_generate_cooldown(context: ContextTypes.DEFAULT_TYPE, user_id: int) -> None:
+    state = _flood_state(context)
+    cooldowns: dict[int, float] = state["generate_cooldowns"]
+    cooldowns[user_id] = time.monotonic() + GENERATE_COOLDOWN_SEC
 
 
 # ------------------------------------------------------------------
@@ -92,6 +185,10 @@ async def generate_entry(
 ) -> int:
     """Show the format picker (entry-point for the conversation)."""
     assert update.message is not None
+    user = update.effective_user
+    if user and _is_flooded(context, user.id):
+        await update.message.reply_text(t_user("flood_wait", _ud(context)))
+        return SELECT_FORMAT
     await update.message.reply_text(
         t_user("step_format", _ud(context)),
         parse_mode="HTML",
@@ -176,6 +273,10 @@ async def on_lang_select(
 async def on_format(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
     assert query is not None and query.data is not None and context.user_data is not None
+    user = update.effective_user
+    if user and _is_flooded(context, user.id):
+        await query.answer(text=t_user("flood_wait", _ud(context)), show_alert=False)
+        return SELECT_FORMAT
     await query.answer()
 
     context.user_data["format"] = query.data.removeprefix(FORMAT_CB)
@@ -194,6 +295,10 @@ async def on_format(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 async def on_dns(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
     assert query is not None and query.data is not None and context.user_data is not None
+    user = update.effective_user
+    if user and _is_flooded(context, user.id):
+        await query.answer(text=t_user("flood_wait", _ud(context)), show_alert=False)
+        return SELECT_DNS
     await query.answer()
 
     context.user_data["dns_idx"] = int(query.data.removeprefix(DNS_CB))
@@ -212,6 +317,10 @@ async def on_dns(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 async def on_relay(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
     assert query is not None and query.data is not None and context.user_data is not None
+    user = update.effective_user
+    if user and _is_flooded(context, user.id):
+        await query.answer(text=t_user("flood_wait", _ud(context)), show_alert=False)
+        return SELECT_RELAY
     await query.answer()
 
     context.user_data["relay_idx"] = int(query.data.removeprefix(RELAY_CB))
@@ -230,6 +339,10 @@ async def on_relay(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 async def on_routing(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
     assert query is not None and query.data is not None and context.user_data is not None
+    user = update.effective_user
+    if user and _is_flooded(context, user.id):
+        await query.answer(text=t_user("flood_wait", _ud(context)), show_alert=False)
+        return SELECT_ROUTING
     await query.answer()
 
     mode = query.data.removeprefix(ROUTE_CB)
@@ -257,6 +370,10 @@ async def on_service_toggle(
 ) -> int:
     query = update.callback_query
     assert query is not None and query.data is not None and context.user_data is not None
+    user = update.effective_user
+    if user and _is_flooded(context, user.id):
+        await query.answer(text=t_user("flood_wait", _ud(context)), show_alert=False)
+        return SELECT_SERVICES
     await query.answer()
 
     if query.data == SVC_DONE_CB:
@@ -320,9 +437,22 @@ async def on_confirm(
     """Handle the confirm / back buttons."""
     query = update.callback_query
     assert query is not None and query.data is not None and context.user_data is not None
+    user = update.effective_user
+    if user and _is_flooded(context, user.id):
+        await query.answer(text=t_user("flood_wait", _ud(context)), show_alert=False)
+        return CONFIRM
     await query.answer()
 
     if query.data == CONFIRM_CB:
+        if user:
+            left = _generate_cooldown_left(context, user.id)
+            if left > 0:
+                await query.answer(
+                    text=t_user("generation_cooldown_wait", _ud(context), seconds=left),
+                    show_alert=False,
+                )
+                return CONFIRM
+            _mark_generate_cooldown(context, user.id)
         return await _generate(update, context)
 
     # Back → restart the conversation from step 1
@@ -423,6 +553,10 @@ async def on_generate_another(
     """Re-enter the conversation from the generate-another button."""
     query = update.callback_query
     assert query is not None and context.user_data is not None
+    user = update.effective_user
+    if user and _is_flooded(context, user.id):
+        await query.answer(text=t_user("flood_wait", _ud(context)), show_alert=False)
+        return SELECT_FORMAT
     await query.answer()
 
     # Clear previous selections but keep user preferences (like lang)

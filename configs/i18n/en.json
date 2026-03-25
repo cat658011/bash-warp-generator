@@ -14,6 +14,8 @@
 
   "generating": "⏳ Generating WARP configuration…",
   "generation_failed": "❌ Failed to register with Cloudflare WARP. Please try again later.",
+  "flood_wait": "⏳ Too many actions in a short time. Please wait a few seconds and try again.",
+  "generation_cooldown_wait": "⏳ Please wait {seconds}s before generating again.",
   "config_generated": "✅ <b>WARP config generated!</b>\n📄 Format: <b>{format}</b>",
   "amnezia_deeplink": "🔗 <b>AmneziaVPN Deep Link</b>\nOpen the file and copy the <code>vpn://</code> link into AmneziaVPN.",
   "cancelled": "❌ Configuration cancelled.",
@@ -58,6 +60,8 @@
   "web_footer_status": "📊 WARP Status",
   "web_footer_github": "⭐ GitHub",
   "web_error_warp": "WARP registration failed. Cloudflare API may be blocked in your region. Try running on a VPS or cloud server.",
+  "web_error_rate_limited": "Too many requests. Please try again in a minute.",
+  "web_error_invalid_request": "Invalid request parameters.",
 
   "dns_cloudflare": "Cloudflare DNS",
   "dns_cloudflare_family": "Cloudflare Family DNS",

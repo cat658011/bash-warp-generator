@@ -14,6 +14,8 @@
 
   "generating": "⏳ Генерация конфигурации WARP…",
   "generation_failed": "❌ Не удалось зарегистрироваться в Cloudflare WARP. Попробуйте позже.",
+  "flood_wait": "⏳ Слишком много действий за короткое время. Подождите несколько секунд.",
+  "generation_cooldown_wait": "⏳ Подождите {seconds}с перед следующей генерацией.",
   "config_generated": "✅ <b>Конфиг WARP сгенерирован!</b>\n📄 Формат: <b>{format}</b>",
   "amnezia_deeplink": "🔗 <b>Ссылка AmneziaVPN</b>\nОткройте файл и скопируйте ссылку <code>vpn://</code> в AmneziaVPN.",
   "cancelled": "❌ Генерация отменена.",
@@ -58,6 +60,8 @@
   "web_footer_status": "📊 Статус WARP",
   "web_footer_github": "⭐ GitHub",
   "web_error_warp": "Ошибка регистрации WARP. API Cloudflare может быть заблокирован в вашем регионе. Попробуйте запустить на VPS или облачном сервере.",
+  "web_error_rate_limited": "Слишком много запросов. Попробуйте снова через минуту.",
+  "web_error_invalid_request": "Некорректные параметры запроса.",
 
   "dns_cloudflare": "Cloudflare DNS",
   "dns_cloudflare_family": "Cloudflare Семейный DNS",
