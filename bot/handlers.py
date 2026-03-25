@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from io import BytesIO
 
 from telegram import Update
@@ -50,6 +51,7 @@ from bot.keyboards import (
 )
 
 logger = logging.getLogger(__name__)
+GENERATION_COOLDOWN_SECONDS = 30
 
 # Conversation states
 (
@@ -345,6 +347,13 @@ async def _generate(
     configs = _configs(context)
     user = context.user_data
     ud = _ud(context)
+    user_id = update.effective_user.id if update.effective_user else None
+    now = time.monotonic()
+    if user_id is not None:
+        last_generated = context.application.bot_data.get(("last_generate_ts", user_id), 0.0)
+        if now - last_generated < GENERATION_COOLDOWN_SECONDS:
+            await query.edit_message_text(t_user("generation_rate_limited", ud))
+            return SELECT_FORMAT
 
     await query.edit_message_text(t_user("generating", ud))
 
@@ -354,6 +363,8 @@ async def _generate(
         logger.exception("WARP registration failed")
         await query.edit_message_text(t_user("generation_failed", ud))
         return ConversationHandler.END
+    if user_id is not None:
+        context.application.bot_data[("last_generate_ts", user_id)] = now
 
     # Resolve user selections
     dns = configs.dns_servers[user["dns_idx"]]

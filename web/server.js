@@ -9,12 +9,45 @@ const { resolveEndpoint } = require('./lib/ports');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const RATE_LIMIT_WINDOW_MS = Number(process.env.WEB_RATE_LIMIT_WINDOW_MS || 60_000);
+const RATE_LIMIT_MAX_REQUESTS = Number(process.env.WEB_RATE_LIMIT_MAX_REQUESTS || 10);
+const rateLimitState = new Map();
 
 // Middleware
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
+
+function cleanupRateLimitState(now) {
+  for (const [ip, entry] of rateLimitState.entries()) {
+    if (now - entry.windowStart >= RATE_LIMIT_WINDOW_MS) {
+      rateLimitState.delete(ip);
+    }
+  }
+}
+
+function antiFlood(req, res, next) {
+  const now = Date.now();
+  cleanupRateLimitState(now);
+  const ip = req.ip || req.socket?.remoteAddress || 'unknown';
+  const entry = rateLimitState.get(ip);
+  if (!entry || now - entry.windowStart >= RATE_LIMIT_WINDOW_MS) {
+    rateLimitState.set(ip, { count: 1, windowStart: now });
+    return next();
+  }
+
+  if (entry.count >= RATE_LIMIT_MAX_REQUESTS) {
+    const lang = req.body?.lang || process.env.BOT_LANG || 'ru';
+    const i18n = loadI18n(lang);
+    return res
+      .status(429)
+      .json({ error: i18n.web_error_rate_limited || 'Too many requests. Try again later.' });
+  }
+
+  entry.count += 1;
+  return next();
+}
 
 // Load configs once at startup
 const configs = loadConfigs();
@@ -62,7 +95,7 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
 
-app.post('/generate', async (req, res) => {
+app.post('/generate', antiFlood, async (req, res) => {
   let fmt = req.body.format || 'wireguard';
   const dnsIdx = parseInt(req.body.dns || '0', 10);
   const relayIdx = parseInt(req.body.relay || '0', 10);
