@@ -393,6 +393,11 @@ npm test
 | `WEB_RATE_LIMIT_MAX_REQUESTS` | Макс. запросов на `/generate` за окно с одного IP | `10` |
 | `BOT_GENERATION_COOLDOWN_SECONDS` | Пауза между генерациями в боте для одного пользователя (сек) | `30` |
 
+### 🛡️ Anti-flood защита
+
+- Веб: эндпоинт `POST /generate` ограничен по IP (`WEB_RATE_LIMIT_WINDOW_MS` + `WEB_RATE_LIMIT_MAX_REQUESTS`), при превышении возвращается `HTTP 429`.
+- Бот: на генерацию действует cooldown на пользователя (`BOT_GENERATION_COOLDOWN_SECONDS`).
+
 ---
 
 ## 🖥️ CLI-генератор
