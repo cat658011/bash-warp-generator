@@ -6,6 +6,12 @@ const http = require('node:http');
 const app = require('../server');
 const { FORMATS, resolveEndpoint } = require('../lib/ports');
 
+function resetLimiter() {
+  if (typeof app.__resetRateLimitStore === 'function') {
+    app.__resetRateLimitStore();
+  }
+}
+
 // Helper: start server on a random port, make a request, close it
 function request(method, path) {
   return new Promise((resolve, reject) => {
@@ -87,6 +93,7 @@ describe('GET /health', () => {
 
 describe('POST /generate rate limiting', () => {
   it('returns 429 after request limit is exceeded', async () => {
+    resetLimiter();
     const server = app.listen(0);
     await new Promise((resolve) => server.once('listening', resolve));
     const { port } = server.address();
@@ -143,6 +150,47 @@ describe('POST /generate rate limiting', () => {
       assert.equal(limited.status, 429);
       const payload = JSON.parse(limited.body);
       assert.equal(payload.error, 'Too many requests. Please try again in a minute.');
+    } finally {
+      await new Promise((resolve) => server.close(resolve));
+    }
+  });
+});
+
+describe('POST /generate validation', () => {
+  it('returns 400 for invalid dns index', async () => {
+    resetLimiter();
+    const server = app.listen(0);
+    await new Promise((resolve) => server.once('listening', resolve));
+    const { port } = server.address();
+    const body = 'format=wireguard&dns=-1&relay=0&routing=full&lang=en';
+
+    try {
+      const response = await new Promise((resolve, reject) => {
+        const req = http.request(
+          {
+            hostname: '127.0.0.1',
+            port,
+            path: '/generate',
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'Content-Length': Buffer.byteLength(body),
+            },
+          },
+          (res) => {
+            let text = '';
+            res.on('data', (chunk) => (text += chunk));
+            res.on('end', () => resolve({ status: res.statusCode, body: text }));
+          },
+        );
+        req.on('error', reject);
+        req.write(body);
+        req.end();
+      });
+
+      assert.equal(response.status, 400);
+      const payload = JSON.parse(response.body);
+      assert.equal(payload.error, 'Invalid request parameters.');
     } finally {
       await new Promise((resolve) => server.close(resolve));
     }

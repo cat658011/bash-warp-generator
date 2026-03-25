@@ -72,6 +72,18 @@ function isRateLimited(req) {
   return false;
 }
 
+function parseIndex(rawValue) {
+  const parsed = Number.parseInt(rawValue, 10);
+  if (!Number.isInteger(parsed) || parsed < 0) {
+    return null;
+  }
+  return parsed;
+}
+
+function resetRateLimitStore() {
+  rateLimitStore.clear();
+}
+
 // ── Routes ───────────────────────────────────────────────────────────────────
 
 app.get('/', (req, res) => {
@@ -96,8 +108,8 @@ app.get('/health', (_req, res) => {
 
 app.post('/generate', async (req, res) => {
   let fmt = req.body.format || 'wireguard';
-  const dnsIdx = parseInt(req.body.dns || '0', 10);
-  const relayIdx = parseInt(req.body.relay || '0', 10);
+  const dnsIdx = parseIndex(req.body.dns || '0');
+  const relayIdx = parseIndex(req.body.relay || '0');
   const routing = req.body.routing || 'full';
   const selectedSvcs = Array.isArray(req.body.services)
     ? req.body.services
@@ -114,14 +126,33 @@ app.post('/generate', async (req, res) => {
     });
   }
 
+  if (!FORMATS.has(fmt)) {
+    fmt = 'wireguard';
+  }
+
+  if (dnsIdx === null || relayIdx === null) {
+    return res.status(400).json({
+      error: i18n.web_error_invalid_request || 'Invalid request parameters.',
+    });
+  }
+
   const dns = configs.dnsServers[dnsIdx];
   const relay = configs.relayServers[relayIdx];
+  if (!dns || !relay) {
+    return res.status(400).json({
+      error: i18n.web_error_invalid_request || 'Invalid request parameters.',
+    });
+  }
 
   let allowedIps;
   if (routing === 'split' && selectedSvcs.length > 0) {
     allowedIps = [];
     for (const idxStr of selectedSvcs) {
-      const svc = configs.routingServices[parseInt(idxStr, 10)];
+      const svcIdx = parseIndex(idxStr);
+      if (svcIdx === null) {
+        continue;
+      }
+      const svc = configs.routingServices[svcIdx];
       if (svc) allowedIps.push(...svc.routes);
     }
   } else {
@@ -148,9 +179,6 @@ app.post('/generate', async (req, res) => {
     mtu: 1280,
   };
 
-  if (!FORMATS.has(fmt)) {
-    fmt = 'wireguard';
-  }
   const { content, filename } = GENERATORS[fmt](params);
 
   res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
@@ -166,3 +194,4 @@ if (require.main === module) {
 }
 
 module.exports = app;
+module.exports.__resetRateLimitStore = resetRateLimitStore;
