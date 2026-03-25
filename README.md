@@ -389,6 +389,9 @@ npm test
 | `BOT_TOKEN` | Токен Telegram-бота от @BotFather | — (обязательно) |
 | `BOT_LANG` | Язык бота (`ru`, `en`) | `ru` |
 | `PORT` | Порт веб-интерфейса | `3000` |
+| `WEB_RATE_LIMIT_WINDOW_MS` | Окно anti-flood лимита веба в мс | `60000` |
+| `WEB_RATE_LIMIT_MAX_REQUESTS` | Макс. запросов на `/generate` за окно с одного IP | `10` |
+| `BOT_GENERATION_COOLDOWN_SECONDS` | Пауза между генерациями в боте для одного пользователя (сек) | `30` |
 
 ---
 

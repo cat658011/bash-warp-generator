@@ -9,8 +9,6 @@ const { resolveEndpoint } = require('./lib/ports');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const RATE_LIMIT_WINDOW_MS = Number(process.env.WEB_RATE_LIMIT_WINDOW_MS || 60_000);
-const RATE_LIMIT_MAX_REQUESTS = Number(process.env.WEB_RATE_LIMIT_MAX_REQUESTS || 10);
 const rateLimitState = new Map();
 
 // Middleware
@@ -19,25 +17,35 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
-function cleanupRateLimitState(now) {
+function getRateLimitConfig() {
+  const windowMsRaw = Number(process.env.WEB_RATE_LIMIT_WINDOW_MS || 60_000);
+  const maxRequestsRaw = Number(process.env.WEB_RATE_LIMIT_MAX_REQUESTS || 10);
+  return {
+    windowMs: Number.isFinite(windowMsRaw) && windowMsRaw > 0 ? windowMsRaw : 60_000,
+    maxRequests: Number.isFinite(maxRequestsRaw) && maxRequestsRaw >= 0 ? maxRequestsRaw : 10,
+  };
+}
+
+function cleanupRateLimitState(now, windowMs) {
   for (const [ip, entry] of rateLimitState.entries()) {
-    if (now - entry.windowStart >= RATE_LIMIT_WINDOW_MS) {
+    if (now - entry.windowStart >= windowMs) {
       rateLimitState.delete(ip);
     }
   }
 }
 
 function antiFlood(req, res, next) {
+  const { windowMs, maxRequests } = getRateLimitConfig();
   const now = Date.now();
-  cleanupRateLimitState(now);
+  cleanupRateLimitState(now, windowMs);
   const ip = req.ip || req.socket?.remoteAddress || 'unknown';
-  const entry = rateLimitState.get(ip);
-  if (!entry || now - entry.windowStart >= RATE_LIMIT_WINDOW_MS) {
-    rateLimitState.set(ip, { count: 1, windowStart: now });
-    return next();
+  let entry = rateLimitState.get(ip);
+  if (!entry || now - entry.windowStart >= windowMs) {
+    entry = { count: 0, windowStart: now };
+    rateLimitState.set(ip, entry);
   }
 
-  if (entry.count >= RATE_LIMIT_MAX_REQUESTS) {
+  if (entry.count >= maxRequests) {
     const lang = req.body?.lang || process.env.BOT_LANG || 'ru';
     const i18n = loadI18n(lang);
     return res

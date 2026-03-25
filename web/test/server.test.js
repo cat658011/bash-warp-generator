@@ -7,12 +7,24 @@ const app = require('../server');
 const { FORMATS, resolveEndpoint } = require('../lib/ports');
 
 // Helper: start server on a random port, make a request, close it
-function request(method, path) {
+function request(method, path, body) {
   return new Promise((resolve, reject) => {
     const server = app.listen(0, () => {
       const { port } = server.address();
+      const payload = body ? JSON.stringify(body) : null;
       const req = http.request(
-        { hostname: '127.0.0.1', port, path, method },
+        {
+          hostname: '127.0.0.1',
+          port,
+          path,
+          method,
+          headers: payload
+            ? {
+              'Content-Type': 'application/json',
+              'Content-Length': Buffer.byteLength(payload),
+            }
+            : undefined,
+        },
         (res) => {
           let body = '';
           res.on('data', (chunk) => (body += chunk));
@@ -26,6 +38,9 @@ function request(method, path) {
         server.close();
         reject(err);
       });
+      if (payload) {
+        req.write(payload);
+      }
       req.end();
     });
   });
@@ -82,6 +97,17 @@ describe('GET /health', () => {
     assert.equal(res.status, 200);
     const data = JSON.parse(res.body);
     assert.deepEqual(data, { status: 'ok' });
+  });
+});
+
+describe('POST /generate anti-flood', () => {
+  it('returns 429 when request limit is exceeded', async () => {
+    process.env.WEB_RATE_LIMIT_WINDOW_MS = '60000';
+    process.env.WEB_RATE_LIMIT_MAX_REQUESTS = '0';
+    const res = await request('POST', '/generate', { lang: 'en' });
+    assert.equal(res.status, 429);
+    const data = JSON.parse(res.body);
+    assert.equal(data.error, 'Too many requests. Please try again shortly.');
   });
 });
 

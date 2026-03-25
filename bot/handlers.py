@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import time
 from io import BytesIO
 
@@ -51,7 +52,16 @@ from bot.keyboards import (
 )
 
 logger = logging.getLogger(__name__)
-GENERATION_COOLDOWN_SECONDS = 30
+DEFAULT_GENERATION_COOLDOWN_SECONDS = 30
+
+
+def _generation_cooldown_seconds() -> int:
+    raw_value = os.environ.get("BOT_GENERATION_COOLDOWN_SECONDS")
+    try:
+        value = int(raw_value) if raw_value is not None else DEFAULT_GENERATION_COOLDOWN_SECONDS
+    except (TypeError, ValueError):
+        value = DEFAULT_GENERATION_COOLDOWN_SECONDS
+    return value if value >= 0 else DEFAULT_GENERATION_COOLDOWN_SECONDS
 
 # Conversation states
 (
@@ -351,7 +361,7 @@ async def _generate(
     now = time.monotonic()
     if user_id is not None:
         last_generated = context.application.bot_data.get(("last_generate_ts", user_id), 0.0)
-        if now - last_generated < GENERATION_COOLDOWN_SECONDS:
+        if now - last_generated < _generation_cooldown_seconds():
             await query.edit_message_text(t_user("generation_rate_limited", ud))
             return SELECT_FORMAT
 

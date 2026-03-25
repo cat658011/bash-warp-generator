@@ -98,6 +98,6 @@
   "web_theme_dark": "Dark",
   "web_generating": "Generating…",
   "web_generate_again": "⬇️ Generate Another",
-  "web_generation_failed": "Generation failed. Try again."
-  ,"web_error_rate_limited": "Too many requests. Please try again shortly."
+  "web_generation_failed": "Generation failed. Try again.",
+  "web_error_rate_limited": "Too many requests. Please try again shortly."
 }
