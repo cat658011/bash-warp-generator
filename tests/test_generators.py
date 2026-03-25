@@ -2,12 +2,19 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 from core.generators import (
     AmneziaWGGenerator,
     ClashGenerator,
     GeneratorParams,
     WireGuardGenerator,
     WireSockGenerator,
+)
+
+_WARP_PARAMS = json.loads(
+    (Path(__file__).resolve().parent.parent / "configs" / "warp_params.json").read_text(encoding="utf-8")
 )
 
 _PARAMS = GeneratorParams(
@@ -79,6 +86,19 @@ class TestAmneziaWG:
         for param in ("Jc =", "Jmin =", "Jmax =", "S1 =", "S2 =", "H1 ="):
             assert param in content
 
+    def test_obfuscation_values_match_config(self) -> None:
+        content, _ = AmneziaWGGenerator().generate(_PARAMS)
+        amnezia_params = _WARP_PARAMS["amnezia"]
+        assert f"Jc = {amnezia_params['Jc']}" in content
+        assert f"Jmin = {amnezia_params['Jmin']}" in content
+        assert f"Jmax = {amnezia_params['Jmax']}" in content
+        assert f"S1 = {amnezia_params['S1']}" in content
+        assert f"S2 = {amnezia_params['S2']}" in content
+        assert f"H1 = {amnezia_params['H1']}" in content
+        assert f"H2 = {amnezia_params['H2']}" in content
+        assert f"H3 = {amnezia_params['H3']}" in content
+        assert f"H4 = {amnezia_params['H4']}" in content
+
     def test_has_i1_payload(self) -> None:
         content, _ = AmneziaWGGenerator().generate(_PARAMS)
         # I1 payloads are hex strings from warp_params.json
@@ -146,15 +166,16 @@ class TestClash:
 
     def test_amnezia_wg_option_values(self) -> None:
         content, _ = ClashGenerator().generate(_PARAMS)
-        assert "jc: 120" in content
-        assert "jmin: 23" in content
-        assert "jmax: 911" in content
-        assert "s1: 0" in content
-        assert "s2: 0" in content
-        assert "h1: 1" in content
-        assert "h2: 2" in content
-        assert "h3: 4" in content
-        assert "h4: 3" in content
+        clash_params = _WARP_PARAMS["clash"]
+        assert f"jc: {clash_params['Jc']}" in content
+        assert f"jmin: {clash_params['Jmin']}" in content
+        assert f"jmax: {clash_params['Jmax']}" in content
+        assert f"s1: {clash_params['S1']}" in content
+        assert f"s2: {clash_params['S2']}" in content
+        assert f"h1: {clash_params['H1']}" in content
+        assert f"h2: {clash_params['H2']}" in content
+        assert f"h3: {clash_params['H3']}" in content
+        assert f"h4: {clash_params['H4']}" in content
 
     def test_has_i1_field(self) -> None:
         content, _ = ClashGenerator().generate(_PARAMS)
@@ -192,15 +213,16 @@ class TestWireSock:
 
     def test_has_obfuscation_params(self) -> None:
         content, _ = WireSockGenerator().generate(_PARAMS)
-        assert "Jc = 120" in content
-        assert "Jmin = 23" in content
-        assert "Jmax = 911" in content
-        assert "S1 = 0" in content
-        assert "S2 = 0" in content
-        assert "H1 = 1" in content
-        assert "H2 = 2" in content
-        assert "H3 = 3" in content
-        assert "H4 = 4" in content
+        wiresock_params = _WARP_PARAMS["wiresock"]
+        assert f"Jc = {wiresock_params['Jc']}" in content
+        assert f"Jmin = {wiresock_params['Jmin']}" in content
+        assert f"Jmax = {wiresock_params['Jmax']}" in content
+        assert f"S1 = {wiresock_params['S1']}" in content
+        assert f"S2 = {wiresock_params['S2']}" in content
+        assert f"H1 = {wiresock_params['H1']}" in content
+        assert f"H2 = {wiresock_params['H2']}" in content
+        assert f"H3 = {wiresock_params['H3']}" in content
+        assert f"H4 = {wiresock_params['H4']}" in content
 
     def test_has_protocol_masking_section(self) -> None:
         content, _ = WireSockGenerator().generate(_PARAMS)
@@ -214,3 +236,11 @@ class TestWireSock:
         masking_pos = content.index("# Protocol masking")
         peer_pos = content.index("[Peer]")
         assert masking_pos < peer_pos, "Protocol masking must appear before [Peer]"
+
+
+class TestSharedGeneratorDefaults:
+    def test_persistent_keepalive_matches_shared_config(self) -> None:
+        expected_keepalive = _WARP_PARAMS["persistent_keepalive"]
+        for generator in (WireGuardGenerator(), AmneziaWGGenerator(), WireSockGenerator()):
+            content, _ = generator.generate(_PARAMS)
+            assert f"PersistentKeepalive = {expected_keepalive}" in content

@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import logging
+import os
+import time
 from io import BytesIO
 
 from telegram import Update
@@ -50,6 +52,24 @@ from bot.keyboards import (
 )
 
 logger = logging.getLogger(__name__)
+DEFAULT_GENERATION_COOLDOWN_SECONDS = 30
+
+
+def _generation_cooldown_seconds() -> int:
+    raw_value = os.environ.get("BOT_GENERATION_COOLDOWN_SECONDS")
+    try:
+        value = int(raw_value) if raw_value is not None else DEFAULT_GENERATION_COOLDOWN_SECONDS
+    except (TypeError, ValueError):
+        value = DEFAULT_GENERATION_COOLDOWN_SECONDS
+    return value if value >= 0 else DEFAULT_GENERATION_COOLDOWN_SECONDS
+
+
+def _last_generate_map(context: ContextTypes.DEFAULT_TYPE) -> dict[int, float]:
+    store = context.application.bot_data.setdefault("last_generate_ts", {})
+    if not isinstance(store, dict):
+        store = {}
+        context.application.bot_data["last_generate_ts"] = store
+    return store
 
 # Conversation states
 (
@@ -345,6 +365,14 @@ async def _generate(
     configs = _configs(context)
     user = context.user_data
     ud = _ud(context)
+    user_id = update.effective_user.id if update.effective_user else None
+    now = time.monotonic()
+    last_generate_by_user = _last_generate_map(context)
+    if user_id is not None:
+        last_generated = last_generate_by_user.get(user_id, 0.0)
+        if now - last_generated < _generation_cooldown_seconds():
+            await query.edit_message_text(t_user("generation_rate_limited", ud))
+            return ConversationHandler.END
 
     await query.edit_message_text(t_user("generating", ud))
 
@@ -354,6 +382,9 @@ async def _generate(
         logger.exception("WARP registration failed")
         await query.edit_message_text(t_user("generation_failed", ud))
         return ConversationHandler.END
+    if user_id is not None:
+        # Update cooldown only after successful generation.
+        last_generate_by_user[user_id] = now
 
     # Resolve user selections
     dns = configs.dns_servers[user["dns_idx"]]

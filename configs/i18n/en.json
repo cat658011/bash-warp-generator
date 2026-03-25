@@ -14,6 +14,7 @@
 
   "generating": "⏳ Generating WARP configuration…",
   "generation_failed": "❌ Failed to register with Cloudflare WARP. Please try again later.",
+  "generation_rate_limited": "⏱️ Please wait a bit before generating another config.",
   "config_generated": "✅ <b>WARP config generated!</b>\n📄 Format: <b>{format}</b>",
   "amnezia_deeplink": "🔗 <b>AmneziaVPN Deep Link</b>\nOpen the file and copy the <code>vpn://</code> link into AmneziaVPN.",
   "cancelled": "❌ Configuration cancelled.",
@@ -97,5 +98,6 @@
   "web_theme_dark": "Dark",
   "web_generating": "Generating…",
   "web_generate_again": "⬇️ Generate Another",
-  "web_generation_failed": "Generation failed. Try again."
+  "web_generation_failed": "Generation failed. Try again.",
+  "web_error_rate_limited": "Too many requests. Please try again shortly."
 }

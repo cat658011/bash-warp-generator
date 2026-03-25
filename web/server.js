@@ -9,12 +9,58 @@ const { resolveEndpoint } = require('./lib/ports');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const rateLimitState = new Map();
+let lastRateLimitCleanupAt = 0;
+const NO_IP_BUCKET = '__unknown_ip__';
 
 // Middleware
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
+
+function getRateLimitConfig() {
+  const windowMsRaw = Number(process.env.WEB_RATE_LIMIT_WINDOW_MS || 60_000);
+  const maxRequestsRaw = Number(process.env.WEB_RATE_LIMIT_MAX_REQUESTS || 10);
+  return {
+    windowMs: Number.isFinite(windowMsRaw) && windowMsRaw > 0 ? windowMsRaw : 60_000,
+    maxRequests: Number.isFinite(maxRequestsRaw) && maxRequestsRaw >= 0 ? maxRequestsRaw : 10,
+  };
+}
+
+function cleanupRateLimitState(now, windowMs) {
+  for (const [ip, entry] of rateLimitState.entries()) {
+    if (now - entry.windowStart >= windowMs) {
+      rateLimitState.delete(ip);
+    }
+  }
+}
+
+function antiFlood(req, res, next) {
+  const { windowMs, maxRequests } = getRateLimitConfig();
+  const now = Date.now();
+  if (now - lastRateLimitCleanupAt >= windowMs) {
+    cleanupRateLimitState(now, windowMs);
+    lastRateLimitCleanupAt = now;
+  }
+  const ip = req.ip || req.socket?.remoteAddress || NO_IP_BUCKET;
+  let entry = rateLimitState.get(ip);
+  if (!entry || now - entry.windowStart >= windowMs) {
+    entry = { count: 0, windowStart: now };
+    rateLimitState.set(ip, entry);
+  }
+
+  if (entry.count >= maxRequests) {
+    const lang = req.body?.lang || process.env.BOT_LANG || 'ru';
+    const i18n = loadI18n(lang);
+    return res
+      .status(429)
+      .json({ error: i18n.web_error_rate_limited || 'Too many requests. Try again later.' });
+  }
+
+  entry.count += 1;
+  return next();
+}
 
 // Load configs once at startup
 const configs = loadConfigs();
@@ -62,7 +108,7 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
 
-app.post('/generate', async (req, res) => {
+app.post('/generate', antiFlood, async (req, res) => {
   let fmt = req.body.format || 'wireguard';
   const dnsIdx = parseInt(req.body.dns || '0', 10);
   const relayIdx = parseInt(req.body.relay || '0', 10);
