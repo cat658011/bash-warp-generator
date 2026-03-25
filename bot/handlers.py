@@ -63,6 +63,14 @@ def _generation_cooldown_seconds() -> int:
         value = DEFAULT_GENERATION_COOLDOWN_SECONDS
     return value if value >= 0 else DEFAULT_GENERATION_COOLDOWN_SECONDS
 
+
+def _last_generate_map(context: ContextTypes.DEFAULT_TYPE) -> dict[int, float]:
+    store = context.application.bot_data.setdefault("last_generate_ts", {})
+    if not isinstance(store, dict):
+        store = {}
+        context.application.bot_data["last_generate_ts"] = store
+    return store
+
 # Conversation states
 (
     SELECT_FORMAT,
@@ -359,11 +367,12 @@ async def _generate(
     ud = _ud(context)
     user_id = update.effective_user.id if update.effective_user else None
     now = time.monotonic()
+    last_generate_by_user = _last_generate_map(context)
     if user_id is not None:
-        last_generated = context.application.bot_data.get(("last_generate_ts", user_id), 0.0)
+        last_generated = last_generate_by_user.get(user_id, 0.0)
         if now - last_generated < _generation_cooldown_seconds():
             await query.edit_message_text(t_user("generation_rate_limited", ud))
-            return SELECT_FORMAT
+            return ConversationHandler.END
 
     await query.edit_message_text(t_user("generating", ud))
 
@@ -374,7 +383,8 @@ async def _generate(
         await query.edit_message_text(t_user("generation_failed", ud))
         return ConversationHandler.END
     if user_id is not None:
-        context.application.bot_data[("last_generate_ts", user_id)] = now
+        # Update cooldown only after successful generation.
+        last_generate_by_user[user_id] = now
 
     # Resolve user selections
     dns = configs.dns_servers[user["dns_idx"]]

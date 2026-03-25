@@ -5,6 +5,8 @@ const assert = require('node:assert/strict');
 const http = require('node:http');
 const app = require('../server');
 const { FORMATS, resolveEndpoint } = require('../lib/ports');
+const originalWindowMs = process.env.WEB_RATE_LIMIT_WINDOW_MS;
+const originalMaxRequests = process.env.WEB_RATE_LIMIT_MAX_REQUESTS;
 
 // Helper: start server on a random port, make a request, close it
 function request(method, path, body) {
@@ -104,10 +106,23 @@ describe('POST /generate anti-flood', () => {
   it('returns 429 when request limit is exceeded', async () => {
     process.env.WEB_RATE_LIMIT_WINDOW_MS = '60000';
     process.env.WEB_RATE_LIMIT_MAX_REQUESTS = '0';
-    const res = await request('POST', '/generate', { lang: 'en' });
-    assert.equal(res.status, 429);
-    const data = JSON.parse(res.body);
-    assert.equal(data.error, 'Too many requests. Please try again shortly.');
+    try {
+      const res = await request('POST', '/generate', { lang: 'en' });
+      assert.equal(res.status, 429);
+      const data = JSON.parse(res.body);
+      assert.equal(data.error, 'Too many requests. Please try again shortly.');
+    } finally {
+      if (originalWindowMs === undefined) {
+        delete process.env.WEB_RATE_LIMIT_WINDOW_MS;
+      } else {
+        process.env.WEB_RATE_LIMIT_WINDOW_MS = originalWindowMs;
+      }
+      if (originalMaxRequests === undefined) {
+        delete process.env.WEB_RATE_LIMIT_MAX_REQUESTS;
+      } else {
+        process.env.WEB_RATE_LIMIT_MAX_REQUESTS = originalMaxRequests;
+      }
+    }
   });
 });
 

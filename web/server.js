@@ -10,6 +10,8 @@ const { resolveEndpoint } = require('./lib/ports');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const rateLimitState = new Map();
+let lastRateLimitCleanupAt = 0;
+const NO_IP_BUCKET = '__unknown_ip__';
 
 // Middleware
 app.set('view engine', 'ejs');
@@ -37,8 +39,11 @@ function cleanupRateLimitState(now, windowMs) {
 function antiFlood(req, res, next) {
   const { windowMs, maxRequests } = getRateLimitConfig();
   const now = Date.now();
-  cleanupRateLimitState(now, windowMs);
-  const ip = req.ip || req.socket?.remoteAddress || 'unknown';
+  if (now - lastRateLimitCleanupAt >= windowMs) {
+    cleanupRateLimitState(now, windowMs);
+    lastRateLimitCleanupAt = now;
+  }
+  const ip = req.ip || req.socket?.remoteAddress || NO_IP_BUCKET;
   let entry = rateLimitState.get(ip);
   if (!entry || now - entry.windowStart >= windowMs) {
     entry = { count: 0, windowStart: now };
