@@ -5,6 +5,7 @@ const express = require('express');
 const { loadConfigs, loadI18n, availableLanguages } = require('./lib/config');
 const { registerWarp } = require('./lib/warp');
 const { GENERATORS, FORMAT_LABELS } = require('./lib/generators');
+const { resolveEndpoint } = require('./lib/ports');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -104,7 +105,7 @@ app.post('/generate', async (req, res) => {
     clientIpv4: account.clientIpv4,
     clientIpv6: account.clientIpv6,
     dnsServers: dns.servers,
-    endpoint: relay.endpoint,
+    endpoint: resolveEndpoint(fmt, relay),
     allowedIps,
     mtu: 1280,
   };
