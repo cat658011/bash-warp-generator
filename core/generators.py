@@ -9,6 +9,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Protocol
 
+from core.ports import FORMATS
+
 # ---------------------------------------------------------------------------
 # Load AmneziaWG parameters from shared config
 # ---------------------------------------------------------------------------
@@ -272,8 +274,6 @@ class WireSockGenerator:
         config = "\n".join(lines) + "\n"
         return config, "warp-wiresock.conf"
 
-
-from core.ports import FORMATS
 
 # Registry
 GENERATORS: dict[str, type[ConfigGenerator]] = {
