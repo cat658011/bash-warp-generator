@@ -86,6 +86,19 @@ class TestAmneziaWG:
         for param in ("Jc =", "Jmin =", "Jmax =", "S1 =", "S2 =", "H1 ="):
             assert param in content
 
+    def test_obfuscation_values_match_config(self) -> None:
+        content, _ = AmneziaWGGenerator().generate(_PARAMS)
+        amnezia_params = _WARP_PARAMS["amnezia"]
+        assert f"Jc = {amnezia_params['Jc']}" in content
+        assert f"Jmin = {amnezia_params['Jmin']}" in content
+        assert f"Jmax = {amnezia_params['Jmax']}" in content
+        assert f"S1 = {amnezia_params['S1']}" in content
+        assert f"S2 = {amnezia_params['S2']}" in content
+        assert f"H1 = {amnezia_params['H1']}" in content
+        assert f"H2 = {amnezia_params['H2']}" in content
+        assert f"H3 = {amnezia_params['H3']}" in content
+        assert f"H4 = {amnezia_params['H4']}" in content
+
     def test_has_i1_payload(self) -> None:
         content, _ = AmneziaWGGenerator().generate(_PARAMS)
         # I1 payloads are hex strings from warp_params.json
@@ -223,3 +236,11 @@ class TestWireSock:
         masking_pos = content.index("# Protocol masking")
         peer_pos = content.index("[Peer]")
         assert masking_pos < peer_pos, "Protocol masking must appear before [Peer]"
+
+
+class TestSharedGeneratorDefaults:
+    def test_persistent_keepalive_matches_shared_config(self) -> None:
+        expected_keepalive = _WARP_PARAMS["persistent_keepalive"]
+        for generator in (WireGuardGenerator(), AmneziaWGGenerator(), WireSockGenerator()):
+            content, _ = generator.generate(_PARAMS)
+            assert f"PersistentKeepalive = {expected_keepalive}" in content
