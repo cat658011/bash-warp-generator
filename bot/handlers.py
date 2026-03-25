@@ -100,26 +100,33 @@ def _flood_state(context: ContextTypes.DEFAULT_TYPE) -> dict:
         {
             "events": defaultdict(deque),
             "generate_cooldowns": {},
+            "ops_since_cleanup": 0,
         },
     )
 
 
 def _cleanup_flood_state(context: ContextTypes.DEFAULT_TYPE, now: float) -> None:
     state = _flood_state(context)
+    state["ops_since_cleanup"] += 1
+    if state["ops_since_cleanup"] < 25:
+        return
+    state["ops_since_cleanup"] = 0
+
     events: defaultdict[int, deque[float]] = state["events"]
     cooldowns: dict[int, float] = state["generate_cooldowns"]
 
     threshold = now - FLOOD_WINDOW_SEC
-    stale_users: list[int] = []
     for user_id, q in events.items():
         while q and q[0] < threshold:
             q.popleft()
-        if not q and cooldowns.get(user_id, 0.0) <= now:
-            stale_users.append(user_id)
 
-    for user_id in stale_users:
+    for user_id, ready_at in list(cooldowns.items()):
+        if ready_at <= now:
+            cooldowns.pop(user_id, None)
+
+    for user_id, q in list(events.items()):
+        if not q and user_id not in cooldowns:
         events.pop(user_id, None)
-        cooldowns.pop(user_id, None)
 
 
 def _is_flooded(context: ContextTypes.DEFAULT_TYPE, user_id: int) -> bool:

@@ -98,9 +98,10 @@ describe('POST /generate rate limiting', () => {
     await new Promise((resolve) => server.once('listening', resolve));
     const { port } = server.address();
     const body = 'format=wireguard&dns=0&relay=0&routing=full&lang=en';
+    const limit = app.__rateLimitMax || 15;
 
     try {
-      for (let i = 0; i < 15; i += 1) {
+      for (let i = 0; i < limit; i += 1) {
         await new Promise((resolve, reject) => {
           const req = http.request(
             {

@@ -26,6 +26,8 @@ const RATE_LIMIT_WINDOW_MS = parsePositiveIntEnv('RATE_LIMIT_WINDOW_MS', 60000);
 const RATE_LIMIT_GENERATE_MAX = parsePositiveIntEnv('RATE_LIMIT_GENERATE_MAX', 15);
 const TRUST_PROXY = process.env.TRUST_PROXY === '1';
 const rateLimitStore = new Map();
+let requestsSinceCleanup = 0;
+const CLEANUP_EVERY_REQUESTS = 50;
 
 // Middleware
 app.set('view engine', 'ejs');
@@ -69,9 +71,13 @@ function getClientIp(req) {
 
 function isRateLimited(req) {
   const now = Date.now();
-  for (const [key, value] of rateLimitStore) {
-    if (now >= value.resetAt) {
-      rateLimitStore.delete(key);
+  requestsSinceCleanup += 1;
+  if (requestsSinceCleanup >= CLEANUP_EVERY_REQUESTS) {
+    requestsSinceCleanup = 0;
+    for (const [key, value] of rateLimitStore) {
+      if (now >= value.resetAt) {
+        rateLimitStore.delete(key);
+      }
     }
   }
 
@@ -101,6 +107,7 @@ function parseIndex(rawValue) {
 
 function resetRateLimitStore() {
   rateLimitStore.clear();
+  requestsSinceCleanup = 0;
 }
 
 // ── Routes ───────────────────────────────────────────────────────────────────
@@ -214,3 +221,4 @@ if (require.main === module) {
 
 module.exports = app;
 module.exports.__resetRateLimitStore = resetRateLimitStore;
+module.exports.__rateLimitMax = RATE_LIMIT_GENERATE_MAX;
