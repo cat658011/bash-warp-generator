@@ -375,7 +375,7 @@ async def _generate(
         client_ipv4=account.client_ipv4,
         client_ipv6=account.client_ipv6,
         dns_servers=dns.servers,
-        endpoint=relay.endpoint,
+        endpoint=relay.endpoint_for(fmt),
         allowed_ips=allowed_ips,
     )
 
