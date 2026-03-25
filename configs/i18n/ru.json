@@ -58,6 +58,7 @@
   "web_footer_status": "📊 Статус WARP",
   "web_footer_github": "⭐ GitHub",
   "web_error_warp": "Ошибка регистрации WARP. API Cloudflare может быть заблокирован в вашем регионе. Попробуйте запустить на VPS или облачном сервере.",
+  "web_error_rate_limited": "Слишком много запросов. Попробуйте снова через минуту.",
 
   "dns_cloudflare": "Cloudflare DNS",
   "dns_cloudflare_family": "Cloudflare Семейный DNS",

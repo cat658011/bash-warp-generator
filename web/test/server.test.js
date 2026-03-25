@@ -85,6 +85,70 @@ describe('GET /health', () => {
   });
 });
 
+describe('POST /generate rate limiting', () => {
+  it('returns 429 after request limit is exceeded', async () => {
+    const server = app.listen(0);
+    await new Promise((resolve) => server.once('listening', resolve));
+    const { port } = server.address();
+    const body = 'format=wireguard&dns=0&relay=0&routing=full&lang=en';
+
+    try {
+      for (let i = 0; i < 15; i += 1) {
+        await new Promise((resolve, reject) => {
+          const req = http.request(
+            {
+              hostname: '127.0.0.1',
+              port,
+              path: '/generate',
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Length': Buffer.byteLength(body),
+              },
+            },
+            (res) => {
+              res.resume();
+              res.on('end', resolve);
+            },
+          );
+          req.on('error', reject);
+          req.write(body);
+          req.end();
+        });
+      }
+
+      const limited = await new Promise((resolve, reject) => {
+        const req = http.request(
+          {
+            hostname: '127.0.0.1',
+            port,
+            path: '/generate',
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'Content-Length': Buffer.byteLength(body),
+            },
+          },
+          (res) => {
+            let text = '';
+            res.on('data', (chunk) => (text += chunk));
+            res.on('end', () => resolve({ status: res.statusCode, body: text }));
+          },
+        );
+        req.on('error', reject);
+        req.write(body);
+        req.end();
+      });
+
+      assert.equal(limited.status, 429);
+      const payload = JSON.parse(limited.body);
+      assert.equal(payload.error, 'Too many requests. Please try again in a minute.');
+    } finally {
+      await new Promise((resolve) => server.close(resolve));
+    }
+  });
+});
+
 // ── Port resolution (lib/ports.js) ───────────────────────────────────────────
 
 describe('FORMATS', () => {

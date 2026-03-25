@@ -9,12 +9,19 @@ const { resolveEndpoint } = require('./lib/ports');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const RATE_LIMIT_WINDOW_MS = Math.max(1, parseInt(process.env.RATE_LIMIT_WINDOW_MS || '60000', 10));
+const RATE_LIMIT_GENERATE_MAX = Math.max(1, parseInt(process.env.RATE_LIMIT_GENERATE_MAX || '15', 10));
+const TRUST_PROXY = process.env.TRUST_PROXY === '1';
+const rateLimitStore = new Map();
 
 // Middleware
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
+if (TRUST_PROXY) {
+  app.set('trust proxy', true);
+}
 
 // Load configs once at startup
 const configs = loadConfigs();
@@ -38,6 +45,31 @@ function resolveFormatLabels(formatLabels, i18n) {
     };
   }
   return resolved;
+}
+
+function getClientIp(req) {
+  if (typeof req.ip === 'string' && req.ip.length > 0) {
+    return req.ip;
+  }
+  return req.socket?.remoteAddress || 'unknown';
+}
+
+function isRateLimited(req) {
+  const now = Date.now();
+  const ip = getClientIp(req);
+  const entry = rateLimitStore.get(ip);
+
+  if (!entry || now >= entry.resetAt) {
+    rateLimitStore.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return false;
+  }
+
+  if (entry.count >= RATE_LIMIT_GENERATE_MAX) {
+    return true;
+  }
+
+  entry.count += 1;
+  return false;
 }
 
 // ── Routes ───────────────────────────────────────────────────────────────────
@@ -75,6 +107,12 @@ app.post('/generate', async (req, res) => {
 
   const lang = req.body.lang || process.env.BOT_LANG || 'ru';
   const i18n = loadI18n(lang);
+
+  if (isRateLimited(req)) {
+    return res.status(429).json({
+      error: i18n.web_error_rate_limited || 'Too many requests. Please try again later.',
+    });
+  }
 
   const dns = configs.dnsServers[dnsIdx];
   const relay = configs.relayServers[relayIdx];

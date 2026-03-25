@@ -58,6 +58,7 @@
   "web_footer_status": "📊 WARP Status",
   "web_footer_github": "⭐ GitHub",
   "web_error_warp": "WARP registration failed. Cloudflare API may be blocked in your region. Try running on a VPS or cloud server.",
+  "web_error_rate_limited": "Too many requests. Please try again in a minute.",
 
   "dns_cloudflare": "Cloudflare DNS",
   "dns_cloudflare_family": "Cloudflare Family DNS",
