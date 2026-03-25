@@ -23,6 +23,18 @@ const AMNEZIA = {
   H4: _amneziaConf.H4,
 };
 
+// ---------------------------------------------------------------------------
+// WireSock / Clash obfuscation constants (fixed values, not from JSON)
+// ---------------------------------------------------------------------------
+const OBF = { S1: 0, S2: 0, JC: 120, JMIN: 23, JMAX: 911, H1: 1, H2: 2, H3: 3, H4: 4 };
+
+// Clash uses a slightly different H3/H4 assignment in its amnezia-wg-option block.
+const CLASH_H3 = 4;
+const CLASH_H4 = 3;
+
+// Fixed I1 payload used in the Clash amnezia-wg-option block.
+const CLASH_I1 = _i1Payloads[0];
+
 function randomI1() {
   return _i1Payloads[Math.floor(Math.random() * _i1Payloads.length)];
 }
@@ -128,7 +140,7 @@ function generateAmneziaDeeplink(params) {
 }
 
 // ---------------------------------------------------------------------------
-// Clash
+// Clash / Mihomo
 // ---------------------------------------------------------------------------
 function generateClash(params) {
   const lastColon = params.endpoint.lastIndexOf(':');
@@ -171,7 +183,20 @@ function generateClash(params) {
     `    private-key: ${params.privateKey}\n` +
     `    public-key: ${params.peerPublicKey}\n` +
     '    udp: true\n' +
+    '    remote-dns-resolve: true\n' +
+    '    reserved: [177, 85, 135]\n' +
     `    mtu: ${params.mtu}\n` +
+    '    amnezia-wg-option:\n' +
+    `      jc: ${OBF.JC}\n` +
+    `      jmin: ${OBF.JMIN}\n` +
+    `      jmax: ${OBF.JMAX}\n` +
+    `      s1: ${OBF.S1}\n` +
+    `      s2: ${OBF.S2}\n` +
+    `      h1: ${OBF.H1}\n` +
+    `      h2: ${OBF.H2}\n` +
+    `      h3: ${CLASH_H3}\n` +
+    `      h4: ${CLASH_H4}\n` +
+    `      i1: ${CLASH_I1}\n` +
     '\n' +
     'proxy-groups:\n' +
     '  - name: Proxy\n' +
@@ -198,6 +223,20 @@ function generateWireSock(params) {
     `Address = ${params.clientIpv4}/32`,
     `DNS = ${dns}`,
     `MTU = ${params.mtu}`,
+    `S1 = ${OBF.S1}`,
+    `S2 = ${OBF.S2}`,
+    `Jc = ${OBF.JC}`,
+    `Jmin = ${OBF.JMIN}`,
+    `Jmax = ${OBF.JMAX}`,
+    `H1 = ${OBF.H1}`,
+    `H2 = ${OBF.H2}`,
+    `H3 = ${OBF.H3}`,
+    `H4 = ${OBF.H4}`,
+    '',
+    '# Protocol masking',
+    'Id = gosuslugi.ru',
+    'Ip = quic',
+    'Ib = firefox',
     '',
     '[Peer]',
     `PublicKey = ${params.peerPublicKey}`,

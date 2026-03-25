@@ -4,21 +4,19 @@ from __future__ import annotations
 
 import pytest
 
-from core.ports import FORMATS, FORMAT_PORT_PREFERENCES, resolve_endpoint
+from core.ports import FORMATS, _AWG_FORMATS, resolve_endpoint
 
 
 # ---------------------------------------------------------------------------
-# Fixtures
+# Fixtures — ports are [wireguard_port, amneziawg_port]
 # ---------------------------------------------------------------------------
 
-RELAY_MULTI = ("relay.example.com", [4500, 2408])   # supports both common ports
-RELAY_SINGLE_4500 = ("relay.example.com", [4500])   # only supports 4500
-RELAY_SINGLE_2408 = ("relay.example.com", [2408])   # only supports 2408
-RELAY_EXOTIC = ("relay.example.com", [1701])         # only supports an unusual port
+RELAY_DUAL = ("relay.example.com", [2408, 4500])   # standard two-port relay
+RELAY_SINGLE = ("relay.example.com", [4500])        # single-port relay (fallback)
 
 
 # ---------------------------------------------------------------------------
-# FORMATS constant
+# FORMATS / _AWG_FORMATS constants
 # ---------------------------------------------------------------------------
 
 class TestFormats:
@@ -28,96 +26,94 @@ class TestFormats:
     def test_is_frozenset(self) -> None:
         assert isinstance(FORMATS, frozenset)
 
-    def test_format_keys_match_preferences(self) -> None:
-        assert set(FORMAT_PORT_PREFERENCES.keys()) == FORMATS
+    def test_awg_formats_subset_of_formats(self) -> None:
+        assert _AWG_FORMATS < FORMATS
+
+    def test_wireguard_not_in_awg_formats(self) -> None:
+        assert "wireguard" not in _AWG_FORMATS
+
+    def test_awg_formats_contains_expected_ids(self) -> None:
+        assert {"amnezia", "wiresock", "clash"} == _AWG_FORMATS
 
 
 # ---------------------------------------------------------------------------
-# resolve_endpoint — preferred port hit
+# resolve_endpoint — index-based port selection
 # ---------------------------------------------------------------------------
 
-class TestResolveEndpointPreferred:
-    def test_wireguard_prefers_2408_when_available(self) -> None:
-        host, ports = RELAY_MULTI
-        endpoint = resolve_endpoint("wireguard", host, ports)
-        assert endpoint == f"{host}:2408"
+class TestResolveEndpointIndexBased:
+    def test_wireguard_uses_ports0(self) -> None:
+        host, ports = RELAY_DUAL
+        assert resolve_endpoint("wireguard", host, ports) == f"{host}:{ports[0]}"
 
-    def test_amnezia_prefers_4500_when_available(self) -> None:
-        host, ports = RELAY_MULTI
-        endpoint = resolve_endpoint("amnezia", host, ports)
-        assert endpoint == f"{host}:4500"
+    def test_amnezia_uses_ports1(self) -> None:
+        host, ports = RELAY_DUAL
+        assert resolve_endpoint("amnezia", host, ports) == f"{host}:{ports[1]}"
 
-    def test_wiresock_prefers_2408_when_available(self) -> None:
-        host, ports = RELAY_MULTI
-        endpoint = resolve_endpoint("wiresock", host, ports)
-        assert endpoint == f"{host}:2408"
+    def test_wiresock_uses_ports1(self) -> None:
+        host, ports = RELAY_DUAL
+        assert resolve_endpoint("wiresock", host, ports) == f"{host}:{ports[1]}"
 
-    def test_clash_prefers_2408_when_available(self) -> None:
-        host, ports = RELAY_MULTI
-        endpoint = resolve_endpoint("clash", host, ports)
-        assert endpoint == f"{host}:2408"
+    def test_clash_uses_ports1(self) -> None:
+        host, ports = RELAY_DUAL
+        assert resolve_endpoint("clash", host, ports) == f"{host}:{ports[1]}"
 
-    def test_returns_only_supported_port(self) -> None:
-        host, ports = RELAY_SINGLE_4500
-        # wireguard prefers 2408, which is not in [4500], so falls through to 4500
-        endpoint = resolve_endpoint("wireguard", host, ports)
-        assert endpoint == f"{host}:4500"
+    def test_wireguard_gets_2408_from_standard_relay(self) -> None:
+        host, ports = RELAY_DUAL
+        assert resolve_endpoint("wireguard", host, ports) == f"{host}:2408"
 
-    def test_amnezia_gets_2408_when_4500_unavailable(self) -> None:
-        host, ports = RELAY_SINGLE_2408
-        # amnezia prefers 4500 but only 2408 is available
-        endpoint = resolve_endpoint("amnezia", host, ports)
-        assert endpoint == f"{host}:2408"
+    def test_amnezia_gets_4500_from_standard_relay(self) -> None:
+        host, ports = RELAY_DUAL
+        assert resolve_endpoint("amnezia", host, ports) == f"{host}:4500"
 
 
 # ---------------------------------------------------------------------------
-# resolve_endpoint — fallback behavior
+# resolve_endpoint — fallback behavior (single-port relay)
 # ---------------------------------------------------------------------------
 
 class TestResolveEndpointFallback:
-    def test_falls_back_to_first_port_when_no_preferred_match(self) -> None:
-        host, ports = RELAY_EXOTIC
-        # 1701 is last in every preference list; all others missing → ports[0]
-        endpoint = resolve_endpoint("wireguard", host, ports)
-        assert endpoint == f"{host}:1701"
+    def test_wireguard_single_port_uses_ports0(self) -> None:
+        host, ports = RELAY_SINGLE
+        assert resolve_endpoint("wireguard", host, ports) == f"{host}:{ports[0]}"
 
-    def test_unknown_format_uses_wireguard_preferences(self) -> None:
-        host, ports = RELAY_MULTI
-        endpoint = resolve_endpoint("unknown_format", host, ports)
-        # Falls back to wireguard prefs: first match in [4500, 2408] is 2408
-        assert endpoint == f"{host}:2408"
+    def test_amnezia_falls_back_to_ports0_when_only_one_port(self) -> None:
+        host, ports = RELAY_SINGLE
+        assert resolve_endpoint("amnezia", host, ports) == f"{host}:{ports[0]}"
 
-    def test_empty_string_format_falls_back_gracefully(self) -> None:
-        host, ports = RELAY_SINGLE_4500
+    def test_wiresock_falls_back_to_ports0_when_only_one_port(self) -> None:
+        host, ports = RELAY_SINGLE
+        assert resolve_endpoint("wiresock", host, ports) == f"{host}:{ports[0]}"
+
+    def test_clash_falls_back_to_ports0_when_only_one_port(self) -> None:
+        host, ports = RELAY_SINGLE
+        assert resolve_endpoint("clash", host, ports) == f"{host}:{ports[0]}"
+
+    def test_unknown_format_uses_ports0(self) -> None:
+        host, ports = RELAY_DUAL
+        assert resolve_endpoint("unknown_format", host, ports) == f"{host}:{ports[0]}"
+
+    def test_empty_string_format_uses_ports0(self) -> None:
+        host, ports = RELAY_SINGLE
         endpoint = resolve_endpoint("", host, ports)
-        assert ":" in endpoint
-        assert endpoint.startswith(host)
-
-    def test_returns_string_with_colon_separator(self) -> None:
-        host, ports = RELAY_MULTI
-        endpoint = resolve_endpoint("wireguard", host, ports)
-        assert endpoint.count(":") == 1
-        h, p = endpoint.rsplit(":", 1)
-        assert h == host
-        assert p.isdigit()
+        assert endpoint == f"{host}:{ports[0]}"
 
 
 # ---------------------------------------------------------------------------
-# resolve_endpoint — endpoint format
+# resolve_endpoint — output format
 # ---------------------------------------------------------------------------
 
 class TestResolveEndpointFormat:
     @pytest.mark.parametrize("fmt", list(FORMATS))
     def test_all_formats_produce_valid_endpoint(self, fmt: str) -> None:
-        host, ports = RELAY_MULTI
+        host, ports = RELAY_DUAL
         endpoint = resolve_endpoint(fmt, host, ports)
         h, p = endpoint.rsplit(":", 1)
         assert h == host
         assert int(p) in ports
 
-    def test_port_in_relay_ports(self) -> None:
-        host, ports = RELAY_MULTI
-        for fmt in FORMATS:
-            endpoint = resolve_endpoint(fmt, host, ports)
-            _, port_str = endpoint.rsplit(":", 1)
-            assert int(port_str) in ports
+    def test_returns_string_with_colon_separator(self) -> None:
+        host, ports = RELAY_DUAL
+        endpoint = resolve_endpoint("wireguard", host, ports)
+        assert endpoint.count(":") == 1
+        h, p = endpoint.rsplit(":", 1)
+        assert h == host
+        assert p.isdigit()

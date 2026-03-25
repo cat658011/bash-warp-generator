@@ -358,6 +358,7 @@ async def _generate(
     # Resolve user selections
     dns = configs.dns_servers[user["dns_idx"]]
     relay = configs.relay_servers[user["relay_idx"]]
+    fmt = user["format"] if user["format"] in FORMATS else "wireguard"
 
     if user.get("routing") == "split":
         selected_set: set[int] = user.get("selected_svcs", set())
@@ -380,9 +381,6 @@ async def _generate(
         allowed_ips=allowed_ips,
     )
 
-    fmt = user["format"]
-    if fmt not in FORMATS:
-        fmt = "wireguard"
     generator = GENERATORS[fmt]()
     content, filename = generator.generate(params)
 

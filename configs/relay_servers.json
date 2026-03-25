@@ -2,7 +2,7 @@
   {
     "id": "cloudflare",
     "host": "engage.cloudflareclient.com",
-    "ports": [4500, 2408]
+    "ports": [2408, 4500]
   },
   {
     "id": "cloudflare_alt",
@@ -12,46 +12,46 @@
   {
     "id": "finland_1",
     "host": "fi.tribukvy.ltd",
-    "ports": [4500]
+    "ports": [2408, 4500]
   },
   {
     "id": "finland_2",
     "host": "fi0.tribukvy.ltd",
-    "ports": [4500]
+    "ports": [2408, 4500]
   },
   {
     "id": "netherlands_1",
     "host": "nl.tribukvy.ltd",
-    "ports": [4500]
+    "ports": [2408, 4500]
   },
   {
     "id": "netherlands_2",
     "host": "nl0.tribukvy.ltd",
-    "ports": [4500]
+    "ports": [2408, 4500]
   },
   {
     "id": "poland_1",
     "host": "pl.tribukvy.ltd",
-    "ports": [4500]
+    "ports": [2408, 4500]
   },
   {
     "id": "poland_2",
     "host": "pl0.tribukvy.ltd",
-    "ports": [4500]
+    "ports": [2408, 4500]
   },
   {
     "id": "germany_1",
     "host": "de.tribukvy.ltd",
-    "ports": [4500]
+    "ports": [2408, 4500]
   },
   {
     "id": "estonia_1",
     "host": "ee.tribukvy.ltd",
-    "ports": [4500]
+    "ports": [2408, 4500]
   },
   {
     "id": "russia_1",
     "host": "ru.tribukvy.ltd",
-    "ports": [4500]
+    "ports": [2408, 4500]
   }
 ]

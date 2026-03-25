@@ -1,34 +1,27 @@
 """Format → port resolution for WARP relays.
 
-The canonical set of supported format IDs and each format's ordered list of
-preferred UDP ports live here.  The resolver finds the first preferred port
-that a given relay actually supports, falling back to the relay's first port
-when none match.  No JSON config involved.
+Ports are stored as a two-element array: ``[wireguard_port, amneziawg_port]``.
+The resolver uses a strict positional index — no preference lists needed.
+All intelligence stays in Python; the relay JSON only declares supported ports.
 """
 
 from __future__ import annotations
 
 FORMATS: frozenset[str] = frozenset({"wireguard", "amnezia", "wiresock", "clash"})
 
-# Each format lists its preferred ports from most-wanted to least-wanted.
-# The resolver picks the first port in this list that the relay supports.
-FORMAT_PORT_PREFERENCES: dict[str, list[int]] = {
-    "wireguard": [2408, 4500, 500, 1701],
-    "amnezia":   [4500, 2408, 500, 1701],
-    "wiresock":  [2408, 4500, 500, 1701],
-    "clash":     [2408, 4500, 500, 1701],
-}
+# Formats that use the AmneziaWG port (ports[1]).
+_AWG_FORMATS: frozenset[str] = frozenset({"amnezia", "wiresock", "clash"})
 
 
 def resolve_endpoint(fmt: str, host: str, ports: list[int]) -> str:
-    """Return ``host:port`` using format-aware port selection.
+    """Return ``host:port`` using strict positional index selection.
 
-    Picks the first port in *fmt*'s preference list that appears in *ports*.
-    Falls back to ``ports[0]`` when the format is unknown or none of its
-    preferred ports are supported.
+    - ``wireguard``: always uses ``ports[0]`` (WireGuard port).
+    - ``amnezia``, ``wiresock``, ``clash``: use ``ports[1]`` (AmneziaWG port)
+      when the relay has at least two ports; fall back to ``ports[0]``
+      otherwise to prevent index errors.
+    - Unknown format IDs behave like ``wireguard`` (use ``ports[0]``).
     """
-    preferences = FORMAT_PORT_PREFERENCES.get(fmt, FORMAT_PORT_PREFERENCES["wireguard"])
-    for port in preferences:
-        if port in ports:
-            return f"{host}:{port}"
+    if fmt in _AWG_FORMATS and len(ports) >= 2:
+        return f"{host}:{ports[1]}"
     return f"{host}:{ports[0]}"

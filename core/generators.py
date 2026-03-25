@@ -39,6 +39,26 @@ _AMNEZIA_H4 = _AMNEZIA_CONF["H4"]
 _I1_PAYLOADS: list[str] = _WARP_PARAMS["i1_payloads"]
 _PERSISTENT_KEEPALIVE: int = _WARP_PARAMS.get("persistent_keepalive", 25)
 
+# ---------------------------------------------------------------------------
+# WireSock / Clash obfuscation constants (fixed values, not from JSON)
+# ---------------------------------------------------------------------------
+_OBF_S1: int = 0
+_OBF_S2: int = 0
+_OBF_JC: int = 120
+_OBF_JMIN: int = 23
+_OBF_JMAX: int = 911
+_OBF_H1: int = 1
+_OBF_H2: int = 2
+_OBF_H3: int = 3
+_OBF_H4: int = 4
+
+# Clash uses a slightly different H3/H4 assignment in its amnezia-wg-option block.
+_CLASH_H3: int = 4
+_CLASH_H4: int = 3
+
+# Fixed I1 payload used in the Clash amnezia-wg-option block.
+_CLASH_I1: str = _I1_PAYLOADS[0]
+
 
 def _random_i1() -> str:
     """Return a randomly selected I1 obfuscation payload."""
@@ -183,10 +203,10 @@ class AmneziaWGGenerator:
 
 
 # ---------------------------------------------------------------------------
-# Clash
+# Clash / Mihomo
 # ---------------------------------------------------------------------------
 class ClashGenerator:
-    """Clash proxy configuration (YAML)."""
+    """Clash/Mihomo proxy configuration (YAML) with AmneziaWG obfuscation."""
 
     def generate(self, params: GeneratorParams) -> tuple[str, str]:
         host, port = params.endpoint.rsplit(":", 1)
@@ -225,7 +245,20 @@ class ClashGenerator:
             f"    private-key: {params.private_key}\n"
             f"    public-key: {params.peer_public_key}\n"
             "    udp: true\n"
+            "    remote-dns-resolve: true\n"
+            "    reserved: [177, 85, 135]\n"
             f"    mtu: {params.mtu}\n"
+            "    amnezia-wg-option:\n"
+            f"      jc: {_OBF_JC}\n"
+            f"      jmin: {_OBF_JMIN}\n"
+            f"      jmax: {_OBF_JMAX}\n"
+            f"      s1: {_OBF_S1}\n"
+            f"      s2: {_OBF_S2}\n"
+            f"      h1: {_OBF_H1}\n"
+            f"      h2: {_OBF_H2}\n"
+            f"      h3: {_CLASH_H3}\n"
+            f"      h4: {_CLASH_H4}\n"
+            f"      i1: {_CLASH_I1}\n"
             "\n"
             "proxy-groups:\n"
             "  - name: Proxy\n"
@@ -244,7 +277,7 @@ class ClashGenerator:
 # WireSock
 # ---------------------------------------------------------------------------
 class WireSockGenerator:
-    """WireSock configuration (Windows WireGuard variant)."""
+    """WireSock configuration with AmneziaWG obfuscation and protocol masking."""
 
     def generate(self, params: GeneratorParams) -> tuple[str, str]:
         dns = ", ".join(params.dns_servers)
@@ -256,6 +289,20 @@ class WireSockGenerator:
             f"Address = {params.client_ipv4}/32",
             f"DNS = {dns}",
             f"MTU = {params.mtu}",
+            f"S1 = {_OBF_S1}",
+            f"S2 = {_OBF_S2}",
+            f"Jc = {_OBF_JC}",
+            f"Jmin = {_OBF_JMIN}",
+            f"Jmax = {_OBF_JMAX}",
+            f"H1 = {_OBF_H1}",
+            f"H2 = {_OBF_H2}",
+            f"H3 = {_OBF_H3}",
+            f"H4 = {_OBF_H4}",
+            "",
+            "# Protocol masking",
+            "Id = gosuslugi.ru",
+            "Ip = quic",
+            "Ib = firefox",
             "",
             "[Peer]",
             f"PublicKey = {params.peer_public_key}",

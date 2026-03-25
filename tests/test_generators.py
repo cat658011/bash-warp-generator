@@ -17,7 +17,7 @@ _PARAMS = GeneratorParams(
     client_ipv4="172.16.0.2",
     client_ipv6="fd01:db8:1111::2",
     dns_servers=["1.1.1.1", "1.0.0.1"],
-    endpoint="162.159.192.1:500",
+    endpoint="162.159.192.1:4500",
     allowed_ips=["0.0.0.0/0", "::/0"],
 )
 
@@ -28,7 +28,7 @@ _SPLIT_PARAMS = GeneratorParams(
     client_ipv4="172.16.0.2",
     client_ipv6="fd01:db8:1111::2",
     dns_servers=["8.8.8.8"],
-    endpoint="162.159.193.1:2408",
+    endpoint="162.159.193.1:4500",
     allowed_ips=["142.250.0.0/15", "172.217.0.0/16"],
 )
 
@@ -140,6 +140,34 @@ class TestClash:
         content, _ = ClashGenerator().generate(_PARAMS)
         assert "type: wireguard" in content
 
+    def test_has_amnezia_wg_option_block(self) -> None:
+        content, _ = ClashGenerator().generate(_PARAMS)
+        assert "amnezia-wg-option:" in content
+
+    def test_amnezia_wg_option_values(self) -> None:
+        content, _ = ClashGenerator().generate(_PARAMS)
+        assert "jc: 120" in content
+        assert "jmin: 23" in content
+        assert "jmax: 911" in content
+        assert "s1: 0" in content
+        assert "s2: 0" in content
+        assert "h1: 1" in content
+        assert "h2: 2" in content
+        assert "h3: 4" in content
+        assert "h4: 3" in content
+
+    def test_has_i1_field(self) -> None:
+        content, _ = ClashGenerator().generate(_PARAMS)
+        assert "i1: " in content
+
+    def test_has_reserved_field(self) -> None:
+        content, _ = ClashGenerator().generate(_PARAMS)
+        assert "reserved: [177, 85, 135]" in content
+
+    def test_has_remote_dns_resolve(self) -> None:
+        content, _ = ClashGenerator().generate(_PARAMS)
+        assert "remote-dns-resolve: true" in content
+
 
 # ── WireSock ──────────────────────────────────────────────────────
 class TestWireSock:
@@ -161,3 +189,28 @@ class TestWireSock:
     def test_has_persistent_keepalive(self) -> None:
         content, _ = WireSockGenerator().generate(_PARAMS)
         assert "PersistentKeepalive = 25" in content
+
+    def test_has_obfuscation_params(self) -> None:
+        content, _ = WireSockGenerator().generate(_PARAMS)
+        assert "Jc = 120" in content
+        assert "Jmin = 23" in content
+        assert "Jmax = 911" in content
+        assert "S1 = 0" in content
+        assert "S2 = 0" in content
+        assert "H1 = 1" in content
+        assert "H2 = 2" in content
+        assert "H3 = 3" in content
+        assert "H4 = 4" in content
+
+    def test_has_protocol_masking_section(self) -> None:
+        content, _ = WireSockGenerator().generate(_PARAMS)
+        assert "# Protocol masking" in content
+        assert "Id = gosuslugi.ru" in content
+        assert "Ip = quic" in content
+        assert "Ib = firefox" in content
+
+    def test_protocol_masking_before_peer(self) -> None:
+        content, _ = WireSockGenerator().generate(_PARAMS)
+        masking_pos = content.index("# Protocol masking")
+        peer_pos = content.index("[Peer]")
+        assert masking_pos < peer_pos, "Protocol masking must appear before [Peer]"
