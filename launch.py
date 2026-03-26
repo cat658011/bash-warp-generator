@@ -7,6 +7,7 @@ import argparse
 import signal
 import subprocess
 import sys
+import time
 from dataclasses import dataclass
 
 
@@ -76,7 +77,7 @@ def main(argv: list[str] | None = None) -> int:
                         _terminate(other)
                 _wait_all(processes)
                 return int(code)
-        signal.pause()
+        time.sleep(0.2)
 
 
 if __name__ == "__main__":

@@ -13,7 +13,15 @@ async function generateViaPython(payload) {
     body: JSON.stringify(payload),
   });
 
-  const data = await response.json().catch(() => ({}));
+  const bodyText = await response.text();
+  let data = {};
+  if (bodyText) {
+    try {
+      data = JSON.parse(bodyText);
+    } catch (err) {
+      throw new Error(`Generation API returned non-JSON response: ${err.message}`);
+    }
+  }
   if (!response.ok) {
     throw new Error(data.error || `Generation API failed: ${response.status}`);
   }

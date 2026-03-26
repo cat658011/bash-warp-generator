@@ -89,6 +89,12 @@ class _Handler(BaseHTTPRequestHandler):
 
         try:
             account = asyncio.run(register_warp())
+        except Exception:
+            logging.exception("WARP registration failed")
+            _json_response(self, HTTPStatus.BAD_GATEWAY, asdict(_Error("warp registration failed")))
+            return
+
+        try:
             params = GeneratorParams(
                 private_key=account.private_key,
                 public_key=account.public_key,
@@ -103,8 +109,8 @@ class _Handler(BaseHTTPRequestHandler):
             generator = GENERATORS[fmt]()
             content, filename = generator.generate(params)
         except Exception:
-            logging.exception("Generation failed")
-            _json_response(self, HTTPStatus.BAD_GATEWAY, asdict(_Error("generation failed")))
+            logging.exception("Config generation failed")
+            _json_response(self, HTTPStatus.BAD_GATEWAY, asdict(_Error("config generation failed")))
             return
 
         _json_response(

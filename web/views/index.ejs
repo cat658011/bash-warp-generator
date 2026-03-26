@@ -570,7 +570,7 @@
           <div class="format-grid" id="format-grid">
             <% var icons = { wireguard: '🔐', amnezia: '🛡️', clash: '⚔️', wiresock: '🪟' }; %>
             <% formats.forEach(function(fmt, i) { %>
-            <label class="format-card<%= i === 0 ? ' active' : '' %>" data-fmt="<%= fmt %>" tabindex="0" role="radio" aria-checked="<%= i === 0 ? 'true' : 'false' %>">
+            <label class="format-card<%= i === 0 ? ' active' : '' %>" data-fmt="<%= fmt %>" tabindex="0">
               <input type="radio" name="format" value="<%= fmt %>"<%= i === 0 ? ' checked' : '' %>>
               <span class="fc-check"></span>
               <span class="fc-icon"><%= icons[fmt] || '📦' %></span>
@@ -691,10 +691,8 @@
       function activateCard() {
         document.querySelectorAll('.format-card').forEach(function(c) {
           c.classList.remove('active');
-          c.setAttribute('aria-checked', 'false');
         });
         card.classList.add('active');
-        card.setAttribute('aria-checked', 'true');
         card.querySelector('input').checked = true;
       }
       card.addEventListener('click', activateCard);

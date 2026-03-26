@@ -13,6 +13,7 @@ const PORT = process.env.PORT || 3000;
 const API_HOST = process.env.GENERATION_API_HOST || '127.0.0.1';
 const API_PORT = process.env.GENERATION_API_PORT || '8787';
 const API_MANAGED = (process.env.GENERATION_API_MANAGED || '1') !== '0';
+const SHUTDOWN_TIMEOUT_MS = 500;
 const rateLimitState = new Map();
 let lastRateLimitCleanupAt = 0;
 let generationApiProcess = null;
@@ -100,9 +101,18 @@ function ensureGenerationApi() {
     ['-m', 'core.generation_api', '--host', API_HOST, '--port', String(API_PORT)],
     {
       cwd: path.resolve(__dirname, '..'),
-      stdio: 'ignore',
+      stdio: ['ignore', 'ignore', 'pipe'],
     },
   );
+  generationApiProcess.stderr.on('data', (chunk) => {
+    const message = chunk.toString().trim();
+    if (message) {
+      console.error('[generation-api]', message);
+    }
+  });
+  generationApiProcess.on('error', (err) => {
+    console.error('Failed to start generation API process:', err);
+  });
   generationApiProcess.on('exit', () => {
     generationApiProcess = null;
   });
@@ -198,7 +208,7 @@ if (require.main === module) {
   const shutdown = () => {
     stopGenerationApi();
     server.close(() => process.exit(0));
-    setTimeout(() => process.exit(0), 500).unref();
+    setTimeout(() => process.exit(0), SHUTDOWN_TIMEOUT_MS).unref();
   };
   process.on('SIGINT', shutdown);
   process.on('SIGTERM', shutdown);
