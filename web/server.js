@@ -1,16 +1,21 @@
 'use strict';
 
 const path = require('node:path');
+const { spawn } = require('node:child_process');
 const express = require('express');
 const { loadConfigs, loadI18n, availableLanguages } = require('./lib/config');
-const { registerWarp } = require('./lib/warp');
-const { GENERATORS, FORMAT_LABELS, FORMATS } = require('./lib/generators');
+const { FORMAT_LABELS, FORMATS } = require('./lib/formats');
 const { resolveEndpoint } = require('./lib/ports');
+const { generateViaPython } = require('./lib/python_api');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const API_HOST = process.env.GENERATION_API_HOST || '127.0.0.1';
+const API_PORT = process.env.GENERATION_API_PORT || '8787';
+const API_MANAGED = (process.env.GENERATION_API_MANAGED || '1') !== '0';
 const rateLimitState = new Map();
 let lastRateLimitCleanupAt = 0;
+let generationApiProcess = null;
 const NO_IP_BUCKET = '__unknown_ip__';
 
 // Middleware
@@ -86,6 +91,29 @@ function resolveFormatLabels(formatLabels, i18n) {
   return resolved;
 }
 
+function ensureGenerationApi() {
+  if (!API_MANAGED || generationApiProcess) {
+    return;
+  }
+  generationApiProcess = spawn(
+    'python',
+    ['-m', 'core.generation_api', '--host', API_HOST, '--port', String(API_PORT)],
+    {
+      cwd: path.resolve(__dirname, '..'),
+      stdio: 'ignore',
+    },
+  );
+  generationApiProcess.on('exit', () => {
+    generationApiProcess = null;
+  });
+}
+
+function stopGenerationApi() {
+  if (generationApiProcess && !generationApiProcess.killed) {
+    generationApiProcess.kill('SIGTERM');
+  }
+}
+
 // ── Routes ───────────────────────────────────────────────────────────────────
 
 app.get('/', (req, res) => {
@@ -93,7 +121,7 @@ app.get('/', (req, res) => {
   const i18n = loadI18n(lang);
 
   res.render('index', {
-    formats: Object.keys(GENERATORS),
+    formats: Array.from(FORMATS),
     formatLabels: resolveFormatLabels(FORMAT_LABELS, i18n),
     dnsServers: resolveNames(configs.dnsServers, 'dns_', i18n),
     relayServers: resolveNames(configs.relayServers, 'relay_', i18n),
@@ -136,30 +164,25 @@ app.post('/generate', antiFlood, async (req, res) => {
     allowedIps = ['0.0.0.0/0', '::/0'];
   }
 
-  let account;
-  try {
-    account = await registerWarp();
-  } catch (err) {
-    console.error('WARP registration failed:', err);
-    return res.status(502).json({ error: i18n.web_error_warp || 'WARP registration failed' });
-  }
-
-  const params = {
-    privateKey: account.privateKey,
-    publicKey: account.publicKey,
-    peerPublicKey: account.peerPublicKey,
-    clientIpv4: account.clientIpv4,
-    clientIpv6: account.clientIpv6,
-    dnsServers: dns.servers,
-    endpoint: resolveEndpoint(fmt, relay),
-    allowedIps,
-    mtu: 1280,
-  };
-
   if (!FORMATS.has(fmt)) {
     fmt = 'wireguard';
   }
-  const { content, filename } = GENERATORS[fmt](params);
+
+  let generated;
+  try {
+    generated = await generateViaPython({
+      format: fmt,
+      dns_servers: dns.servers,
+      endpoint: resolveEndpoint(fmt, relay),
+      allowed_ips: allowedIps,
+      mtu: 1280,
+    });
+  } catch (err) {
+    console.error('Python generation API failed:', err);
+    return res.status(502).json({ error: i18n.web_error_warp || 'WARP registration failed' });
+  }
+
+  const { content, filename } = generated;
 
   res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
   res.setHeader('Content-Type', 'application/octet-stream');
@@ -168,9 +191,17 @@ app.post('/generate', antiFlood, async (req, res) => {
 
 // Only start listening when run directly (not when imported for testing)
 if (require.main === module) {
-  app.listen(PORT, () => {
+  ensureGenerationApi();
+  const server = app.listen(PORT, () => {
     console.log(`🚀 WARP Config Generator running: http://localhost:${PORT}`);
   });
+  const shutdown = () => {
+    stopGenerationApi();
+    server.close(() => process.exit(0));
+    setTimeout(() => process.exit(0), 500).unref();
+  };
+  process.on('SIGINT', shutdown);
+  process.on('SIGTERM', shutdown);
 }
 
 module.exports = app;
