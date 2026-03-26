@@ -10,7 +10,9 @@
 
 - Добавлены новые пресеты для **split tunnel**: **Spotify**, **Netflix**, **OpenAI**, **TikTok** и **Steam**.
 - Расширены IP-диапазоны для существующих сервисов маршрутизации в `configs/routing_services.json`.
-- Параметры **Clash** и **WireSock** приведены в соответствие с актуальными значениями **AmneziaWG** из `configs/warp_params.json`.
+- Убрано дублирование параметров обфускации: **Clash** и **WireSock** теперь используют значения **AmneziaWG** из `configs/warp_params.json`.
+- Добавлен общий запуск сервисов через `python launch.py` (`--web-only` / `--bot-only`).
+- Веб-интерфейс переведён на общую Python generation API (единая точка генерации конфигов).
 - Основная документация теперь ведётся на русском языке, английская версия доступна в [README.en.md](README.en.md).
 
 ## Поддерживаемые форматы
@@ -63,6 +65,17 @@ python -m bot
 ```
 
 Бот начнёт получать обновления. Отправьте `/start` в чате, чтобы начать.
+
+### 3.1 Единый запуск (бот + веб)
+
+```bash
+python launch.py
+```
+
+Флаги:
+
+- `--web-only` — запуск только веб-сервера
+- `--bot-only` — запуск только Telegram-бота
 
 ### 4. Запустите веб-интерфейс
 
@@ -131,7 +144,7 @@ curl http://localhost:3000/health
 | `dns_servers.json` | DNS-серверы (имя + адреса) |
 | `relay_servers.json` | Альтернативные эндпоинты Cloudflare WARP |
 | `routing_services.json` | IP-диапазоны сервисов для раздельного туннеля |
-| `warp_params.json` | Параметры AmneziaWG, Clash и WireSock: Jc, Jmin, Jmax, H1–H4, MTU, I1 payloads |
+| `warp_params.json` | Параметры AmneziaWG + общие I1 payloads, MTU, reserved для Clash и masking для WireSock |
 | `i18n/ru.json` | Русская локализация (бот + веб) |
 | `i18n/en.json` | Английская локализация (бот + веб) |
 
@@ -356,6 +369,7 @@ http://localhost:3000/?lang=en
 │   ├── __init__.py
 │   ├── config.py             # Загрузка JSON-конфигов и dataclasses
 │   ├── generators.py         # Генераторы WireGuard / AmneziaWG / Clash / WireSock
+│   ├── generation_api.py     # Общий HTTP API генерации конфигов
 │   ├── ports.py              # Выбор портов для разных форматов
 │   └── warp.py               # Клиент API Cloudflare WARP
 ├── bot/                      # Telegram-бот
@@ -370,9 +384,9 @@ http://localhost:3000/?lang=en
 │   ├── server.js             # Express-приложение
 │   ├── lib/
 │   │   ├── config.js         # Загрузка JSON-конфигов + i18n + warp_params
-│   │   ├── generators.js     # Генераторы конфигов
+│   │   ├── formats.js        # Метаданные форматов для UI
 │   │   ├── ports.js          # Выбор портов для веб-форматов
-│   │   └── warp.js           # Клиент API WARP (X25519 + регистрация)
+│   │   └── python_api.js     # Клиент общей Python generation API
 │   ├── views/
 │   │   └── index.ejs         # HTML-шаблон (EJS, i18n-строки)
 │   └── test/
@@ -394,6 +408,7 @@ http://localhost:3000/?lang=en
 │   └── test_web.py           # Интеграционные тесты веб-сервера
 ├── .env.example              # Пример переменных окружения
 ├── generate.py               # CLI-генератор
+├── launch.py                 # Единый запуск бот+веб
 ├── LICENSE
 ├── README.en.md              # Английская документация
 ├── README.md                 # Основная русская документация
@@ -401,6 +416,7 @@ http://localhost:3000/?lang=en
 ```
 
 Пакет `core/` содержит всю логику генерации WARP и **не зависит** от Telegram.
+Веб-интерфейс вызывает `core/generation_api.py`, поэтому генерация конфигов поддерживается в одном месте (Python).
 Оба фронтенда (бот и веб) читают параметры из общих конфигов в `configs/`: локализацию из `configs/i18n/`, параметры обфускации из `configs/warp_params.json`, а маршруты split tunnel — из `configs/routing_services.json`.
 
 ---
@@ -431,6 +447,10 @@ npm test
 | `BOT_TOKEN` | Токен Telegram-бота от @BotFather | — (обязательно) |
 | `BOT_LANG` | Язык бота и веб-интерфейса по умолчанию (`ru`, `en`) | `ru` |
 | `PORT` | Порт веб-интерфейса | `3000` |
+| `GENERATION_API_URL` | URL общей Python generation API для веб-интерфейса | `http://127.0.0.1:8787` |
+| `GENERATION_API_MANAGED` | Автозапуск generation API из `web/server.js` (`1`/`0`) | `1` |
+| `GENERATION_API_HOST` | Хост для автозапуска generation API | `127.0.0.1` |
+| `GENERATION_API_PORT` | Порт для автозапуска generation API | `8787` |
 | `WEB_RATE_LIMIT_WINDOW_MS` | Окно anti-flood лимита веба в мс | `60000` |
 | `WEB_RATE_LIMIT_MAX_REQUESTS` | Макс. запросов на `/generate` за окно с одного IP | `10` |
 | `BOT_GENERATION_COOLDOWN_SECONDS` | Пауза между генерациями в боте для одного пользователя (сек) | `30` |
@@ -457,6 +477,16 @@ python generate.py
 ## 🔄 Legacy Bash-скрипт
 
 Оригинальный bash-скрипт в текущем репозитории отсутствует — актуальная реализация перенесена в Python-ядро, Telegram-бот и веб-интерфейс. Если вам нужен терминальный режим, используйте `python generate.py`.
+
+---
+
+## 💡 Идеи для развития проекта
+
+- Добавить OpenAPI-схему и автогенерацию клиентов для `core/generation_api.py`.
+- Вынести rate-limit хранилище веба в Redis для устойчивости при нескольких инстансах.
+- Добавить страницу “what’s new” в веб UI с changelog по релизам.
+- Добавить экспорт QR-кода для WireGuard/AmneziaWG прямо из веба.
+- Ввести наблюдаемость: метрики (Prometheus), structured logs и алерты по ошибкам регистрации WARP.
 
 ---
 

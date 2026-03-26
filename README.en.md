@@ -10,7 +10,9 @@ A **Cloudflare WARP** VPN config generator available as a **Telegram bot**, **we
 
 - Added new **split tunnel** presets: **Spotify**, **Netflix**, **OpenAI**, **TikTok**, and **Steam**.
 - Expanded IP ranges for existing routing services in `configs/routing_services.json`.
-- Updated **Clash** and **WireSock** settings to match the current **AmneziaWG** values from `configs/warp_params.json`.
+- Removed obfuscation duplication: **Clash** and **WireSock** now reuse **AmneziaWG** values from `configs/warp_params.json`.
+- Added a unified launcher via `python launch.py` (`--web-only` / `--bot-only`).
+- Switched web generation to a shared Python generation API (single generation code path).
 - The main documentation is now Russian-first; this file is the up-to-date English companion README.
 
 ## Supported formats
@@ -63,6 +65,17 @@ python -m bot
 ```
 
 The bot will start polling. Send `/start` in chat to begin.
+
+### 3.1 Unified launch (bot + web)
+
+```bash
+python launch.py
+```
+
+Flags:
+
+- `--web-only` — run only the web server
+- `--bot-only` — run only the Telegram bot
 
 ### 4. Run the web interface
 
@@ -131,7 +144,7 @@ All settings are stored in JSON files inside `configs/`. You can customize the p
 | `dns_servers.json` | DNS servers (display name + addresses) |
 | `relay_servers.json` | Alternative Cloudflare WARP endpoints |
 | `routing_services.json` | Service IP ranges for split tunnel |
-| `warp_params.json` | Shared AmneziaWG, Clash, and WireSock parameters: Jc, Jmin, Jmax, H1–H4, MTU, and I1 payloads |
+| `warp_params.json` | AmneziaWG parameters + shared I1 payloads, MTU, Clash reserved and WireSock masking |
 | `i18n/ru.json` | Russian localization for bot + web |
 | `i18n/en.json` | English localization for bot + web |
 
@@ -353,6 +366,7 @@ Obfuscation parameters and I1 payloads are stored in `configs/warp_params.json`:
 │   ├── __init__.py
 │   ├── config.py             # JSON config loading and dataclasses
 │   ├── generators.py         # WireGuard / AmneziaWG / Clash / WireSock generators
+│   ├── generation_api.py     # Shared HTTP API for config generation
 │   ├── ports.py              # Port selection for different formats
 │   └── warp.py               # Cloudflare WARP API client
 ├── bot/                      # Telegram bot
@@ -367,9 +381,9 @@ Obfuscation parameters and I1 payloads are stored in `configs/warp_params.json`:
 │   ├── server.js             # Express application
 │   ├── lib/
 │   │   ├── config.js         # JSON config + i18n + warp_params loader
-│   │   ├── generators.js     # Config generators
+│   │   ├── formats.js        # UI format metadata
 │   │   ├── ports.js          # Port selection for web formats
-│   │   └── warp.js           # WARP API client (X25519 + registration)
+│   │   └── python_api.js     # Shared Python generation API client
 │   ├── views/
 │   │   └── index.ejs         # HTML template with i18n strings
 │   └── test/
@@ -391,13 +405,16 @@ Obfuscation parameters and I1 payloads are stored in `configs/warp_params.json`:
 │   └── test_web.py           # Web integration tests
 ├── .env.example              # Example environment variables
 ├── generate.py               # CLI generator
+├── launch.py                 # Unified bot+web launcher
 ├── LICENSE
 ├── README.en.md              # English documentation
 ├── README.md                 # Main Russian documentation
 └── requirements.txt          # Python dependencies (bot + core)
 ```
 
-`core/` contains the generation logic and does **not depend on Telegram**. The bot and web frontend both read their settings from shared files under `configs/`.
+`core/` contains the generation logic and does **not depend on Telegram**.  
+The web server calls `core/generation_api.py`, so config generation is maintained in one codebase (Python).  
+The bot and web frontend both read settings from shared files under `configs/`.
 
 ---
 
@@ -427,6 +444,10 @@ npm test
 | `BOT_TOKEN` | Telegram bot token from @BotFather | — (required) |
 | `BOT_LANG` | Default language for the bot and web UI (`ru`, `en`) | `ru` |
 | `PORT` | Web interface port | `3000` |
+| `GENERATION_API_URL` | Shared Python generation API URL used by web | `http://127.0.0.1:8787` |
+| `GENERATION_API_MANAGED` | Auto-start generation API from `web/server.js` (`1`/`0`) | `1` |
+| `GENERATION_API_HOST` | Host for managed generation API process | `127.0.0.1` |
+| `GENERATION_API_PORT` | Port for managed generation API process | `8787` |
 
 ---
 
@@ -445,6 +466,16 @@ The script registers with Cloudflare WARP, generates an AmneziaWG config, prints
 ## 🔄 Legacy Bash script
 
 The original bash script is not present in the current repository snapshot. The actively maintained implementation now lives in the Python core, Telegram bot, web UI, and CLI generator. For terminal-based usage, run `python generate.py`.
+
+---
+
+## 💡 Project ideas
+
+- Add OpenAPI schema and auto-generated clients for `core/generation_api.py`.
+- Move web rate-limit state to Redis for multi-instance deployment.
+- Add a “what’s new” web page sourced from release changelog.
+- Add QR export for WireGuard/AmneziaWG in the web UI.
+- Add observability: Prometheus metrics, structured logs, and alerts for WARP registration failures.
 
 ---
 
