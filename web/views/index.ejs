@@ -206,6 +206,10 @@
       border-color: rgba(244,129,32,.22);
       box-shadow: 0 4px 24px var(--card-glow);
     }
+    .card:focus-within {
+      border-color: rgba(244,129,32,.3);
+      box-shadow: 0 6px 28px var(--card-glow);
+    }
     .card-header {
       display: flex; align-items: center; gap: .6rem;
       margin-bottom: 1rem;
@@ -252,6 +256,10 @@
       box-shadow: 0 0 0 1px var(--accent), 0 4px 16px rgba(244,129,32,.12);
     }
     .format-card input { display: none; }
+    .format-card:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
     .format-card .fc-icon {
       font-size: 1.3rem;
       margin-bottom: .35rem;
@@ -412,6 +420,10 @@
       font-size: .65rem;
       font-weight: 700;
     }
+    .svc-item input[type="checkbox"]:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
 
     /* ── Generate button ─────────────────────────────────── */
     .btn-generate {
@@ -438,6 +450,10 @@
     }
     .btn-generate:active {
       transform: translateY(0) scale(.99);
+    }
+    .btn-generate:focus-visible {
+      outline: 2px solid var(--accent-light);
+      outline-offset: 2px;
     }
     .btn-generate.loading {
       pointer-events: none;
@@ -483,6 +499,7 @@
       color: #ef4444;
       border: 1px solid rgba(239, 68, 68, .2);
     }
+
 
     /* ── Footer ──────────────────────────────────────────── */
     .footer {
@@ -553,7 +570,7 @@
           <div class="format-grid" id="format-grid">
             <% var icons = { wireguard: '🔐', amnezia: '🛡️', clash: '⚔️', wiresock: '🪟' }; %>
             <% formats.forEach(function(fmt, i) { %>
-            <label class="format-card<%= i === 0 ? ' active' : '' %>" data-fmt="<%= fmt %>">
+            <label class="format-card<%= i === 0 ? ' active' : '' %>" data-fmt="<%= fmt %>" tabindex="0">
               <input type="radio" name="format" value="<%= fmt %>"<%= i === 0 ? ' checked' : '' %>>
               <span class="fc-check"></span>
               <span class="fc-icon"><%= icons[fmt] || '📦' %></span>
@@ -671,10 +688,19 @@
 
     // ── Format card selection ──────────────────────────────
     document.querySelectorAll('.format-card').forEach(function(card) {
-      card.addEventListener('click', function() {
-        document.querySelectorAll('.format-card').forEach(function(c) { c.classList.remove('active'); });
+      function activateCard() {
+        document.querySelectorAll('.format-card').forEach(function(c) {
+          c.classList.remove('active');
+        });
         card.classList.add('active');
         card.querySelector('input').checked = true;
+      }
+      card.addEventListener('click', activateCard);
+      card.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          activateCard();
+        }
       });
     });
 
