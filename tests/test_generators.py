@@ -166,16 +166,16 @@ class TestClash:
 
     def test_amnezia_wg_option_values(self) -> None:
         content, _ = ClashGenerator().generate(_PARAMS)
-        clash_params = _WARP_PARAMS["clash"]
-        assert f"jc: {clash_params['Jc']}" in content
-        assert f"jmin: {clash_params['Jmin']}" in content
-        assert f"jmax: {clash_params['Jmax']}" in content
-        assert f"s1: {clash_params['S1']}" in content
-        assert f"s2: {clash_params['S2']}" in content
-        assert f"h1: {clash_params['H1']}" in content
-        assert f"h2: {clash_params['H2']}" in content
-        assert f"h3: {clash_params['H3']}" in content
-        assert f"h4: {clash_params['H4']}" in content
+        amnezia_params = _WARP_PARAMS["amnezia"]
+        assert f"jc: {amnezia_params['Jc']}" in content
+        assert f"jmin: {amnezia_params['Jmin']}" in content
+        assert f"jmax: {amnezia_params['Jmax']}" in content
+        assert f"s1: {amnezia_params['S1']}" in content
+        assert f"s2: {amnezia_params['S2']}" in content
+        assert f"h1: {amnezia_params['H1']}" in content
+        assert f"h2: {amnezia_params['H2']}" in content
+        assert f"h3: {amnezia_params['H3']}" in content
+        assert f"h4: {amnezia_params['H4']}" in content
 
     def test_has_i1_field(self) -> None:
         content, _ = ClashGenerator().generate(_PARAMS)
@@ -213,16 +213,16 @@ class TestWireSock:
 
     def test_has_obfuscation_params(self) -> None:
         content, _ = WireSockGenerator().generate(_PARAMS)
-        wiresock_params = _WARP_PARAMS["wiresock"]
-        assert f"Jc = {wiresock_params['Jc']}" in content
-        assert f"Jmin = {wiresock_params['Jmin']}" in content
-        assert f"Jmax = {wiresock_params['Jmax']}" in content
-        assert f"S1 = {wiresock_params['S1']}" in content
-        assert f"S2 = {wiresock_params['S2']}" in content
-        assert f"H1 = {wiresock_params['H1']}" in content
-        assert f"H2 = {wiresock_params['H2']}" in content
-        assert f"H3 = {wiresock_params['H3']}" in content
-        assert f"H4 = {wiresock_params['H4']}" in content
+        amnezia_params = _WARP_PARAMS["amnezia"]
+        assert f"Jc = {amnezia_params['Jc']}" in content
+        assert f"Jmin = {amnezia_params['Jmin']}" in content
+        assert f"Jmax = {amnezia_params['Jmax']}" in content
+        assert f"S1 = {amnezia_params['S1']}" in content
+        assert f"S2 = {amnezia_params['S2']}" in content
+        assert f"H1 = {amnezia_params['H1']}" in content
+        assert f"H2 = {amnezia_params['H2']}" in content
+        assert f"H3 = {amnezia_params['H3']}" in content
+        assert f"H4 = {amnezia_params['H4']}" in content
 
     def test_has_protocol_masking_section(self) -> None:
         content, _ = WireSockGenerator().generate(_PARAMS)
